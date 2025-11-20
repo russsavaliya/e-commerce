@@ -1,0 +1,10 @@
+# Node modules ignore
+node_modules/
+
+# Environment files ignore
+.env
+*/.env
+
+# Package files ignore
+package-lock.json
+*/package-lock.json
