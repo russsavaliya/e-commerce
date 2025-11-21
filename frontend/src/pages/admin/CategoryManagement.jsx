@@ -59,11 +59,11 @@ const CategoryManagement = () => {
       setLoading(true);
       const data = await getAllCategories(currentPage, itemsPerPage);
       const categoriesArray = Array.isArray(data.data?.exist_category) ? data.data.exist_category : [];
-      
+
       // Update categories and pagination info
       setCategories(categoriesArray);
       setFilteredCategories(categoriesArray);
-      
+
       // Update pagination metadata from API response
       if (data.data?.total_count !== undefined) {
         setTotalCategories(data.data.total_count);
@@ -136,12 +136,12 @@ const CategoryManagement = () => {
   // Get Parent Category Name
   const getParentCategoryName = (parentCategoryId) => {
     if (!parentCategoryId) return 'None (Top Level)';
-    
+
     // If parent_category_id is an object (populated), use its name directly
     if (typeof parentCategoryId === 'object' && parentCategoryId.name) {
       return parentCategoryId.name;
     }
-    
+
     // If it's a string ID, find the parent in categories
     const parent = categories.find((c) => c._id === parentCategoryId);
     return parent ? parent.name : 'Unknown';
@@ -265,7 +265,11 @@ const CategoryManagement = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className={`space-y-4 ${showForm ? 'relative' : ''}`}>
+      {/* Overlay when form is open */}
+      {showForm && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" onClick={resetForm}></div>
+      )}
       {/* Header Section with Stats */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -315,115 +319,120 @@ const CategoryManagement = () => {
         </div>
       </div>
 
-      {/* Add/Edit Form */}
+      {/* Add/Edit Form - Modal */}
       {showForm && (
-        <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-200">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">
-              {editingCategory ? 'Edit Category' : 'Add New Category'}
-            </h2>
-            <button
-              onClick={resetForm}
-              className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-              aria-label="Close form"
-            >
-              <X className="w-4 h-4 text-gray-600" />
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Category Name Input */}
-            <div>
-              <label
-                htmlFor="categoryName"
-                className="block text-sm font-medium text-gray-700 mb-1.5"
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+          <div
+            className="bg-white rounded-lg shadow-2xl p-5 border border-gray-200 w-full max-w-lg max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">
+                {editingCategory ? 'Edit Category' : 'Add New Category'}
+              </h2>
+              <button
+                onClick={resetForm}
+                className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Close form"
               >
-                Category Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="categoryName"
-                value={formData.name}
-                onChange={(e) => {
-                  setFormData({ ...formData, name: e.target.value });
-                  if (formErrors.name) {
-                    setFormErrors({ ...formErrors, name: '' });
-                  }
-                }}
-                className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formErrors.name
+                <X className="w-4 h-4 text-gray-600" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Category Name Input */}
+              <div>
+                <label
+                  htmlFor="categoryName"
+                  className="block text-sm font-medium text-gray-700 mb-1.5"
+                >
+                  Category Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="categoryName"
+                  value={formData.name}
+                  onChange={(e) => {
+                    setFormData({ ...formData, name: e.target.value });
+                    if (formErrors.name) {
+                      setFormErrors({ ...formErrors, name: '' });
+                    }
+                  }}
+                  className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formErrors.name
                     ? 'border-red-300 bg-red-50'
                     : 'border-gray-300 bg-white'
-                  }`}
-                placeholder="Enter category name"
-                aria-invalid={!!formErrors.name}
-                aria-describedby={formErrors.name ? 'name-error' : undefined}
-              />
-              {formErrors.name && (
-                <p id="name-error" className="mt-1.5 text-xs text-red-600" role="alert">
-                  {formErrors.name}
-                </p>
-              )}
-            </div>
-
-            {/* Parent Category Dropdown */}
-            <div>
-              <label
-                htmlFor="parentCategory"
-                className="block text-sm font-medium text-gray-700 mb-1.5"
-              >
-                Parent Category <span className="text-gray-400 text-xs">(Optional)</span>
-              </label>
-              <select
-                id="parentCategory"
-                value={formData.parent_category_id}
-                onChange={(e) =>
-                  setFormData({ ...formData, parent_category_id: e.target.value })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-              >
-                <option value="">None (Top Level Category)</option>
-                {/* Use _id for option value - this ensures we pass _id instead of name */}
-                {getAllParentOptions(editingCategory?._id).map((cat) => (
-                  <option key={cat._id} value={cat._id}>
-                    {getCategoryPath(cat)}
-                  </option>
-                ))}
-              </select>
-              <p className="mt-1.5 text-xs text-gray-500">
-                Leave empty to create a top-level category
-              </p>
-            </div>
-
-            {/* Form Action Buttons */}
-            <div className="flex items-center gap-3 pt-3">
-              <button
-                type="submit"
-                disabled={submitting}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-              >
-                {submitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4" />
-                    {editingCategory ? 'Update Category' : 'Create Category'}
-                  </>
+                    }`}
+                  placeholder="Enter category name"
+                  aria-invalid={!!formErrors.name}
+                  aria-describedby={formErrors.name ? 'name-error' : undefined}
+                />
+                {formErrors.name && (
+                  <p id="name-error" className="mt-1.5 text-xs text-red-600" role="alert">
+                    {formErrors.name}
+                  </p>
                 )}
-              </button>
+              </div>
 
-              <button
-                type="button"
-                onClick={resetForm}
-                disabled={submitting}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
+              {/* Parent Category Dropdown */}
+              <div>
+                <label
+                  htmlFor="parentCategory"
+                  className="block text-sm font-medium text-gray-700 mb-1.5"
+                >
+                  Parent Category <span className="text-gray-400 text-xs">(Optional)</span>
+                </label>
+                <select
+                  id="parentCategory"
+                  value={formData.parent_category_id}
+                  onChange={(e) =>
+                    setFormData({ ...formData, parent_category_id: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                >
+                  <option value="">None (Top Level Category)</option>
+                  {/* Use _id for option value - this ensures we pass _id instead of name */}
+                  {getAllParentOptions(editingCategory?._id).map((cat) => (
+                    <option key={cat._id} value={cat._id}>
+                      {getCategoryPath(cat)}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1.5 text-xs text-gray-500">
+                  Leave empty to create a top-level category
+                </p>
+              </div>
+
+              {/* Form Action Buttons */}
+              <div className="flex items-center gap-3 pt-3">
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      {editingCategory ? 'Update Category' : 'Create Category'}
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  disabled={submitting}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
@@ -592,11 +601,10 @@ const CategoryManagement = () => {
                     <button
                       key={pageNum}
                       onClick={() => setCurrentPage(pageNum)}
-                      className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                        currentPage === pageNum
-                          ? 'bg-blue-600 text-white'
-                          : 'border border-gray-300 hover:bg-gray-50'
-                      }`}
+                      className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${currentPage === pageNum
+                        ? 'bg-blue-600 text-white'
+                        : 'border border-gray-300 hover:bg-gray-50'
+                        }`}
                     >
                       {pageNum}
                     </button>

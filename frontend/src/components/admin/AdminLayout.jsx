@@ -15,6 +15,7 @@ import {
   Menu,
   X,
   FolderTree,
+  Tag,
 } from 'lucide-react';
 import { ROUTES } from '../../utils/constants';
 
@@ -60,6 +61,11 @@ const AdminLayout = () => {
           name: 'Category',
           icon: FolderTree,
           path: ROUTES.ADMIN_CATEGORIES,
+        },
+        {
+          name: 'Attributes',
+          icon: Tag,
+          path: ROUTES.ADMIN_ATTRIBUTES,
         },
       ],
     },
@@ -119,9 +125,6 @@ const AdminLayout = () => {
                     <button
                       onClick={() => {
                         setSettingsOpen(!settingsOpen);
-                        if (!settingsOpen) {
-                          navigate(item.submenu[0].path);
-                        }
                       }}
                       className={`
                         w-full flex items-center gap-3 px-4 py-3 rounded-lg
@@ -242,6 +245,8 @@ const AdminLayout = () => {
                 ? 'Dashboard'
                 : location.pathname === ROUTES.ADMIN_CATEGORIES
                 ? 'Category Management'
+                : location.pathname === ROUTES.ADMIN_ATTRIBUTES
+                ? 'Attribute Management'
                 : 'Settings'}
             </h2>
             <div className="w-10" /> {/* Spacer for mobile menu button */}

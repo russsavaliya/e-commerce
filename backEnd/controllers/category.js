@@ -25,7 +25,6 @@ exports.create_category = async (req, res) => {
         });
     }
 }
-
 exports.get_category_list = async (req, res) => {
     try {
         let { page = 1, limit = 10 } = req.query;
@@ -70,6 +69,34 @@ exports.delete_category = async (req, res) => {
             data: result
         });
 
+    } catch (error) {
+        return res.status(500).json({
+            status: false,
+            message: error.message
+        });
+    }
+}
+
+exports.update_category = async (req, res) => {
+    try {
+        let { id } = req.query;
+        let { name, parent_category_id } = req.body;
+        let exist_category = await category_model.findOne({ name: name, _id: { $ne: id } });
+        if (exist_category) {
+            return res.status(400).json({
+                status: false,
+                message: "Category already exists"
+            });
+        }
+        const category = await category_model.findByIdAndUpdate(id, {
+            name: name,
+            parent_category_id: parent_category_id
+        });
+        return res.status(200).json({
+            status: true,
+            message: "Category updated successfully",
+            data: category
+        });
     } catch (error) {
         return res.status(500).json({
             status: false,

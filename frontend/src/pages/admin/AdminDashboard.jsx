@@ -27,20 +27,20 @@ const AdminDashboard = () => {
       <div className="absolute inset-0 overflow-hidden">
         {/* Base gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/30 via-purple-900/40 to-fuchsia-900/30"></div>
-        
+
         {/* Teal/Cyan Nebula Clouds */}
         <div className="absolute -top-40 -left-40 w-[600px] h-[600px] bg-gradient-to-br from-cyan-400/20 to-teal-500/15 rounded-full blur-3xl animate-blob"></div>
         <div className="absolute top-1/3 -left-20 w-[500px] h-[500px] bg-gradient-to-br from-teal-400/15 to-cyan-300/10 rounded-full blur-3xl animate-blob [animation-delay:3s]"></div>
         <div className="absolute bottom-20 left-1/4 w-[400px] h-[400px] bg-gradient-to-br from-cyan-500/15 to-teal-400/10 rounded-full blur-3xl animate-blob [animation-delay:6s]"></div>
-        
+
         {/* Magenta/Pink Nebula Clouds */}
         <div className="absolute -top-20 right-1/4 w-[550px] h-[550px] bg-gradient-to-br from-fuchsia-500/20 to-pink-500/15 rounded-full blur-3xl animate-blob [animation-delay:2s]"></div>
         <div className="absolute top-1/2 right-10 w-[450px] h-[450px] bg-gradient-to-br from-pink-500/15 to-magenta-400/10 rounded-full blur-3xl animate-blob [animation-delay:5s]"></div>
         <div className="absolute bottom-1/4 right-1/3 w-[500px] h-[500px] bg-gradient-to-br from-fuchsia-600/15 to-pink-400/10 rounded-full blur-3xl animate-blob [animation-delay:4s]"></div>
-        
+
         {/* Blended Purple Area */}
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-gradient-to-br from-purple-500/10 via-violet-500/8 to-indigo-500/10 rounded-full blur-3xl animate-blob [animation-delay:1s]"></div>
-        
+
         {/* Stars */}
         {[...Array(30)].map((_, i) => (
           <div
