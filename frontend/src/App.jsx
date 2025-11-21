@@ -64,6 +64,7 @@ import AdminLayout from './components/admin/AdminLayout';
 import Dashboard from './pages/admin/Dashboard';
 import CategoryManagement from './pages/admin/CategoryManagement';
 import AttributeManagement from './pages/admin/AttributeManagement';
+import ProductAdd from './pages/admin/ProductAdd';
 
 // TODO: When you create new pages, import them here:
 // import ProductManagement from './pages/admin/ProductManagement';
@@ -107,6 +108,11 @@ const ADMIN_ROUTES = [
     path: 'settings/attributes',          // URL path (will be /admin/settings/attributes)
     component: AttributeManagement,        // The component to show
     description: 'Attribute Management Page'
+  },
+  {
+    path: 'products/add',                 // URL path (will be /admin/products/add)
+    component: ProductAdd,                 // The component to show
+    description: 'Add New Product Page'
   },
   // ============================================
   // ADD NEW ADMIN PAGES HERE - IT'S THAT EASY!

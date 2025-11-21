@@ -16,6 +16,20 @@ const attributeApi = axios.create({
   timeout: 10000,
 });
 
+// Request interceptor for adding token
+attributeApi.interceptors.request.use(
+  (config) => {
+    const token = getAdminToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 export const getAllAttributes = async (page = 1, limit = 10) => {
   try {
     const response = await attributeApi.get('/attributes/list', {

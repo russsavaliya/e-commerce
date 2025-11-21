@@ -1,0 +1,1383 @@
+/**
+ * Product Add/Edit Page
+ * Complete form for creating and editing products with attributes and variants
+ */
+
+import React, { useState, useEffect } from 'react';
+import {
+  Save,
+  X,
+  Loader2,
+  Plus,
+  Trash2,
+  Upload,
+  Image as ImageIcon,
+  Package,
+  DollarSign,
+  Tag,
+  Layers,
+  AlertCircle,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react';
+import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
+import { createProduct } from '../../services/admin/productService';
+import { getAllCategories } from '../../services/admin/categoryService';
+import { getAllAttributes } from '../../services/admin/attributeService';
+
+const ProductAdd = () => {
+  const navigate = useNavigate();
+
+  // Loading states
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+  const [loadingAttributes, setLoadingAttributes] = useState(false);
+
+  // Data states
+  const [categories, setCategories] = useState([]);
+  const [attributes, setAttributes] = useState([]);
+
+  // Form data
+  const [formData, setFormData] = useState({
+    name: '',
+    SKU: '',
+    description: '',
+    category: '',
+    status: 'ACTIVE',
+    selling_price: '',
+    original_price: '',
+    cost_price: '',
+    productImages: [], // Array of File objects
+    productImagePreviews: [], // Array of preview URLs
+  });
+
+  // Attributes state - array of { attributeId, selectedValueIds: [] }
+  const [productAttributes, setProductAttributes] = useState([]);
+
+  // Variants state - array of variant objects (optional, starts empty)
+  const [variants, setVariants] = useState([]);
+  const [showVariants, setShowVariants] = useState(false);
+
+  // Form errors
+  const [formErrors, setFormErrors] = useState({});
+
+  // Fetch categories and attributes on mount
+  useEffect(() => {
+    fetchInitialData();
+  }, []);
+
+  const fetchInitialData = async () => {
+    try {
+      setLoading(true);
+      await Promise.all([fetchCategories(), fetchAttributes()]);
+    } catch (error) {
+      toast.error('Failed to load initial data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      setLoadingCategories(true);
+      // Fetch all categories (high limit to get all)
+      const data = await getAllCategories(1, 1000);
+      const categoriesArray = Array.isArray(data.data?.exist_category)
+        ? data.data.exist_category
+        : Array.isArray(data.data)
+          ? data.data
+          : [];
+      setCategories(categoriesArray);
+    } catch (error) {
+      toast.error('Failed to fetch categories');
+      setCategories([]);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
+
+  const fetchAttributes = async () => {
+    try {
+      setLoadingAttributes(true);
+      // Fetch all attributes (high limit to get all)
+      const data = await getAllAttributes(1, 1000);
+      const attributesArray = Array.isArray(data.data?.attributes)
+        ? data.data.attributes
+        : Array.isArray(data.data)
+          ? data.data
+          : Array.isArray(data.attributes)
+            ? data.attributes
+            : Array.isArray(data)
+              ? data
+              : [];
+      setAttributes(attributesArray);
+    } catch (error) {
+      toast.error('Failed to fetch attributes');
+      setAttributes([]);
+    } finally {
+      setLoadingAttributes(false);
+    }
+  };
+
+  // Handle basic form field changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    // Clear error for this field
+    if (formErrors[name]) {
+      setFormErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+  };
+
+  // Handle product images upload
+  const handleProductImagesChange = (e) => {
+    const files = Array.from(e.target.files);
+    const newPreviews = [];
+    const newFiles = [];
+
+    files.forEach((file) => {
+      if (file.type.startsWith('image/')) {
+        newFiles.push(file);
+        newPreviews.push(URL.createObjectURL(file));
+      }
+    });
+
+    setFormData((prev) => ({
+      ...prev,
+      productImages: [...prev.productImages, ...newFiles],
+      productImagePreviews: [...prev.productImagePreviews, ...newPreviews],
+    }));
+  };
+
+  const removeProductImage = (index) => {
+    setFormData((prev) => {
+      const newImages = [...prev.productImages];
+      const newPreviews = [...prev.productImagePreviews];
+      // Revoke object URL to prevent memory leak
+      if (newPreviews[index]) {
+        URL.revokeObjectURL(newPreviews[index]);
+      }
+      newImages.splice(index, 1);
+      newPreviews.splice(index, 1);
+      return {
+        ...prev,
+        productImages: newImages,
+        productImagePreviews: newPreviews,
+      };
+    });
+  };
+
+  // Handle product attributes
+  const addProductAttribute = () => {
+    setProductAttributes((prev) => [
+      ...prev,
+      {
+        attributeId: '',
+        selectedValueIds: [],
+      },
+    ]);
+  };
+
+  const removeProductAttribute = (index) => {
+    setProductAttributes((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleAttributeChange = (index, attributeId) => {
+    setProductAttributes((prev) => {
+      const updated = [...prev];
+      updated[index] = {
+        attributeId: attributeId,
+        selectedValueIds: [], // Reset selected values when attribute changes
+      };
+      return updated;
+    });
+  };
+
+  const handleAttributeValueToggle = (attrIndex, valueId) => {
+    setProductAttributes((prev) => {
+      const updated = [...prev];
+      const currentValueIds = updated[attrIndex].selectedValueIds || [];
+      if (currentValueIds.includes(valueId)) {
+        updated[attrIndex].selectedValueIds = currentValueIds.filter(
+          (id) => id !== valueId
+        );
+      } else {
+        updated[attrIndex].selectedValueIds = [...currentValueIds, valueId];
+      }
+      return updated;
+    });
+  };
+
+  // Get attribute values for a given attribute ID
+  const getAttributeValues = (attributeId) => {
+    const attribute = attributes.find(
+      (attr) => (attr._id || attr.id) === attributeId
+    );
+    return attribute?.values || [];
+  };
+
+  // Get available attributes for a variant (excluding already selected ones)
+  const getAvailableAttributesForVariant = (variantIndex, currentAttrIndex) => {
+    const variant = variants[variantIndex];
+    if (!variant || !variant.variant_attributes) {
+      return attributes;
+    }
+    
+    // Get already selected attribute IDs (excluding the current one being edited)
+    const selectedAttributeIds = variant.variant_attributes
+      .map((attr, idx) => idx !== currentAttrIndex ? attr.attribute_id : null)
+      .filter(Boolean);
+    
+    // Filter out already selected attributes
+    return attributes.filter(
+      (attr) => !selectedAttributeIds.includes(attr._id || attr.id)
+    );
+  };
+
+  // Handle variants
+  const addVariant = () => {
+    setShowVariants(true); // Show variants section when first variant is added
+    setVariants((prev) => [
+      ...prev,
+      {
+        variant_name: '',
+        variant_SKU: '',
+        variant_price: '',
+        variant_image: null,
+        variant_image_preview: null,
+        variant_attributes: [],
+        quantity: '',
+        status: 'ACTIVE',
+      },
+    ]);
+  };
+
+  const removeVariant = (index) => {
+    setVariants((prev) => {
+      const updated = [...prev];
+      // Revoke object URL if exists
+      if (updated[index].variant_image_preview) {
+        URL.revokeObjectURL(updated[index].variant_image_preview);
+      }
+      updated.splice(index, 1);
+      return updated;
+    });
+  };
+
+  const handleVariantChange = (index, field, value) => {
+    setVariants((prev) => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        [field]: value,
+      };
+      return updated;
+    });
+  };
+
+  const handleVariantImageChange = (index, e) => {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      // Revoke previous preview if exists
+      const prev = variants[index];
+      if (prev.variant_image_preview) {
+        URL.revokeObjectURL(prev.variant_image_preview);
+      }
+
+      setVariants((prev) => {
+        const updated = [...prev];
+        updated[index] = {
+          ...updated[index],
+          variant_image: file,
+          variant_image_preview: URL.createObjectURL(file),
+        };
+        return updated;
+      });
+    }
+  };
+
+  const removeVariantImage = (index) => {
+    setVariants((prev) => {
+      const updated = [...prev];
+      if (updated[index].variant_image_preview) {
+        URL.revokeObjectURL(updated[index].variant_image_preview);
+      }
+      updated[index] = {
+        ...updated[index],
+        variant_image: null,
+        variant_image_preview: null,
+      };
+      return updated;
+    });
+  };
+
+  // Handle variant attributes (for variants)
+  const addVariantAttribute = (variantIndex) => {
+    setVariants((prev) => {
+      const updated = [...prev];
+      updated[variantIndex].variant_attributes = [
+        ...updated[variantIndex].variant_attributes,
+        {
+          attribute_id: '',
+          value_id: '',
+        },
+      ];
+      return updated;
+    });
+  };
+
+  const removeVariantAttribute = (variantIndex, attrIndex) => {
+    setVariants((prev) => {
+      const updated = [...prev];
+      updated[variantIndex].variant_attributes = updated[
+        variantIndex
+      ].variant_attributes.filter((_, i) => i !== attrIndex);
+      return updated;
+    });
+  };
+
+  const handleVariantAttributeChange = (
+    variantIndex,
+    attrIndex,
+    field,
+    value
+  ) => {
+    setVariants((prev) => {
+      const updated = [...prev];
+      updated[variantIndex].variant_attributes[attrIndex] = {
+        ...updated[variantIndex].variant_attributes[attrIndex],
+        [field]: value,
+        // Reset value_id when attribute_id changes
+        ...(field === 'attribute_id' ? { value_id: '' } : {}),
+      };
+      return updated;
+    });
+  };
+
+  // Form validation
+  const validateForm = () => {
+    const errors = {};
+
+    // Basic fields
+    if (!formData.name.trim()) {
+      errors.name = 'Product name is required';
+    }
+    if (!formData.SKU.trim()) {
+      errors.SKU = 'SKU is required';
+    }
+    if (!formData.category) {
+      errors.category = 'Category is required';
+    }
+    if (!formData.selling_price || parseFloat(formData.selling_price) <= 0) {
+      errors.selling_price = 'Valid selling price is required';
+    }
+
+    // Validate product attributes
+    productAttributes.forEach((attr, index) => {
+      if (!attr.attributeId) {
+        errors[`productAttribute_${index}`] = 'Please select an attribute';
+      } else if (!attr.selectedValueIds || attr.selectedValueIds.length === 0) {
+        errors[`productAttributeValue_${index}`] =
+          'Please select at least one value';
+      }
+    });
+
+    // Validate variants (only if variants exist - variants are optional)
+    if (variants.length > 0) {
+      variants.forEach((variant, index) => {
+        if (!variant.variant_name?.trim()) {
+          errors[`variant_name_${index}`] = 'Variant name is required';
+        }
+        if (!variant.variant_SKU?.trim()) {
+          errors[`variant_SKU_${index}`] = 'Variant SKU is required';
+        }
+        if (!variant.variant_price || parseFloat(variant.variant_price) <= 0) {
+          errors[`variant_price_${index}`] = 'Valid variant price is required';
+        }
+        if (!variant.quantity || parseInt(variant.quantity) < 0) {
+          errors[`variant_quantity_${index}`] = 'Valid quantity is required';
+        }
+        // Validate variant attributes
+        variant.variant_attributes.forEach((vAttr, vAttrIndex) => {
+          if (!vAttr.attribute_id) {
+            errors[`variant_attr_${index}_${vAttrIndex}`] =
+              'Please select an attribute';
+          }
+          if (!vAttr.value_id) {
+            errors[`variant_value_${index}_${vAttrIndex}`] =
+              'Please select a value';
+          }
+        });
+      });
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      toast.error('Please fix the errors in the form');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      // Prepare FormData
+      const formDataToSend = new FormData();
+
+      // Basic product fields
+      formDataToSend.append('name', formData.name.trim());
+      formDataToSend.append('SKU', formData.SKU.trim());
+      formDataToSend.append('description', formData.description.trim() || '');
+      formDataToSend.append('category', formData.category);
+      formDataToSend.append('status', formData.status);
+      formDataToSend.append('selling_price', parseFloat(formData.selling_price));
+      formDataToSend.append(
+        'original_price',
+        parseFloat(formData.original_price) || 0
+      );
+      formDataToSend.append('cost_price', parseFloat(formData.cost_price) || 0);
+
+      // Product images
+      formData.productImages.forEach((file) => {
+        formDataToSend.append('images', file);
+      });
+
+      // Product attributes - format: [{ attributeId, attributeValuesIds: [] }]
+      const formattedAttributes = productAttributes.map((attr) => ({
+        attributeId: attr.attributeId,
+        attributeValuesIds: attr.selectedValueIds,
+      }));
+      formDataToSend.append('attributes', JSON.stringify(formattedAttributes));
+
+      // Variants - format according to product model (send empty array if no variants)
+      const formattedVariants = variants.length > 0 ? variants.map((variant, index) => {
+        const variantData = {
+          variant_name: variant.variant_name.trim(),
+          variant_SKU: variant.variant_SKU.trim(),
+          variant_price: parseFloat(variant.variant_price),
+          variant_attributes: variant.variant_attributes.map((vAttr) => ({
+            attribute_id: vAttr.attribute_id,
+            value_id: vAttr.value_id,
+          })),
+          quantity: parseInt(variant.quantity) || 0,
+          status: variant.status,
+        };
+
+        // Add variant image if exists
+        if (variant.variant_image) {
+          formDataToSend.append(`variant_images[${index}]`, variant.variant_image);
+        }
+
+        return variantData;
+      }) : [];
+      formDataToSend.append('variants', JSON.stringify(formattedVariants));
+
+      // Call API
+      await createProduct(formDataToSend);
+      toast.success('Product created successfully!');
+      navigate('/admin/dashboard'); // Navigate to dashboard after successful creation
+    } catch (error) {
+      toast.error(error.message || 'Failed to create product');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <span className="ml-3 text-gray-600">Loading...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-6xl mx-auto space-y-5">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200 p-6 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              <Package className="w-6 h-6 text-blue-600" />
+              Add New Product
+            </h1>
+            <p className="text-sm text-gray-600 mt-1.5">
+              Fill in the product details below. Fields marked with <span className="text-red-500">*</span> are required.
+            </p>
+          </div>
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 hover:bg-white/80 rounded-lg transition-colors"
+            aria-label="Go back"
+          >
+            <X className="w-5 h-5 text-gray-600" />
+          </button>
+        </div>
+      </div>
+
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Basic Information */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-5 flex items-center gap-2">
+            <Package className="w-5 h-5 text-blue-600" />
+            Basic Information
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Product Name */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Product Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  formErrors.name ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder="Enter product name"
+              />
+              {formErrors.name && (
+                <p className="text-xs text-red-500 mt-1">{formErrors.name}</p>
+              )}
+            </div>
+
+            {/* SKU */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                SKU <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="SKU"
+                value={formData.SKU}
+                onChange={handleInputChange}
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  formErrors.SKU ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder="Enter SKU"
+              />
+              {formErrors.SKU && (
+                <p className="text-xs text-red-500 mt-1">{formErrors.SKU}</p>
+              )}
+            </div>
+
+            {/* Category */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Category <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="category"
+                value={formData.category}
+                onChange={handleInputChange}
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  formErrors.category ? 'border-red-500' : 'border-gray-300'
+                }`}
+                disabled={loadingCategories}
+              >
+                <option value="">Select Category</option>
+                {categories.map((cat) => (
+                  <option key={cat._id || cat.id} value={cat._id || cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+              {formErrors.category && (
+                <p className="text-xs text-red-500 mt-1">{formErrors.category}</p>
+              )}
+            </div>
+
+            {/* Status */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Status
+              </label>
+              <select
+                name="status"
+                value={formData.status}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="ACTIVE">Active</option>
+                <option value="DRAFT">Draft</option>
+              </select>
+            </div>
+
+            {/* Selling Price */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Selling Price <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="number"
+                  name="selling_price"
+                  value={formData.selling_price}
+                  onChange={handleInputChange}
+                  step="0.01"
+                  min="0"
+                  className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    formErrors.selling_price ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                  placeholder="0.00"
+                />
+              </div>
+              {formErrors.selling_price && (
+                <p className="text-xs text-red-500 mt-1">
+                  {formErrors.selling_price}
+                </p>
+              )}
+            </div>
+
+            {/* Original Price (MRP) */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Original Price (MRP)
+              </label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="number"
+                  name="original_price"
+                  value={formData.original_price}
+                  onChange={handleInputChange}
+                  step="0.01"
+                  min="0"
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+
+            {/* Cost Price */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Cost Price
+              </label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="number"
+                  name="cost_price"
+                  value={formData.cost_price}
+                  onChange={handleInputChange}
+                  step="0.01"
+                  min="0"
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Description */}
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Description
+            </label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
+              rows={4}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter product description"
+            />
+          </div>
+
+          {/* Product Images */}
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Product Images
+            </label>
+            <div className="flex flex-wrap gap-4">
+              {/* Image Previews */}
+              {formData.productImagePreviews.map((preview, index) => (
+                <div key={index} className="relative">
+                  <img
+                    src={preview}
+                    alt={`Product ${index + 1}`}
+                    className="w-24 h-24 object-cover rounded-lg border border-gray-300"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeProductImage(index)}
+                    className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+
+              {/* Upload Button */}
+              <label className="flex flex-col items-center justify-center w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
+                <Upload className="w-6 h-6 text-gray-400" />
+                <span className="text-xs text-gray-500 mt-1">Upload</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleProductImagesChange}
+                  className="hidden"
+                />
+              </label>
+            </div>
+          </div>
+        </div>
+
+        {/* Product Attributes */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <Tag className="w-5 h-5 text-blue-600" />
+                Product Attributes
+              </h2>
+              <p className="text-xs text-gray-500 mt-1.5">
+                Add multiple attributes (e.g., Brand, Material, Color) and select multiple values for each
+              </p>
+            </div>
+            {productAttributes.length > 0 && (
+              <button
+                type="button"
+                onClick={addProductAttribute}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+              >
+                <Plus className="w-4 h-4" />
+                Add More
+              </button>
+            )}
+          </div>
+
+          {productAttributes.length === 0 ? (
+            <div className="text-center py-10 border-2 border-dashed border-blue-200 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Tag className="w-8 h-8 text-blue-600" />
+              </div>
+              <p className="text-base font-semibold text-gray-800 mb-1">
+                No attributes added yet
+              </p>
+              <p className="text-sm text-gray-600 mb-6 max-w-md mx-auto">
+                Start by adding your first product attribute. You can add multiple attributes like Brand, Material, Color, etc.
+              </p>
+              <button
+                type="button"
+                onClick={addProductAttribute}
+                className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+              >
+                <Plus className="w-5 h-5" />
+                Add Your First Attribute
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Show count */}
+              <div className="flex items-center justify-between text-sm text-gray-600 bg-blue-50 px-3 py-2 rounded-lg">
+                <span>
+                  <span className="font-semibold text-blue-700">{productAttributes.length}</span> attribute{productAttributes.length !== 1 ? 's' : ''} added
+                </span>
+                <button
+                  type="button"
+                  onClick={addProductAttribute}
+                  className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+                >
+                  <Plus className="w-3 h-3" />
+                  Add Another
+                </button>
+              </div>
+
+              {productAttributes.map((attr, index) => {
+                const selectedAttribute = attributes.find(
+                  (a) => (a._id || a.id) === attr.attributeId
+                );
+                const attributeValues = getAttributeValues(attr.attributeId);
+                const selectedValuesCount = attr.selectedValueIds?.length || 0;
+
+                return (
+                  <div
+                    key={index}
+                    className="p-5 border-2 border-gray-200 rounded-lg bg-white hover:border-blue-300 transition-colors"
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                            Attribute #{index + 1}
+                          </span>
+                          {selectedAttribute && (
+                            <span className="text-sm font-medium text-blue-600">
+                              {selectedAttribute.name}
+                            </span>
+                          )}
+                          {selectedValuesCount > 0 && (
+                            <span className="text-xs text-gray-500">
+                              ({selectedValuesCount} value{selectedValuesCount !== 1 ? 's' : ''} selected)
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Attribute Selection */}
+                        <div className="mb-3">
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Select Attribute <span className="text-red-500">*</span>
+                          </label>
+                          <select
+                            value={attr.attributeId}
+                            onChange={(e) =>
+                              handleAttributeChange(index, e.target.value)
+                            }
+                            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                              formErrors[`productAttribute_${index}`]
+                                ? 'border-red-500'
+                                : 'border-gray-300'
+                            }`}
+                            disabled={loadingAttributes}
+                          >
+                            <option value="">Choose an attribute...</option>
+                            {attributes.map((a) => (
+                              <option key={a._id || a.id} value={a._id || a.id}>
+                                {a.name}
+                              </option>
+                            ))}
+                          </select>
+                          {formErrors[`productAttribute_${index}`] && (
+                            <p className="text-xs text-red-500 mt-1">
+                              {formErrors[`productAttribute_${index}`]}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Attribute Values Selection */}
+                        {selectedAttribute && (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Select Values (You can select multiple) <span className="text-red-500">*</span>
+                            </label>
+                            {attributeValues.length === 0 ? (
+                              <p className="text-xs text-gray-500 italic">
+                                No values available for this attribute
+                              </p>
+                            ) : (
+                              <div className="flex flex-wrap gap-2">
+                                {attributeValues.map((valueObj) => {
+                                  const valueId = valueObj._id || valueObj.id;
+                                  const isSelected = attr.selectedValueIds?.includes(valueId);
+
+                                  return (
+                                    <button
+                                      key={valueId}
+                                      type="button"
+                                      onClick={() =>
+                                        handleAttributeValueToggle(index, valueId)
+                                      }
+                                      className={`px-3 py-1.5 text-sm rounded-lg border transition-all ${
+                                        isSelected
+                                          ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                                          : 'bg-white text-gray-700 border-gray-300 hover:border-blue-500 hover:bg-blue-50'
+                                      }`}
+                                    >
+                                      {valueObj.value}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
+                            {formErrors[`productAttributeValue_${index}`] && (
+                              <p className="text-xs text-red-500 mt-2">
+                                {formErrors[`productAttributeValue_${index}`]}
+                              </p>
+                            )}
+                            {selectedValuesCount > 0 && (
+                              <p className="text-xs text-green-600 mt-2">
+                                ✓ {selectedValuesCount} value{selectedValuesCount !== 1 ? 's' : ''} selected
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Remove Button */}
+                      <button
+                        type="button"
+                        onClick={() => removeProductAttribute(index)}
+                        className="ml-4 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Remove this attribute"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Variants - Optional Section */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <Layers className="w-5 h-5 text-blue-600" />
+                Product Variants
+              </h2>
+              <p className="text-xs text-gray-500 mt-1.5">
+                Variants are optional. Add variants if your product has different sizes, colors, etc.
+              </p>
+            </div>
+            {!showVariants && (
+              <button
+                type="button"
+                onClick={addVariant}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors shadow-sm"
+              >
+                <Plus className="w-4 h-4" />
+                Add Variant
+              </button>
+            )}
+          </div>
+
+          {!showVariants ? (
+            <div className="text-center py-6 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
+              <Layers className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+              <p className="text-sm font-medium text-gray-700 mb-1">
+                No variants added
+              </p>
+              <p className="text-xs text-gray-500">
+                Variants are optional. Click "Add Variant" button above to add variants.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <span className="font-semibold text-gray-700">{variants.length}</span> variant{variants.length !== 1 ? 's' : ''} added
+                </div>
+                <button
+                  type="button"
+                  onClick={addVariant}
+                  className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add More
+                </button>
+              </div>
+            {variants.map((variant, variantIndex) => (
+              <div
+                key={variantIndex}
+                className="bg-gradient-to-br from-gray-50 to-blue-50 border-2 border-gray-300 rounded-xl p-6 shadow-sm hover:shadow-md transition-all"
+              >
+                {/* Variant Header */}
+                <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                      {variantIndex + 1}
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-gray-900">
+                        {variant.variant_name || `Variant ${variantIndex + 1}`}
+                      </h3>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {variant.variant_SKU || 'No SKU yet'}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (variants.length === 1) {
+                        setShowVariants(false);
+                        setVariants([]);
+                      } else {
+                        removeVariant(variantIndex);
+                      }
+                    }}
+                    className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                    title="Remove variant"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {/* Variant Name */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Variant Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={variant.variant_name}
+                      onChange={(e) =>
+                        handleVariantChange(
+                          variantIndex,
+                          'variant_name',
+                          e.target.value
+                        )
+                      }
+                      className={`w-full px-4 py-2.5 border-2 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                        formErrors[`variant_name_${variantIndex}`]
+                          ? 'border-red-500 bg-red-50'
+                          : 'border-gray-300'
+                      }`}
+                      placeholder="e.g., Red - Large"
+                    />
+                    {formErrors[`variant_name_${variantIndex}`] && (
+                      <p className="text-xs text-red-600 mt-1.5 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" />
+                        {formErrors[`variant_name_${variantIndex}`]}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Variant SKU */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Variant SKU <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={variant.variant_SKU}
+                      onChange={(e) =>
+                        handleVariantChange(
+                          variantIndex,
+                          'variant_SKU',
+                          e.target.value
+                        )
+                      }
+                      className={`w-full px-4 py-2.5 border-2 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                        formErrors[`variant_SKU_${variantIndex}`]
+                          ? 'border-red-500 bg-red-50'
+                          : 'border-gray-300'
+                      }`}
+                      placeholder="e.g., PROD-RED-L"
+                    />
+                    {formErrors[`variant_SKU_${variantIndex}`] && (
+                      <p className="text-xs text-red-600 mt-1.5 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" />
+                        {formErrors[`variant_SKU_${variantIndex}`]}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Variant Price */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Variant Price <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <DollarSign className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        type="number"
+                        value={variant.variant_price}
+                        onChange={(e) =>
+                          handleVariantChange(
+                            variantIndex,
+                            'variant_price',
+                            e.target.value
+                          )
+                        }
+                        step="0.01"
+                        min="0"
+                        className={`w-full pl-12 pr-4 py-2.5 border-2 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                          formErrors[`variant_price_${variantIndex}`]
+                            ? 'border-red-500 bg-red-50'
+                            : 'border-gray-300'
+                        }`}
+                        placeholder="0.00"
+                      />
+                    </div>
+                    {formErrors[`variant_price_${variantIndex}`] && (
+                      <p className="text-xs text-red-600 mt-1.5 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" />
+                        {formErrors[`variant_price_${variantIndex}`]}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Quantity */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Quantity <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      value={variant.quantity}
+                      onChange={(e) =>
+                        handleVariantChange(
+                          variantIndex,
+                          'quantity',
+                          e.target.value
+                        )
+                      }
+                      min="0"
+                      className={`w-full px-4 py-2.5 border-2 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                        formErrors[`variant_quantity_${variantIndex}`]
+                          ? 'border-red-500 bg-red-50'
+                          : 'border-gray-300'
+                      }`}
+                      placeholder="0"
+                    />
+                    {formErrors[`variant_quantity_${variantIndex}`] && (
+                      <p className="text-xs text-red-600 mt-1.5 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" />
+                        {formErrors[`variant_quantity_${variantIndex}`]}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Variant Status */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Status
+                    </label>
+                    <select
+                      value={variant.status}
+                      onChange={(e) =>
+                        handleVariantChange(
+                          variantIndex,
+                          'status',
+                          e.target.value
+                        )
+                      }
+                      className="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    >
+                      <option value="ACTIVE">Active</option>
+                      <option value="DRAFT">Draft</option>
+                    </select>
+                  </div>
+
+                  {/* Variant Image */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Variant Image
+                    </label>
+                    {variant.variant_image_preview ? (
+                      <div className="relative inline-block">
+                        <img
+                          src={variant.variant_image_preview}
+                          alt={`Variant ${variantIndex + 1}`}
+                          className="w-28 h-28 object-cover rounded-lg border-2 border-gray-300 shadow-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeVariantImage(variantIndex)}
+                          className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 shadow-md transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center w-28 h-28 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all bg-white">
+                        <Upload className="w-6 h-6 text-gray-400" />
+                        <span className="text-xs text-gray-500 mt-1 font-medium">Upload</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) =>
+                            handleVariantImageChange(variantIndex, e)
+                          }
+                          className="hidden"
+                        />
+                      </label>
+                    )}
+                  </div>
+                </div>
+
+                {/* Variant Attributes */}
+                <div className="mt-6 pt-5 border-t border-gray-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">
+                        Variant Attributes
+                      </label>
+                      <p className="text-xs text-gray-500">
+                        Add attributes like Color, Size, etc. (Each attribute can only be added once)
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => addVariantAttribute(variantIndex)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      Add Attribute
+                    </button>
+                  </div>
+
+                  {variant.variant_attributes.length === 0 ? (
+                    <div className="text-center py-4 border-2 border-dashed border-gray-200 rounded-lg bg-white">
+                      <p className="text-xs text-gray-500">
+                        No variant attributes added. Add attributes like Color, Size, etc.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {variant.variant_attributes.map((vAttr, vAttrIndex) => {
+                        const selectedAttr = attributes.find(
+                          (a) => (a._id || a.id) === vAttr.attribute_id
+                        );
+                        const vAttrValues = getAttributeValues(vAttr.attribute_id);
+                        const availableAttributes = getAvailableAttributesForVariant(variantIndex, vAttrIndex);
+
+                        return (
+                          <div
+                            key={vAttrIndex}
+                            className="flex items-center gap-3 p-3 bg-white rounded-lg border-2 border-gray-200 hover:border-blue-300 transition-colors"
+                          >
+                            {/* Attribute Selection */}
+                            <select
+                              value={vAttr.attribute_id}
+                              onChange={(e) =>
+                                handleVariantAttributeChange(
+                                  variantIndex,
+                                  vAttrIndex,
+                                  'attribute_id',
+                                  e.target.value
+                                )
+                              }
+                              className={`flex-1 px-3 py-2 text-sm border-2 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                                formErrors[
+                                  `variant_attr_${variantIndex}_${vAttrIndex}`
+                                ]
+                                  ? 'border-red-500 bg-red-50'
+                                  : 'border-gray-300'
+                              }`}
+                              disabled={loadingAttributes}
+                            >
+                              <option value="">Select Attribute</option>
+                              {availableAttributes.map((a) => (
+                                <option key={a._id || a.id} value={a._id || a.id}>
+                                  {a.name}
+                                </option>
+                              ))}
+                            </select>
+
+                            {/* Value Selection */}
+                            <select
+                              value={vAttr.value_id}
+                              onChange={(e) =>
+                                handleVariantAttributeChange(
+                                  variantIndex,
+                                  vAttrIndex,
+                                  'value_id',
+                                  e.target.value
+                                )
+                              }
+                              disabled={!vAttr.attribute_id || loadingAttributes}
+                              className={`flex-1 px-3 py-2 text-sm border-2 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                                formErrors[
+                                  `variant_value_${variantIndex}_${vAttrIndex}`
+                                ]
+                                  ? 'border-red-500 bg-red-50'
+                                  : 'border-gray-300'
+                              } ${!vAttr.attribute_id ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                            >
+                              <option value="">Select Value</option>
+                              {vAttrValues.map((val) => (
+                                <option
+                                  key={val._id || val.id}
+                                  value={val._id || val.id}
+                                >
+                                  {val.value}
+                                </option>
+                              ))}
+                            </select>
+
+                            {/* Remove Button */}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                removeVariantAttribute(variantIndex, vAttrIndex)
+                              }
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
+                              title="Remove attribute"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {/* Show validation errors for variant attributes */}
+                  {variant.variant_attributes.map((vAttr, vAttrIndex) => (
+                    <div key={vAttrIndex}>
+                      {formErrors[`variant_attr_${variantIndex}_${vAttrIndex}`] && (
+                        <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" />
+                          {formErrors[`variant_attr_${variantIndex}_${vAttrIndex}`]}
+                        </p>
+                      )}
+                      {formErrors[`variant_value_${variantIndex}_${vAttrIndex}`] && (
+                        <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" />
+                          {formErrors[`variant_value_${variantIndex}_${vAttrIndex}`]}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+            </div>
+          )}
+        </div>
+
+        {/* Submit Button */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-end gap-4">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg font-semibold"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Creating Product...</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-5 h-5" />
+                  <span>Create Product</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default ProductAdd;
+

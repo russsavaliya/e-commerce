@@ -16,6 +16,7 @@ import {
   X,
   FolderTree,
   Tag,
+  Package,
 } from 'lucide-react';
 import { ROUTES } from '../../utils/constants';
 
@@ -51,6 +52,11 @@ const AdminLayout = () => {
       name: 'Dashboard',
       icon: LayoutDashboard,
       path: ROUTES.ADMIN_DASHBOARD,
+    },
+    {
+      name: 'Products',
+      icon: Package,
+      path: ROUTES.ADMIN_PRODUCTS_ADD,
     },
     {
       name: 'Settings',
@@ -243,6 +249,8 @@ const AdminLayout = () => {
             <h2 className="text-xl lg:text-2xl font-bold text-gray-900">
               {location.pathname === ROUTES.ADMIN_DASHBOARD
                 ? 'Dashboard'
+                : location.pathname === ROUTES.ADMIN_PRODUCTS_ADD
+                ? 'Add New Product'
                 : location.pathname === ROUTES.ADMIN_CATEGORIES
                 ? 'Category Management'
                 : location.pathname === ROUTES.ADMIN_ATTRIBUTES

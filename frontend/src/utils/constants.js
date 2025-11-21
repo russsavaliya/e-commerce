@@ -72,6 +72,7 @@ export const ROUTES = {
   ADMIN_SETTINGS: '/admin/settings',
   ADMIN_CATEGORIES: '/admin/settings/categories',
   ADMIN_ATTRIBUTES: '/admin/settings/attributes',
+  ADMIN_PRODUCTS_ADD: '/admin/products/add',
   USER_LOGIN: '/user/login',
   USER_SIGNUP: '/user/signup',
   USER_DASHBOARD: '/user/dashboard',
