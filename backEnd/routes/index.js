@@ -23,5 +23,7 @@ router.delete('/attributes/delete/:id', attributes_controller.delete_attribute);
 // product routes
 router.post('/product/create', upload.any(), product_controller.create_product);
 router.put('/product/update/:id', upload.any(), product_controller.update_product);
+router.get('/product/get_one/:id', product_controller.get_one_product);
+router.get('/product/list', product_controller.get_product_list);
 
 module.exports = router;

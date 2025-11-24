@@ -17,12 +17,15 @@ import {
   FolderTree,
   Tag,
   Package,
+  List,
+  Plus,
 } from 'lucide-react';
 import { ROUTES } from '../../utils/constants';
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [productsOpen, setProductsOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -32,6 +35,9 @@ const AdminLayout = () => {
   useEffect(() => {
     if (location.pathname.startsWith(ROUTES.ADMIN_SETTINGS)) {
       setSettingsOpen(true);
+    }
+    if (location.pathname.startsWith(ROUTES.ADMIN_PRODUCTS)) {
+      setProductsOpen(true);
     }
   }, [location.pathname]);
 
@@ -46,6 +52,7 @@ const AdminLayout = () => {
 
   const isActive = (path) => location.pathname === path;
   const isSettingsActive = location.pathname.startsWith(ROUTES.ADMIN_SETTINGS);
+  const isProductsActive = location.pathname.startsWith(ROUTES.ADMIN_PRODUCTS);
 
   const menuItems = [
     {
@@ -56,7 +63,19 @@ const AdminLayout = () => {
     {
       name: 'Products',
       icon: Package,
-      path: ROUTES.ADMIN_PRODUCTS_ADD,
+      path: ROUTES.ADMIN_PRODUCTS,
+      submenu: [
+        {
+          name: 'Product List',
+          icon: List,
+          path: ROUTES.ADMIN_PRODUCTS_LIST,
+        },
+        {
+          name: 'Add Product',
+          icon: Plus,
+          path: ROUTES.ADMIN_PRODUCTS_ADD,
+        },
+      ],
     },
     {
       name: 'Settings',
@@ -123,15 +142,23 @@ const AdminLayout = () => {
           <nav className="flex-1 overflow-y-auto p-4 space-y-2">
             {menuItems.map((item) => {
               const Icon = item.icon;
-              const active = isActive(item.path) || (item.submenu && isSettingsActive);
+              const isItemActive = item.name === 'Settings' 
+                ? isSettingsActive 
+                : item.name === 'Products'
+                ? isProductsActive
+                : isActive(item.path);
+              const active = isItemActive || (item.submenu && (isSettingsActive || isProductsActive));
 
               if (item.submenu) {
+                const isOpen = item.name === 'Settings' ? settingsOpen : productsOpen;
+                const toggleOpen = item.name === 'Settings' 
+                  ? () => setSettingsOpen(!settingsOpen)
+                  : () => setProductsOpen(!productsOpen);
+
                 return (
                   <div key={item.name}>
                     <button
-                      onClick={() => {
-                        setSettingsOpen(!settingsOpen);
-                      }}
+                      onClick={toggleOpen}
                       className={`
                         w-full flex items-center gap-3 px-4 py-3 rounded-lg
                         transition-all duration-200
@@ -141,13 +168,13 @@ const AdminLayout = () => {
                             : 'text-gray-700 hover:bg-gray-100'
                         }
                       `}
-                      aria-expanded={settingsOpen}
+                      aria-expanded={isOpen}
                     >
                       <Icon className="w-5 h-5 flex-shrink-0" />
                       {sidebarOpen && (
                         <>
                           <span className="flex-1 text-left text-base">{item.name}</span>
-                          {settingsOpen ? (
+                          {isOpen ? (
                             <ChevronDown className="w-4 h-4" />
                           ) : (
                             <ChevronRight className="w-4 h-4" />
@@ -157,7 +184,7 @@ const AdminLayout = () => {
                     </button>
 
                     {/* Submenu */}
-                    {settingsOpen && sidebarOpen && (
+                    {isOpen && sidebarOpen && (
                       <div className="ml-4 mt-2 space-y-1">
                         {item.submenu.map((subItem) => {
                           const SubIcon = subItem.icon;
@@ -249,8 +276,12 @@ const AdminLayout = () => {
             <h2 className="text-xl lg:text-2xl font-bold text-gray-900">
               {location.pathname === ROUTES.ADMIN_DASHBOARD
                 ? 'Dashboard'
+                : location.pathname === ROUTES.ADMIN_PRODUCTS_LIST
+                ? 'Product List'
                 : location.pathname === ROUTES.ADMIN_PRODUCTS_ADD
                 ? 'Add New Product'
+                : location.pathname.startsWith('/admin/products/edit/')
+                ? 'Edit Product'
                 : location.pathname === ROUTES.ADMIN_CATEGORIES
                 ? 'Category Management'
                 : location.pathname === ROUTES.ADMIN_ATTRIBUTES

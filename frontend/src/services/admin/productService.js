@@ -88,11 +88,11 @@ export const getAllProducts = async (page = 1, limit = 10) => {
 };
 
 /**
- * Get single product by ID (if endpoint exists)
+ * Get single product by ID
  */
 export const getProductById = async (id) => {
   try {
-    const response = await productApi.get(`/product/${id}`);
+    const response = await productApi.get(`/product/get_one/${id}`);
     return response.data;
   } catch (error) {
     if (error.response) {

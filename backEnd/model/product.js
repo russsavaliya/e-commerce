@@ -25,6 +25,10 @@ const productSchema = new mongoose.Schema({
         type: Number,   //for profit calculate
         default: 0
     },
+    quantity: {
+        type: Number,
+        default: 0
+    },
     attributes: [
         {
             attributeId: { type: mongoose.Schema.Types.ObjectId, ref: 'attributes' },
