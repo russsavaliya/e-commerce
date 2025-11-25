@@ -38,36 +38,76 @@ const ProductList = () => {
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [imageErrors, setImageErrors] = useState(new Set()); // Track which images failed to load
-  const [searchTimeout, setSearchTimeout] = useState(null);
+  const searchTimeoutRef = React.useRef(null);
+  const isFetchingRef = React.useRef(false);
+  const lastParamsRef = React.useRef({ page: null, limit: null, search: null });
 
+  // Single unified effect to handle all data fetching
   useEffect(() => {
-    fetchProducts(pagination.page, pagination.limit, searchTerm);
-  }, [pagination.page, pagination.limit]);
-
-  // Debounced search effect
-  useEffect(() => {
-    // Clear previous timeout
-    if (searchTimeout) {
-      clearTimeout(searchTimeout);
+    // Clear any existing search timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+      searchTimeoutRef.current = null;
     }
 
-    // Set new timeout for search
-    const timeout = setTimeout(() => {
-      // Reset to page 1 when searching
-      fetchProducts(1, pagination.limit, searchTerm);
-    }, 500); // 500ms debounce
+    // Determine fetch parameters
+    let fetchPage = pagination.page;
+    let fetchLimit = pagination.limit;
+    let fetchSearch = searchTerm;
 
-    setSearchTimeout(timeout);
+    // If search term exists, debounce and reset to page 1
+    if (searchTerm.trim() !== '') {
+      searchTimeoutRef.current = setTimeout(() => {
+        fetchPage = 1;
+        fetchSearch = searchTerm;
+        const params = { page: fetchPage, limit: fetchLimit, search: fetchSearch };
+        
+        // Only fetch if parameters changed and not already fetching
+        if (!isFetchingRef.current && 
+            (lastParamsRef.current.page !== params.page || 
+             lastParamsRef.current.limit !== params.limit || 
+             lastParamsRef.current.search !== params.search)) {
+          fetchProducts(fetchPage, fetchLimit, fetchSearch);
+        }
+      }, 500);
+    } else {
+      // No search term - fetch immediately
+      const params = { page: fetchPage, limit: fetchLimit, search: fetchSearch };
+      
+      // Only fetch if parameters changed and not already fetching
+      if (!isFetchingRef.current && 
+          (lastParamsRef.current.page !== params.page || 
+           lastParamsRef.current.limit !== params.limit || 
+           lastParamsRef.current.search !== params.search)) {
+        fetchProducts(fetchPage, fetchLimit, fetchSearch);
+      }
+    }
 
     // Cleanup
     return () => {
-      if (timeout) {
-        clearTimeout(timeout);
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+        searchTimeoutRef.current = null;
       }
     };
-  }, [searchTerm]);
+  }, [pagination.page, pagination.limit, searchTerm]);
 
   const fetchProducts = async (page = 1, limit = 10, search = '') => {
+    // Prevent duplicate calls
+    if (isFetchingRef.current) {
+      return;
+    }
+
+    // Check if same parameters
+    if (lastParamsRef.current.page === page && 
+        lastParamsRef.current.limit === limit && 
+        lastParamsRef.current.search === search) {
+      return;
+    }
+
+    isFetchingRef.current = true;
+    lastParamsRef.current = { page, limit, search };
+
     try {
       setLoading(true);
       // Clear image errors when fetching new products
@@ -77,11 +117,25 @@ const ProductList = () => {
       if (response.status && response.data) {
         const productData = response.data.productData || [];
         setProducts(productData);
-        setPagination({
-          page: response.data.page || page,
-          limit: response.data.limit || limit,
-          total_count: response.data.total_count || 0,
-          total_pages: response.data.total_pages || 0,
+        
+        // Update pagination state only if values actually changed
+        const newPage = response.data.page || page;
+        const newLimit = response.data.limit || limit;
+        const newTotalCount = response.data.total_count || 0;
+        const newTotalPages = response.data.total_pages || 0;
+        
+        setPagination(prev => {
+          if (prev.page !== newPage || prev.limit !== newLimit || 
+              prev.total_count !== newTotalCount || 
+              prev.total_pages !== newTotalPages) {
+            return {
+              page: newPage,
+              limit: newLimit,
+              total_count: newTotalCount,
+              total_pages: newTotalPages,
+            };
+          }
+          return prev;
         });
       } else {
         setProducts([]);
@@ -89,8 +143,11 @@ const ProductList = () => {
     } catch (error) {
       toast.error(error.message || 'Failed to fetch products');
       setProducts([]);
+      // Reset last params on error so we can retry
+      lastParamsRef.current = { page: null, limit: null, search: null };
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
   };
 

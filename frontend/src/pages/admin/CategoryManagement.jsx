@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Plus,
   Search,
@@ -44,38 +44,77 @@ const CategoryManagement = () => {
 
   const [formErrors, setFormErrors] = useState({});
 
-  const [searchTimeout, setSearchTimeout] = useState(null);
+  const searchTimeoutRef = React.useRef(null);
+  const isFetchingRef = React.useRef(false);
+  const lastParamsRef = React.useRef({ page: null, limit: null, search: null });
 
-  // Effects
+  // Single unified effect to handle all data fetching
   useEffect(() => {
-    fetchCategories(currentPage, itemsPerPage, searchQuery);
-  }, [currentPage, itemsPerPage]);
-
-  // Debounced search effect
-  useEffect(() => {
-    // Clear previous timeout
-    if (searchTimeout) {
-      clearTimeout(searchTimeout);
+    // Clear any existing search timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+      searchTimeoutRef.current = null;
     }
 
-    // Set new timeout for search
-    const timeout = setTimeout(() => {
-      // Reset to page 1 when searching
-      fetchCategories(1, itemsPerPage, searchQuery);
-    }, 500); // 500ms debounce
+    // Determine fetch parameters
+    let fetchPage = currentPage;
+    let fetchLimit = itemsPerPage;
+    let fetchSearch = searchQuery;
 
-    setSearchTimeout(timeout);
+    // If search query exists, debounce and reset to page 1
+    if (searchQuery.trim() !== '') {
+      searchTimeoutRef.current = setTimeout(() => {
+        fetchPage = 1;
+        fetchSearch = searchQuery;
+        const params = { page: fetchPage, limit: fetchLimit, search: fetchSearch };
+        
+        // Only fetch if parameters changed and not already fetching
+        if (!isFetchingRef.current && 
+            (lastParamsRef.current.page !== params.page || 
+             lastParamsRef.current.limit !== params.limit || 
+             lastParamsRef.current.search !== params.search)) {
+          fetchCategories(fetchPage, fetchLimit, fetchSearch);
+        }
+      }, 500);
+    } else {
+      // No search query - fetch immediately
+      const params = { page: fetchPage, limit: fetchLimit, search: fetchSearch };
+      
+      // Only fetch if parameters changed and not already fetching
+      if (!isFetchingRef.current && 
+          (lastParamsRef.current.page !== params.page || 
+           lastParamsRef.current.limit !== params.limit || 
+           lastParamsRef.current.search !== params.search)) {
+        fetchCategories(fetchPage, fetchLimit, fetchSearch);
+      }
+    }
 
     // Cleanup
     return () => {
-      if (timeout) {
-        clearTimeout(timeout);
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+        searchTimeoutRef.current = null;
       }
     };
-  }, [searchQuery]);
+  }, [currentPage, itemsPerPage, searchQuery]);
 
   // Fetch Categories from API with Pagination and Search
   const fetchCategories = async (page = currentPage, limit = itemsPerPage, search = '') => {
+    // Prevent duplicate calls
+    if (isFetchingRef.current) {
+      return;
+    }
+
+    // Check if same parameters
+    if (lastParamsRef.current.page === page && 
+        lastParamsRef.current.limit === limit && 
+        lastParamsRef.current.search === search) {
+      return;
+    }
+
+    isFetchingRef.current = true;
+    lastParamsRef.current = { page, limit, search };
+
     try {
       setLoading(true);
       const data = await getAllCategories(page, limit, search);
@@ -101,8 +140,11 @@ const CategoryManagement = () => {
       setFilteredCategories([]);
       setTotalCategories(0);
       setTotalPages(1);
+      // Reset last params on error so we can retry
+      lastParamsRef.current = { page: null, limit: null, search: null };
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
   };
 

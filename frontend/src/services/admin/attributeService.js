@@ -21,7 +21,7 @@ attributeApi.interceptors.request.use(
   (config) => {
     const token = getAdminToken();
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers.admin_token = token;
     }
     return config;
   },

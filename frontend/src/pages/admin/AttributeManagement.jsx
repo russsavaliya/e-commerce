@@ -53,40 +53,80 @@ const AttributeManagement = () => {
 
   const [formErrors, setFormErrors] = useState({});
 
-  const [searchTimeout, setSearchTimeout] = useState(null);
+  const searchTimeoutRef = React.useRef(null);
+  const isFetchingRef = React.useRef(false);
+  const lastParamsRef = React.useRef({ page: null, limit: null, search: null });
 
-  // Fetch attributes when page or itemsPerPage changes
+  // Single unified effect to handle all data fetching
   useEffect(() => {
-    fetchAttributes(currentPage, itemsPerPage, searchQuery);
-  }, [currentPage, itemsPerPage]);
-
-  // Debounced search effect
-  useEffect(() => {
-    // Clear previous timeout
-    if (searchTimeout) {
-      clearTimeout(searchTimeout);
+    // Clear any existing search timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+      searchTimeoutRef.current = null;
     }
 
-    // Set new timeout for search
-    const timeout = setTimeout(() => {
-      // Reset to page 1 when searching
-      fetchAttributes(1, itemsPerPage, searchQuery);
-    }, 500); // 500ms debounce
+    // Determine fetch parameters
+    let fetchPage = currentPage;
+    let fetchLimit = itemsPerPage;
+    let fetchSearch = searchQuery;
 
-    setSearchTimeout(timeout);
+    // If search query exists, debounce and reset to page 1
+    if (searchQuery.trim() !== '') {
+      searchTimeoutRef.current = setTimeout(() => {
+        fetchPage = 1;
+        fetchSearch = searchQuery;
+        const params = { page: fetchPage, limit: fetchLimit, search: fetchSearch };
+        
+        // Only fetch if parameters changed and not already fetching
+        if (!isFetchingRef.current && 
+            (lastParamsRef.current.page !== params.page || 
+             lastParamsRef.current.limit !== params.limit || 
+             lastParamsRef.current.search !== params.search)) {
+          fetchAttributes(fetchPage, fetchLimit, fetchSearch);
+        }
+      }, 500);
+    } else {
+      // No search query - fetch immediately
+      const params = { page: fetchPage, limit: fetchLimit, search: fetchSearch };
+      
+      // Only fetch if parameters changed and not already fetching
+      if (!isFetchingRef.current && 
+          (lastParamsRef.current.page !== params.page || 
+           lastParamsRef.current.limit !== params.limit || 
+           lastParamsRef.current.search !== params.search)) {
+        fetchAttributes(fetchPage, fetchLimit, fetchSearch);
+      }
+    }
 
     // Cleanup
     return () => {
-      if (timeout) {
-        clearTimeout(timeout);
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+        searchTimeoutRef.current = null;
       }
     };
-  }, [searchQuery]);
+  }, [currentPage, itemsPerPage, searchQuery]);
 
   /**
    * Fetch all attributes from API with pagination and search
    */
-  const fetchAttributes = async (page = currentPage, limit = itemsPerPage, search = '') => {
+  const fetchAttributes = async (page = currentPage, limit = itemsPerPage, search = '', forceRefresh = false) => {
+    // Prevent duplicate calls
+    if (isFetchingRef.current) {
+      return;
+    }
+
+    // Check if same parameters (skip if forceRefresh is true)
+    if (!forceRefresh && 
+        lastParamsRef.current.page === page && 
+        lastParamsRef.current.limit === limit && 
+        lastParamsRef.current.search === search) {
+      return;
+    }
+
+    isFetchingRef.current = true;
+    lastParamsRef.current = { page, limit, search };
+
     try {
       setLoading(true);
       const data = await getAllAttributes(page, limit, search);
@@ -127,8 +167,11 @@ const AttributeManagement = () => {
       setAttributes([]);
       setTotalAttributes(0);
       setTotalPages(1);
+      // Reset last params on error so we can retry
+      lastParamsRef.current = { page: null, limit: null, search: null };
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
   };
 
@@ -194,7 +237,7 @@ const AttributeManagement = () => {
 
       // Reset form and refresh list
       resetForm();
-      await fetchAttributes(currentPage, itemsPerPage, searchQuery);
+      await fetchAttributes(currentPage, itemsPerPage, searchQuery, true);
     } catch (error) {
       toast.error(error.message || 'Failed to save attribute');
     } finally {
@@ -239,7 +282,7 @@ const AttributeManagement = () => {
       setSubmitting(true);
       await deleteAttribute(id);
       toast.success('Attribute deleted successfully!');
-      await fetchAttributes(currentPage, itemsPerPage, searchQuery);
+      await fetchAttributes(currentPage, itemsPerPage, searchQuery, true);
       setDeleteConfirm(null);
     } catch (error) {
       toast.error(error.message || 'Failed to delete attribute');

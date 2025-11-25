@@ -12,7 +12,7 @@ productApi.interceptors.request.use(
   (config) => {
     const token = getAdminToken();
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers.admin_token = token;
     }
     // Don't set Content-Type for FormData - browser will set it with boundary
     if (config.data instanceof FormData) {

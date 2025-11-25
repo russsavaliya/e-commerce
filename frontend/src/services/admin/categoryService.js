@@ -1,6 +1,7 @@
 
 import axios from 'axios';
 import { API_BASE_URL } from '../../utils/constants';
+import { getAdminToken } from './authService';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -9,6 +10,20 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// Request interceptor for adding token
+api.interceptors.request.use(
+  (config) => {
+    const token = getAdminToken();
+    if (token) {
+      config.headers.admin_token = token;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 
 export const getAllCategories = async (page = 1, limit = 10, search = '') => {

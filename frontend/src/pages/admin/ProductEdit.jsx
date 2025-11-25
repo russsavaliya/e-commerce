@@ -391,6 +391,55 @@ const ProductEdit = () => {
     );
   };
 
+  const generateVariantNameAndSKU = (variantAttributes) => {
+    if (!variantAttributes || variantAttributes.length === 0) {
+      return { name: '', sku: '' };
+    }
+
+    // Get all complete attribute-value pairs
+    const completePairs = variantAttributes.filter(
+      (attr) => attr.attribute_id && attr.value_id
+    );
+
+    if (completePairs.length === 0) {
+      return { name: '', sku: '' };
+    }
+
+    // Build name: "Red-Puma" (just values separated by hyphens)
+    const nameParts = [];
+    const skuParts = [];
+
+    completePairs.forEach((pair) => {
+      const attribute = attributes.find(
+        (a) => (a._id || a.id) === pair.attribute_id
+      );
+      const value = attribute?.values?.find(
+        (v) => (v._id || v.id) === pair.value_id
+      );
+
+      if (attribute && value) {
+        // For name: just the value (e.g., "Red")
+        nameParts.push(value.value);
+        // For SKU: uppercase value without spaces/special chars
+        const skuValue = value.value
+          .toUpperCase()
+          .replace(/[^A-Z0-9]/g, '-')
+          .substring(0, 15); // Limit length
+        skuParts.push(skuValue);
+      }
+    });
+
+    // Name format: "Red-Puma"
+    const generatedName = nameParts.join('-');
+    // SKU format: "PROD-RED-PUMA"
+    const baseSKU = formData.SKU.trim() || 'PROD';
+    const generatedSKU = skuParts.length > 0 
+      ? `${baseSKU}-${skuParts.join('-')}` 
+      : '';
+
+    return { name: generatedName, sku: generatedSKU };
+  };
+
   // Handle variants
   const addVariant = () => {
     setShowVariants(true);
@@ -441,6 +490,18 @@ const ProductEdit = () => {
   };
 
   const continueVariantDetails = (variantIndex) => {
+    setVariants((prev) => {
+      const updated = [...prev];
+      // Regenerate name and SKU when continuing to details
+      const { name, sku } = generateVariantNameAndSKU(updated[variantIndex].variant_attributes);
+      if (name) {
+        updated[variantIndex].variant_name = name;
+      }
+      if (sku) {
+        updated[variantIndex].variant_SKU = sku;
+      }
+      return updated;
+    });
     setVariantAttributeMode((prev) => ({
       ...prev,
       [variantIndex]: false,
@@ -516,6 +577,24 @@ const ProductEdit = () => {
       updated[variantIndex].variant_attributes = updated[
         variantIndex
       ].variant_attributes.filter((_, i) => i !== attrIndex);
+      
+      // Regenerate variant name and SKU after removing attribute
+      const { name, sku } = generateVariantNameAndSKU(updated[variantIndex].variant_attributes);
+      
+      // Auto-update if generated values exist (user can still override)
+      if (name) {
+        updated[variantIndex].variant_name = name;
+      } else {
+        // Clear if no attributes left
+        updated[variantIndex].variant_name = '';
+      }
+      if (sku) {
+        updated[variantIndex].variant_SKU = sku;
+      } else {
+        // Clear if no attributes left
+        updated[variantIndex].variant_SKU = '';
+      }
+      
       return updated;
     });
   };
@@ -531,8 +610,27 @@ const ProductEdit = () => {
       updated[variantIndex].variant_attributes[attrIndex] = {
         ...updated[variantIndex].variant_attributes[attrIndex],
         [field]: value,
+        // Reset value_id when attribute_id changes
         ...(field === 'attribute_id' ? { value_id: '' } : {}),
       };
+      
+      // Auto-generate variant name and SKU from attributes
+      const { name, sku } = generateVariantNameAndSKU(updated[variantIndex].variant_attributes);
+      
+      // Always regenerate name and SKU when attributes change
+      if (name) {
+        updated[variantIndex].variant_name = name;
+      } else {
+        // Clear if no complete attributes
+        updated[variantIndex].variant_name = '';
+      }
+      if (sku) {
+        updated[variantIndex].variant_SKU = sku;
+      } else {
+        // Clear if no complete attributes
+        updated[variantIndex].variant_SKU = '';
+      }
+      
       return updated;
     });
   };
@@ -1266,7 +1364,7 @@ const ProductEdit = () => {
                   className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                 >
                   <Plus className="w-4 h-4" />
-                  Add More
+                  Add More Variant
                 </button>
               </div>
               
@@ -1492,10 +1590,10 @@ const ProductEdit = () => {
                             onClick={() => continueVariantDetails(variantIndex)}
                             disabled={variant.variant_attributes.length === 0 || 
                                      variant.variant_attributes.some(attr => !attr.attribute_id || !attr.value_id)}
-                            className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg font-semibold"
+                            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow"
                           >
                             Continue to Details
-                            <ChevronDown className="w-4 h-4" />
+                            <ChevronDown className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </div>
@@ -1663,23 +1761,23 @@ const ProductEdit = () => {
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+              className="px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg font-semibold"
+              className="flex items-center gap-1.5 px-5 py-2 text-sm bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow font-medium"
             >
               {submitting ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   <span>Updating Product...</span>
                 </>
               ) : (
                 <>
-                  <Save className="w-5 h-5" />
+                  <Save className="w-4 h-4" />
                   <span>Update Product</span>
                 </>
               )}

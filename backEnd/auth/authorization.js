@@ -1,14 +1,14 @@
 const admin_model = require('../model/admin')
+const jwt = require('jsonwebtoken')
 
 exports.authorization = async function (req, res, next) {
     try {
 
-        let token = req.heades.admin_token
+        let token = req.headers.admin_token
         if (!token) {
             return res.status(500).json({
                 status: false,
                 message: 'Plz Enter a Token'
-
             })
 
         }
@@ -25,7 +25,6 @@ exports.authorization = async function (req, res, next) {
         let usercheck = await admin_model.findOne({
             _id: verifytoken.id
         }).populate('role', 'permissions')
-
 
         if (!usercheck) {
             return res.status(500).json({

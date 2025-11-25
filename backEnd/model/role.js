@@ -7,6 +7,15 @@ const permissions = [
     "role_create",
     "role_update",
     "role_delete",
+    "category_add",
+    "category_update",
+    "category_delete",
+    "attribute_add",
+    "attribute_update",
+    "attribute_delete",
+    "product_add",
+    "product_update",
+    "product_delete",
 ];
 
 const Role = new schema({
