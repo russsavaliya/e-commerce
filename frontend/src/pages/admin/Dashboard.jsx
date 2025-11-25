@@ -75,9 +75,9 @@ const Dashboard = () => {
       title: 'Total Categories',
       value: loading ? '...' : totalCategories,
       icon: FolderTree,
-      color: 'bg-blue-500',
-      bgColor: 'bg-blue-50',
-      textColor: 'text-blue-600',
+      color: 'bg-green-500',
+      bgColor: 'bg-green-50',
+      textColor: 'text-green-600',
     },
     {
       title: 'Total Products',
@@ -160,14 +160,14 @@ const Dashboard = () => {
               <Line
                 type="monotone"
                 dataKey="revenue"
-                stroke="#3b82f6"
+                stroke="#22c55e"
                 strokeWidth={2}
                 name="Revenue (₹)"
               />
               <Line
                 type="monotone"
                 dataKey="orders"
-                stroke="#8b5cf6"
+                stroke="#16a34a"
                 strokeWidth={2}
                 name="Orders"
               />
@@ -191,7 +191,7 @@ const Dashboard = () => {
                 }}
               />
               <Legend />
-              <Bar dataKey="count" fill="#3b82f6" radius={[8, 8, 0, 0]} name="Products" />
+              <Bar dataKey="count" fill="#22c55e" radius={[8, 8, 0, 0]} name="Products" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -212,7 +212,7 @@ const Dashboard = () => {
               className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
             >
               <div className="flex items-center gap-4">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 <div>
                   <p className="text-base font-medium text-gray-900">{activity.action}</p>
                   <p className="text-sm text-gray-600">{activity.item}</p>

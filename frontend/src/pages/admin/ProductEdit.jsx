@@ -669,21 +669,32 @@ const ProductEdit = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-        <span className="ml-3 text-gray-600">Loading product...</span>
+      <div className="flex flex-col items-center justify-center py-20 min-h-[400px]">
+        <Loader2 className="w-10 h-10 animate-spin text-green-600 mb-4" />
+        <span className="text-lg font-medium text-gray-700">Loading product data...</span>
+        <span className="text-sm text-gray-500 mt-2">Please wait while we fetch the product details</span>
       </div>
     );
   }
 
   return (
-    <div className="w-full space-y-4 px-4">
+    <div className="w-full space-y-4 px-4 relative">
+      {/* Loading Overlay */}
+      {submitting && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-white rounded-xl shadow-xl p-8 flex flex-col items-center gap-4">
+            <Loader2 className="w-12 h-12 animate-spin text-green-600" />
+            <span className="text-lg font-semibold text-gray-900">Updating Product...</span>
+            <span className="text-sm text-gray-600">Please wait, this may take a few moments</span>
+          </div>
+        </div>
+      )}
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200 p-4 shadow-sm">
+      <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-xl border border-green-200 p-4 shadow-sm">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-              <Package className="w-6 h-6 text-blue-600" />
+              <Package className="w-6 h-6 text-green-600" />
               Edit Product
             </h1>
             <p className="text-sm text-gray-600 mt-1.5">
@@ -705,7 +716,7 @@ const ProductEdit = () => {
         {/* Basic Information */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
           <h2 className="text-lg font-semibold text-gray-900 mb-5 flex items-center gap-2">
-            <Package className="w-5 h-5 text-blue-600" />
+            <Package className="w-5 h-5 text-green-600" />
             Basic Information
           </h2>
 
@@ -720,7 +731,7 @@ const ProductEdit = () => {
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${
                   formErrors.name ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Enter product name"
@@ -740,7 +751,7 @@ const ProductEdit = () => {
                 name="SKU"
                 value={formData.SKU}
                 onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${
                   formErrors.SKU ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Enter SKU"
@@ -764,7 +775,7 @@ const ProductEdit = () => {
                       setCategorySearchTerm('');
                     }
                   }}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-between ${
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 flex items-center justify-between ${
                     formErrors.category ? 'border-red-500' : 'border-gray-300'
                   } ${loadingCategories ? 'bg-gray-100 cursor-not-allowed' : 'bg-white cursor-pointer'}`}
                   disabled={loadingCategories}
@@ -792,7 +803,7 @@ const ProductEdit = () => {
                           placeholder="Search category..."
                           value={categorySearchTerm}
                           onChange={(e) => setCategorySearchTerm(e.target.value)}
-                          className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                           autoFocus
                         />
                       </div>
@@ -808,7 +819,7 @@ const ProductEdit = () => {
                           setCategorySearchTerm('');
                         }}
                         className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 transition-colors ${
-                          !formData.category ? 'bg-blue-50 text-blue-600' : 'text-gray-700'
+                          !formData.category ? 'bg-green-50 text-green-600' : 'text-gray-700'
                         }`}
                       >
                         Select Category
@@ -828,7 +839,7 @@ const ProductEdit = () => {
                             }}
                             className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 transition-colors ${
                               formData.category === (cat._id || cat.id) 
-                                ? 'bg-blue-50 text-blue-600 font-medium' 
+                                ? 'bg-green-50 text-green-600 font-medium' 
                                 : 'text-gray-700'
                             }`}
                           >
@@ -860,7 +871,7 @@ const ProductEdit = () => {
                 name="status"
                 value={formData.status}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               >
                 <option value="ACTIVE">Active</option>
                 <option value="DRAFT">Draft</option>
@@ -881,7 +892,7 @@ const ProductEdit = () => {
                   onChange={handleInputChange}
                   step="0.01"
                   min="0"
-                  className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${
                     formErrors.selling_price ? 'border-red-500' : 'border-gray-300'
                   }`}
                   placeholder="0.00"
@@ -906,7 +917,7 @@ const ProductEdit = () => {
                   onChange={handleInputChange}
                   step="0.01"
                   min="0"
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                   placeholder="0.00"
                 />
               </div>
@@ -926,7 +937,7 @@ const ProductEdit = () => {
                   onChange={handleInputChange}
                   step="0.01"
                   min="0"
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                   placeholder="0.00"
                 />
               </div>
@@ -943,7 +954,7 @@ const ProductEdit = () => {
                 value={formData.quantity}
                 onChange={handleInputChange}
                 min="0"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 placeholder="0"
               />
               <p className="text-xs text-gray-500 mt-1">
@@ -962,7 +973,7 @@ const ProductEdit = () => {
               value={formData.description}
               onChange={handleInputChange}
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               placeholder="Enter product description"
             />
           </div>
@@ -1014,7 +1025,7 @@ const ProductEdit = () => {
               ))}
 
               {/* Upload Button */}
-              <label className="flex flex-col items-center justify-center w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
+              <label className="flex flex-col items-center justify-center w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-green-500 transition-colors">
                 <Upload className="w-6 h-6 text-gray-400" />
                 <span className="text-xs text-gray-500 mt-1">Upload</span>
                 <input
@@ -1034,7 +1045,7 @@ const ProductEdit = () => {
           <div className="flex items-center justify-between mb-5">
             <div>
               <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <Tag className="w-5 h-5 text-blue-600" />
+                <Tag className="w-5 h-5 text-green-600" />
                 Product Attributes
               </h2>
               <p className="text-xs text-gray-500 mt-1.5">
@@ -1045,7 +1056,7 @@ const ProductEdit = () => {
               <button
                 type="button"
                 onClick={addProductAttribute}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm"
               >
                 <Plus className="w-4 h-4" />
                 Add More
@@ -1054,9 +1065,9 @@ const ProductEdit = () => {
           </div>
 
           {productAttributes.length === 0 ? (
-            <div className="text-center py-10 border-2 border-dashed border-blue-200 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50">
+            <div className="text-center py-10 border-2 border-dashed border-green-200 rounded-xl bg-gradient-to-br from-green-50 to-green-100">
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Tag className="w-8 h-8 text-blue-600" />
+                <Tag className="w-8 h-8 text-green-600" />
               </div>
               <p className="text-base font-semibold text-gray-800 mb-1">
                 No attributes added yet
@@ -1075,14 +1086,14 @@ const ProductEdit = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="flex items-center justify-between text-sm text-gray-600 bg-blue-50 px-3 py-2 rounded-lg">
+              <div className="flex items-center justify-between text-sm text-gray-600 bg-green-50 px-3 py-2 rounded-lg">
                 <span>
                   <span className="font-semibold text-blue-700">{productAttributes.length}</span> attribute{productAttributes.length !== 1 ? 's' : ''} added
                 </span>
                 <button
                   type="button"
                   onClick={addProductAttribute}
-                  className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+                  className="text-green-600 hover:text-blue-700 font-medium flex items-center gap-1"
                 >
                   <Plus className="w-3 h-3" />
                   Add Another
@@ -1108,7 +1119,7 @@ const ProductEdit = () => {
                             Attribute #{index + 1}
                           </span>
                           {selectedAttribute && (
-                            <span className="text-sm font-medium text-blue-600">
+                            <span className="text-sm font-medium text-green-600">
                               {selectedAttribute.name}
                             </span>
                           )}
@@ -1126,7 +1137,7 @@ const ProductEdit = () => {
                           <select
                             value={attr.attributeId}
                             onChange={(e) => handleAttributeChange(index, e.target.value)}
-                            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${
                               formErrors[`productAttribute_${index}`]
                                 ? 'border-red-500'
                                 : 'border-gray-300'
@@ -1169,8 +1180,8 @@ const ProductEdit = () => {
                                       onClick={() => handleAttributeValueToggle(index, valueId)}
                                       className={`px-3 py-1.5 text-sm rounded-lg border transition-all ${
                                         isSelected
-                                          ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                                          : 'bg-white text-gray-700 border-gray-300 hover:border-blue-500 hover:bg-blue-50'
+                                          ? 'bg-green-600 text-white border-blue-600 shadow-sm'
+                                          : 'bg-white text-gray-700 border-gray-300 hover:border-green-500 hover:bg-green-50'
                                       }`}
                                     >
                                       {valueObj.value}
@@ -1214,7 +1225,7 @@ const ProductEdit = () => {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <Layers className="w-5 h-5 text-blue-600" />
+                <Layers className="w-5 h-5 text-green-600" />
                 Product Variants
               </h2>
               <p className="text-xs text-gray-500 mt-1.5">
@@ -1252,7 +1263,7 @@ const ProductEdit = () => {
                 <button
                   type="button"
                   onClick={addVariant}
-                  className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                 >
                   <Plus className="w-4 h-4" />
                   Add More
@@ -1270,7 +1281,7 @@ const ProductEdit = () => {
                     {/* Variant Header */}
                     <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                        <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
                           {variantIndex + 1}
                         </div>
                         <div>
@@ -1308,16 +1319,16 @@ const ProductEdit = () => {
 
                     {/* Selected Attributes - Show at top when in details mode */}
                     {!isAttributeMode && variant.variant_attributes.length > 0 && (
-                      <div className="mb-4 pt-3 pb-3 border-b-2 border-gray-300 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 shadow-sm">
+                      <div className="mb-4 pt-3 pb-3 border-b-2 border-gray-300 bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 shadow-sm">
                         <div className="flex items-center justify-between mb-4">
                           <label className="block text-base font-bold text-gray-800 flex items-center gap-2">
-                            <Tag className="w-5 h-5 text-blue-600" />
+                            <Tag className="w-5 h-5 text-green-600" />
                             Selected Attributes
                           </label>
                           <button
                             type="button"
                             onClick={() => setVariantAttributeMode((prev) => ({ ...prev, [variantIndex]: true }))}
-                            className="text-sm text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-blue-100 transition-colors"
+                            className="text-sm text-green-600 hover:text-blue-700 font-semibold flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-blue-100 transition-colors"
                           >
                             <Tag className="w-4 h-4" />
                             Edit Attributes
@@ -1337,7 +1348,7 @@ const ProductEdit = () => {
                                 key={vAttrIndex}
                                 className="px-4 py-2.5 bg-white text-blue-800 rounded-lg text-sm font-semibold border-2 border-blue-300 shadow-sm hover:shadow-md transition-shadow flex items-center gap-2 min-w-[120px]"
                               >
-                                <span className="text-blue-600 font-bold">{selectedAttr?.name || 'Unknown'}:</span>
+                                <span className="text-green-600 font-bold">{selectedAttr?.name || 'Unknown'}:</span>
                                 <span className="text-gray-700 font-medium">{selectedValue?.value || 'Unknown'}</span>
                               </div>
                             );
@@ -1349,9 +1360,9 @@ const ProductEdit = () => {
                     {/* Attribute Selection Mode */}
                     {isAttributeMode ? (
                       <div className="space-y-4">
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
                           <div className="flex items-center gap-2 mb-2">
-                            <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                            <div className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
                               1
                             </div>
                             <h4 className="text-sm font-semibold text-gray-900">
@@ -1371,7 +1382,7 @@ const ProductEdit = () => {
                             <button
                               type="button"
                               onClick={() => addVariantAttribute(variantIndex)}
-                              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm"
                             >
                               <Plus className="w-3.5 h-3.5" />
                               Add Attribute
@@ -1390,7 +1401,7 @@ const ProductEdit = () => {
                               <button
                                 type="button"
                                 onClick={() => addVariantAttribute(variantIndex)}
-                                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                               >
                                 <Plus className="w-4 h-4" />
                                 Add Your First Attribute
@@ -1420,7 +1431,7 @@ const ProductEdit = () => {
                                           e.target.value
                                         )
                                       }
-                                      className={`flex-1 px-3 py-2 text-sm border-2 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                                      className={`flex-1 px-3 py-2 text-sm border-2 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all ${
                                         formErrors[`variant_attr_${variantIndex}_${vAttrIndex}`]
                                           ? 'border-red-500 bg-red-50'
                                           : 'border-gray-300'
@@ -1446,7 +1457,7 @@ const ProductEdit = () => {
                                         )
                                       }
                                       disabled={!vAttr.attribute_id || loadingAttributes}
-                                      className={`flex-1 px-3 py-2 text-sm border-2 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                                      className={`flex-1 px-3 py-2 text-sm border-2 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all ${
                                         formErrors[`variant_value_${variantIndex}_${vAttrIndex}`]
                                           ? 'border-red-500 bg-red-50'
                                           : 'border-gray-300'
@@ -1500,7 +1511,7 @@ const ProductEdit = () => {
                               type="text"
                               value={variant.variant_name}
                               onChange={(e) => handleVariantChange(variantIndex, 'variant_name', e.target.value)}
-                              className={`w-full px-4 py-2.5 border-2 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                              className={`w-full px-4 py-2.5 border-2 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all ${
                                 formErrors[`variant_name_${variantIndex}`]
                                   ? 'border-red-500 bg-red-50'
                                   : 'border-gray-300'
@@ -1523,7 +1534,7 @@ const ProductEdit = () => {
                               type="text"
                               value={variant.variant_SKU}
                               onChange={(e) => handleVariantChange(variantIndex, 'variant_SKU', e.target.value)}
-                              className={`w-full px-4 py-2.5 border-2 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                              className={`w-full px-4 py-2.5 border-2 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all ${
                                 formErrors[`variant_SKU_${variantIndex}`]
                                   ? 'border-red-500 bg-red-50'
                                   : 'border-gray-300'
@@ -1550,7 +1561,7 @@ const ProductEdit = () => {
                                 onChange={(e) => handleVariantChange(variantIndex, 'variant_price', e.target.value)}
                                 step="0.01"
                                 min="0"
-                                className={`w-full pl-12 pr-4 py-2.5 border-2 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                                className={`w-full pl-12 pr-4 py-2.5 border-2 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all ${
                                   formErrors[`variant_price_${variantIndex}`]
                                     ? 'border-red-500 bg-red-50'
                                     : 'border-gray-300'
@@ -1575,7 +1586,7 @@ const ProductEdit = () => {
                               value={variant.quantity}
                               onChange={(e) => handleVariantChange(variantIndex, 'quantity', e.target.value)}
                               min="0"
-                              className={`w-full px-4 py-2.5 border-2 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                              className={`w-full px-4 py-2.5 border-2 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all ${
                                 formErrors[`variant_quantity_${variantIndex}`]
                                   ? 'border-red-500 bg-red-50'
                                   : 'border-gray-300'
@@ -1597,7 +1608,7 @@ const ProductEdit = () => {
                             <select
                               value={variant.status}
                               onChange={(e) => handleVariantChange(variantIndex, 'status', e.target.value)}
-                              className="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                              className="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
                             >
                               <option value="ACTIVE">Active</option>
                               <option value="DRAFT">Draft</option>
@@ -1624,7 +1635,7 @@ const ProductEdit = () => {
                                 </button>
                               </div>
                             ) : (
-                              <label className="flex flex-col items-center justify-center w-28 h-28 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all bg-white">
+                              <label className="flex flex-col items-center justify-center w-28 h-28 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-green-500 hover:bg-green-50 transition-all bg-white">
                                 <Upload className="w-6 h-6 text-gray-400" />
                                 <span className="text-xs text-gray-500 mt-1 font-medium">Upload</span>
                                 <input
@@ -1659,7 +1670,7 @@ const ProductEdit = () => {
             <button
               type="submit"
               disabled={submitting}
-              className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg font-semibold"
+              className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg font-semibold"
             >
               {submitting ? (
                 <>

@@ -11,13 +11,14 @@ const api = axios.create({
 });
 
 
-export const getAllCategories = async (page = 1, limit = 10) => {
+export const getAllCategories = async (page = 1, limit = 10, search = '') => {
   try {
-    // Add pagination query parameters
+    // Add pagination and search query parameters
     const response = await api.get('/category/list', {
       params: {
         page: page,
         limit: limit,
+        search: search,
       },
     });
     return response.data;

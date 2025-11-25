@@ -45,14 +45,24 @@ exports.update_attribute = async (req, res) => {
     });
 }
 exports.get_attributes = async (req, res) => {
-    let { page = 1, limit = 10 } = req.query;
+    let { page = 1, limit = 10, search = '' } = req.query;
 
     page = parseInt(page);
     limit = parseInt(limit);
     const skip = (page - 1) * limit;
-    const attributes = await Attributes.find().skip(skip).limit(limit)
-    const total_count = await Attributes.countDocuments();
+
+    // Build search condition
+    let searchCondition = {};
+    if (search && search.trim()) {
+        searchCondition = {
+            name: { $regex: search.trim(), $options: 'i' }
+        };
+    }
+
+    const attributes = await Attributes.find(searchCondition).skip(skip).limit(limit);
+    const total_count = await Attributes.countDocuments(searchCondition);
     const total_pages = Math.ceil(total_count / limit);
+    
     if (!attributes) {
         return res.status(200).send({
             success: false,

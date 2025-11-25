@@ -38,17 +38,41 @@ const ProductList = () => {
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [imageErrors, setImageErrors] = useState(new Set()); // Track which images failed to load
+  const [searchTimeout, setSearchTimeout] = useState(null);
 
   useEffect(() => {
-    fetchProducts(pagination.page, pagination.limit);
-  }, []);
+    fetchProducts(pagination.page, pagination.limit, searchTerm);
+  }, [pagination.page, pagination.limit]);
 
-  const fetchProducts = async (page = 1, limit = 10) => {
+  // Debounced search effect
+  useEffect(() => {
+    // Clear previous timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    // Set new timeout for search
+    const timeout = setTimeout(() => {
+      // Reset to page 1 when searching
+      fetchProducts(1, pagination.limit, searchTerm);
+    }, 500); // 500ms debounce
+
+    setSearchTimeout(timeout);
+
+    // Cleanup
+    return () => {
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+    };
+  }, [searchTerm]);
+
+  const fetchProducts = async (page = 1, limit = 10, search = '') => {
     try {
       setLoading(true);
       // Clear image errors when fetching new products
       setImageErrors(new Set());
-      const response = await getAllProducts(page, limit);
+      const response = await getAllProducts(page, limit, search);
       
       if (response.status && response.data) {
         const productData = response.data.productData || [];
@@ -72,25 +96,22 @@ const ProductList = () => {
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= pagination.total_pages) {
-      fetchProducts(newPage, pagination.limit);
+      fetchProducts(newPage, pagination.limit, searchTerm);
     }
   };
 
-  const filteredProducts = products.filter((product) => {
-    if (!searchTerm) return true;
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      product.name?.toLowerCase().includes(searchLower) ||
-      product.SKU?.toLowerCase().includes(searchLower) ||
-      product.category?.some(cat => cat?.toLowerCase().includes(searchLower))
-    );
-  });
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    // Reset to page 1 when search changes
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-        <span className="ml-3 text-gray-600">Loading products...</span>
+      <div className="flex flex-col items-center justify-center py-20 min-h-[400px]">
+        <Loader2 className="w-10 h-10 animate-spin text-green-600 mb-4" />
+        <span className="text-lg font-medium text-gray-700">Loading products...</span>
+        <span className="text-sm text-gray-500 mt-2">Please wait while we fetch the data</span>
       </div>
     );
   }
@@ -103,7 +124,7 @@ const ProductList = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                <Package className="w-5 h-5 text-blue-600" />
+                <Package className="w-5 h-5 text-green-600" />
                 Product List
               </h1>
               <p className="text-xs text-gray-500 mt-1">
@@ -120,10 +141,10 @@ const ProductList = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Search products by name, SKU, or category..."
+              placeholder="Search products by name or SKU..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              onChange={handleSearchChange}
+              className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
             />
           </div>
         </div>
@@ -131,7 +152,7 @@ const ProductList = () => {
 
       {/* Products Table */}
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-        {filteredProducts.length === 0 ? (
+        {products.length === 0 ? (
           <div className="text-center py-16">
             <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
             <p className="text-base font-semibold text-gray-700 mb-1">No products found</p>
@@ -143,7 +164,7 @@ const ProductList = () => {
           <>
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50">
+                <thead className="bg-green-50">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       Product
@@ -160,10 +181,10 @@ const ProductList = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-100">
-                  {filteredProducts.map((product) => (
+                  {products.map((product) => (
                     <tr 
                       key={product._id || product.id} 
-                      className="hover:bg-blue-50/50 transition-colors cursor-pointer"
+                      className="hover:bg-green-50/50 transition-colors cursor-pointer"
                       onClick={() => navigate(`/admin/products/edit/${product._id || product.id}`)}
                     >
                       <td className="px-4 py-3">

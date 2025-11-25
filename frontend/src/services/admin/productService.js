@@ -67,12 +67,13 @@ export const updateProduct = async (id, formData) => {
 /**
  * Get all products (if list endpoint exists)
  */
-export const getAllProducts = async (page = 1, limit = 10) => {
+export const getAllProducts = async (page = 1, limit = 10, search = '') => {
   try {
     const response = await productApi.get('/product/list', {
       params: {
         page: page,
         limit: limit,
+        search: search,
       },
     });
     return response.data;

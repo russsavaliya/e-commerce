@@ -53,18 +53,43 @@ const AttributeManagement = () => {
 
   const [formErrors, setFormErrors] = useState({});
 
+  const [searchTimeout, setSearchTimeout] = useState(null);
+
   // Fetch attributes when page or itemsPerPage changes
   useEffect(() => {
-    fetchAttributes();
+    fetchAttributes(currentPage, itemsPerPage, searchQuery);
   }, [currentPage, itemsPerPage]);
 
+  // Debounced search effect
+  useEffect(() => {
+    // Clear previous timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    // Set new timeout for search
+    const timeout = setTimeout(() => {
+      // Reset to page 1 when searching
+      fetchAttributes(1, itemsPerPage, searchQuery);
+    }, 500); // 500ms debounce
+
+    setSearchTimeout(timeout);
+
+    // Cleanup
+    return () => {
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+    };
+  }, [searchQuery]);
+
   /**
-   * Fetch all attributes from API with pagination
+   * Fetch all attributes from API with pagination and search
    */
-  const fetchAttributes = async () => {
+  const fetchAttributes = async (page = currentPage, limit = itemsPerPage, search = '') => {
     try {
       setLoading(true);
-      const data = await getAllAttributes(currentPage, itemsPerPage);
+      const data = await getAllAttributes(page, limit, search);
 
       // Handle different response structures
       const attributesArray = Array.isArray(data.data?.attributes)
@@ -95,7 +120,7 @@ const AttributeManagement = () => {
       } else {
         // Fallback: calculate from array length if API doesn't return total
         setTotalAttributes(attributesArray.length);
-        setTotalPages(Math.ceil(attributesArray.length / itemsPerPage) || 1);
+        setTotalPages(Math.ceil(attributesArray.length / limit) || 1);
       }
     } catch (error) {
       toast.error(error.message || 'Failed to load attributes');
@@ -169,7 +194,7 @@ const AttributeManagement = () => {
 
       // Reset form and refresh list
       resetForm();
-      await fetchAttributes();
+      await fetchAttributes(currentPage, itemsPerPage, searchQuery);
     } catch (error) {
       toast.error(error.message || 'Failed to save attribute');
     } finally {
@@ -214,7 +239,7 @@ const AttributeManagement = () => {
       setSubmitting(true);
       await deleteAttribute(id);
       toast.success('Attribute deleted successfully!');
-      await fetchAttributes();
+      await fetchAttributes(currentPage, itemsPerPage, searchQuery);
       setDeleteConfirm(null);
     } catch (error) {
       toast.error(error.message || 'Failed to delete attribute');
@@ -299,7 +324,7 @@ const AttributeManagement = () => {
               resetForm();
               setShowForm(true);
             }}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm shadow-sm"
           >
             <Plus className="w-4 h-4" />
             Add Attribute
@@ -310,9 +335,9 @@ const AttributeManagement = () => {
         <div className="mt-4 pt-4 border-t border-gray-200">
           <div className="flex flex-wrap items-center gap-4 text-sm">
             <div className="flex items-center gap-2 text-gray-700">
-              <Tag className="w-4 h-4 text-blue-600" />
+              <Tag className="w-4 h-4 text-green-600" />
               <span className="font-medium">Total Attributes:</span>
-              <span className="text-blue-600 font-semibold">{totalAttributes}</span>
+              <span className="text-green-600 font-semibold">{totalAttributes}</span>
             </div>
             <div className="flex items-center gap-2 text-gray-700">
               <Tag className="w-4 h-4 text-green-600" />
@@ -345,7 +370,7 @@ const AttributeManagement = () => {
               setCurrentPage(1);
             }}
             placeholder="Search attributes or values..."
-            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
             aria-label="Search attributes"
           />
         </div>
@@ -391,7 +416,7 @@ const AttributeManagement = () => {
                     }
                   }}
                   placeholder="e.g., Color, Size, Material"
-                  className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formErrors.name
+                  className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${formErrors.name
                     ? 'border-red-300 bg-red-50'
                     : 'border-gray-300 bg-white'
                     }`}
@@ -418,7 +443,7 @@ const AttributeManagement = () => {
                         value={valueItem.value}
                         onChange={(e) => updateValueField(index, e.target.value)}
                         placeholder={`Value ${index + 1}`}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
                       />
                       {formData.values.length > 1 && (
                         <button
@@ -435,7 +460,7 @@ const AttributeManagement = () => {
                   <button
                     type="button"
                     onClick={addValueField}
-                    className="flex items-center gap-2 px-3 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-blue-200 text-sm"
+                    className="flex items-center gap-2 px-3 py-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors border border-green-200 text-sm"
                   >
                     <PlusCircle className="w-4 h-4" />
                     <span>Add Value</span>
@@ -453,7 +478,7 @@ const AttributeManagement = () => {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                 >
                   {submitting ? (
                     <>
@@ -482,13 +507,24 @@ const AttributeManagement = () => {
         </div>
       )}
 
+      {/* Loading Overlay */}
+      {submitting && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-white rounded-xl shadow-xl p-8 flex flex-col items-center gap-4">
+            <Loader2 className="w-12 h-12 animate-spin text-green-600" />
+            <span className="text-lg font-semibold text-gray-900">Processing...</span>
+            <span className="text-sm text-gray-600">Please wait</span>
+          </div>
+        </div>
+      )}
       {/* Attributes Table */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         {loading ? (
           // Loading State
-          <div className="flex items-center justify-center py-10">
-            <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-            <span className="ml-2 text-sm text-gray-600">Loading attributes...</span>
+          <div className="flex flex-col items-center justify-center py-16">
+            <Loader2 className="w-10 h-10 animate-spin text-green-600 mb-3" />
+            <span className="text-base font-medium text-gray-700">Loading attributes...</span>
+            <span className="text-sm text-gray-500 mt-1">Please wait</span>
           </div>
         ) : (() => {
           const filtered = searchQuery.trim() === ''
@@ -557,7 +593,7 @@ const AttributeManagement = () => {
                               ) : (
                                 <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
                               )}
-                              <Tag className="w-3.5 h-3.5 text-blue-600" />
+                              <Tag className="w-3.5 h-3.5 text-green-600" />
                               <span className="text-sm font-medium text-gray-900 capitalize">
                                 {attribute.name}
                               </span>
@@ -576,7 +612,7 @@ const AttributeManagement = () => {
                             <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                               <button
                                 onClick={() => handleEdit(attribute)}
-                                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                                 aria-label={`Edit ${attribute.name}`}
                               >
                                 <Edit2 className="w-4 h-4" />
@@ -603,7 +639,7 @@ const AttributeManagement = () => {
                                     attribute.values.map((val, index) => (
                                       <span
                                         key={index}
-                                        className="px-2.5 py-1 bg-blue-50 text-gray-700 rounded-md text-xs border border-blue-200"
+                                        className="px-2.5 py-1 bg-green-50 text-gray-700 rounded-md text-xs border border-green-200"
                                       >
                                         {val.value}
                                       </span>
@@ -638,7 +674,7 @@ const AttributeManagement = () => {
                   setItemsPerPage(Number(e.target.value));
                   setCurrentPage(1);
                 }}
-                className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
               >
                 <option value={5}>5</option>
                 <option value={10}>10</option>
@@ -679,7 +715,7 @@ const AttributeManagement = () => {
                       key={pageNum}
                       onClick={() => setCurrentPage(pageNum)}
                       className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${currentPage === pageNum
-                        ? 'bg-blue-600 text-white'
+                        ? 'bg-green-600 text-white'
                         : 'border border-gray-300 hover:bg-gray-50'
                         }`}
                     >

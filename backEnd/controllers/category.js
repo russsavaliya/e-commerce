@@ -27,15 +27,23 @@ exports.create_category = async (req, res) => {
 }
 exports.get_category_list = async (req, res) => {
     try {
-        let { page = 1, limit = 10 } = req.query;
+        let { page = 1, limit = 10, search = '' } = req.query;
 
         page = parseInt(page);
         limit = parseInt(limit);
         const skip = (page - 1) * limit;
 
-        const exist_category = await category_model.find().populate("parent_category_id").skip(skip).limit(limit);
+        // Build search condition
+        let searchCondition = {};
+        if (search && search.trim()) {
+            searchCondition = {
+                name: { $regex: search.trim(), $options: 'i' }
+            };
+        }
 
-        const total_count = await category_model.countDocuments();
+        const exist_category = await category_model.find(searchCondition).populate("parent_category_id").skip(skip).limit(limit);
+
+        const total_count = await category_model.countDocuments(searchCondition);
         const total_pages = Math.ceil(total_count / limit);
 
         return res.status(200).json({

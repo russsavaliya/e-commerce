@@ -203,14 +203,27 @@ exports.update_product = async (req, res) => {
 
 exports.get_product_list = async (req, res) => {
     try {
-        let { page = 1, limit = 10 } = req.query;
+        let { page = 1, limit = 10, search = '' } = req.query;
 
         page = parseInt(page);
         limit = parseInt(limit);
         const skip = (page - 1) * limit;
+
+        // Build match condition for search
+        let matchCondition = {};
+        if (search && search.trim()) {
+            const searchRegex = { $regex: search.trim(), $options: 'i' };
+            matchCondition = {
+                $or: [
+                    { name: searchRegex },
+                    { SKU: searchRegex }
+                ]
+            };
+        }
+
         const productData = await product_model.aggregate([
             {
-                $match: {}
+                $match: matchCondition
             },
             {
                 $lookup: {
@@ -237,8 +250,12 @@ exports.get_product_list = async (req, res) => {
                 $limit: limit
             }
         ]);
-        const total_count = await product_model.countDocuments();
+        
+        // Count total documents matching search
+        const countMatchCondition = matchCondition;
+        const total_count = await product_model.countDocuments(countMatchCondition);
         const total_pages = Math.ceil(total_count / limit);
+        
         return res.status(200).json({
             status: true,
             message: "Product list fetched successfully",

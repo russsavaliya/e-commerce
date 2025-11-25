@@ -30,12 +30,13 @@ attributeApi.interceptors.request.use(
   }
 );
 
-export const getAllAttributes = async (page = 1, limit = 10) => {
+export const getAllAttributes = async (page = 1, limit = 10, search = '') => {
   try {
     const response = await attributeApi.get('/attributes/list', {
       params: {
         page: page,
         limit: limit,
+        search: search,
       },
     });
     return response.data;

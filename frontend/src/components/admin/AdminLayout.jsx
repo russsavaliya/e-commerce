@@ -120,7 +120,7 @@ const AdminLayout = () => {
           {/* Logo/Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
             {sidebarOpen && (
-              <h1 className="text-2xl font-bold text-blue-600">Admin Panel</h1>
+              <h1 className="text-2xl font-bold" style={{ color: '#4EA674' }}>Admin Panel</h1>
             )}
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -147,7 +147,8 @@ const AdminLayout = () => {
                 : item.name === 'Products'
                 ? isProductsActive
                 : isActive(item.path);
-              const active = isItemActive || (item.submenu && (isSettingsActive || isProductsActive));
+              // Only mark as active if this specific item is active, not if any submenu is active
+              const active = isItemActive;
 
               if (item.submenu) {
                 const isOpen = item.name === 'Settings' ? settingsOpen : productsOpen;
@@ -161,13 +162,14 @@ const AdminLayout = () => {
                       onClick={toggleOpen}
                       className={`
                         w-full flex items-center gap-3 px-4 py-3 rounded-lg
-                        transition-all duration-200
+                        transition-all duration-200 relative
                         ${
                           active
-                            ? 'bg-blue-50 text-blue-600 font-semibold'
+                            ? 'text-white font-semibold shadow-md'
                             : 'text-gray-700 hover:bg-gray-100'
                         }
                       `}
+                      style={active ? { backgroundColor: '#4EA674' } : {}}
                       aria-expanded={isOpen}
                     >
                       <Icon className="w-5 h-5 flex-shrink-0" />
@@ -199,13 +201,14 @@ const AdminLayout = () => {
                               }}
                               className={`
                                 w-full flex items-center gap-3 px-4 py-2.5 rounded-lg
-                                transition-all duration-200 text-base
+                                transition-all duration-200 text-base relative
                                 ${
                                   subActive
-                                    ? 'bg-blue-100 text-blue-600 font-semibold'
+                                    ? 'text-white font-semibold shadow-md'
                                     : 'text-gray-600 hover:bg-gray-50'
                                 }
                               `}
+                              style={subActive ? { backgroundColor: '#4EA674' } : {}}
                             >
                               <SubIcon className="w-4 h-4 flex-shrink-0" />
                               <span>{subItem.name}</span>
@@ -227,13 +230,14 @@ const AdminLayout = () => {
                   }}
                   className={`
                     w-full flex items-center gap-3 px-4 py-3 rounded-lg
-                    transition-all duration-200 text-base
+                    transition-all duration-200 text-base relative
                     ${
                       active
-                        ? 'bg-blue-50 text-blue-600 font-semibold'
+                        ? 'text-white font-semibold shadow-md'
                         : 'text-gray-700 hover:bg-gray-100'
                     }
                   `}
+                  style={active ? { backgroundColor: '#4EA674' } : {}}
                 >
                   <Icon className="w-5 h-5 flex-shrink-0" />
                   {sidebarOpen && <span className="flex-1 text-left">{item.name}</span>}

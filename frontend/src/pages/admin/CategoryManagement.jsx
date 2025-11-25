@@ -44,20 +44,41 @@ const CategoryManagement = () => {
 
   const [formErrors, setFormErrors] = useState({});
 
+  const [searchTimeout, setSearchTimeout] = useState(null);
+
   // Effects
   useEffect(() => {
-    fetchCategories();
+    fetchCategories(currentPage, itemsPerPage, searchQuery);
   }, [currentPage, itemsPerPage]);
 
+  // Debounced search effect
   useEffect(() => {
-    filterCategories();
-  }, [searchQuery, categories]);
+    // Clear previous timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
 
-  // Fetch Categories from API with Pagination
-  const fetchCategories = async () => {
+    // Set new timeout for search
+    const timeout = setTimeout(() => {
+      // Reset to page 1 when searching
+      fetchCategories(1, itemsPerPage, searchQuery);
+    }, 500); // 500ms debounce
+
+    setSearchTimeout(timeout);
+
+    // Cleanup
+    return () => {
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+    };
+  }, [searchQuery]);
+
+  // Fetch Categories from API with Pagination and Search
+  const fetchCategories = async (page = currentPage, limit = itemsPerPage, search = '') => {
     try {
       setLoading(true);
-      const data = await getAllCategories(currentPage, itemsPerPage);
+      const data = await getAllCategories(page, limit, search);
       const categoriesArray = Array.isArray(data.data?.exist_category) ? data.data.exist_category : [];
 
       // Update categories and pagination info
@@ -71,7 +92,7 @@ const CategoryManagement = () => {
       } else {
         // Fallback: calculate from array length if API doesn't return total
         setTotalCategories(categoriesArray.length);
-        setTotalPages(Math.ceil(categoriesArray.length / itemsPerPage));
+        setTotalPages(Math.ceil(categoriesArray.length / limit));
       }
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -83,22 +104,6 @@ const CategoryManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Filter Categories based on Search
-  const filterCategories = () => {
-    if (!searchQuery.trim()) {
-      setFilteredCategories(categories);
-      return;
-    }
-
-    const query = searchQuery.toLowerCase();
-    const filtered = categories.filter(
-      (cat) =>
-        cat.name?.toLowerCase().includes(query) ||
-        getCategoryPath(cat).toLowerCase().includes(query)
-    );
-    setFilteredCategories(filtered);
   };
 
   // Helper function to get parent category ID (handles both object and string/null)
@@ -211,7 +216,7 @@ const CategoryManagement = () => {
       resetForm();
       // Reset to first page after creating/updating
       setCurrentPage(1);
-      fetchCategories();
+      fetchCategories(1, itemsPerPage, searchQuery);
     } catch (error) {
       console.error('Error saving category:', error);
       toast.error(error.message || 'Failed to save category');
@@ -243,7 +248,7 @@ const CategoryManagement = () => {
       if (filteredCategories.length === 1 && currentPage > 1) {
         setCurrentPage(currentPage - 1);
       }
-      fetchCategories();
+      fetchCategories(currentPage - 1, itemsPerPage, searchQuery);
       setDeleteConfirm(null);
     } catch (error) {
       console.error('Error deleting category:', error);
@@ -266,6 +271,16 @@ const CategoryManagement = () => {
 
   return (
     <div className={`space-y-4 ${showForm ? 'relative' : ''}`}>
+      {/* Loading Overlay */}
+      {submitting && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-white rounded-xl shadow-xl p-8 flex flex-col items-center gap-4">
+            <Loader2 className="w-12 h-12 animate-spin text-green-600" />
+            <span className="text-lg font-semibold text-gray-900">Processing...</span>
+            <span className="text-sm text-gray-600">Please wait</span>
+          </div>
+        </div>
+      )}
       {/* Overlay when form is open */}
       {showForm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" onClick={resetForm}></div>
@@ -285,7 +300,7 @@ const CategoryManagement = () => {
               resetForm();
               setShowForm(true);
             }}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm shadow-sm"
           >
             <Plus className="w-4 h-4" />
             Add Category
@@ -296,9 +311,9 @@ const CategoryManagement = () => {
         <div className="mt-4 pt-4 border-t border-gray-200">
           <div className="flex flex-wrap items-center gap-4 text-sm">
             <div className="flex items-center gap-2 text-gray-700">
-              <BarChart3 className="w-4 h-4 text-blue-600" />
+              <BarChart3 className="w-4 h-4 text-green-600" />
               <span className="font-medium">Total Categories:</span>
-              <span className="text-blue-600 font-semibold">{totalCategories}</span>
+              <span className="text-green-600 font-semibold">{totalCategories}</span>
             </div>
             <div className="flex items-center gap-2 text-gray-700">
               <FolderTree className="w-4 h-4 text-green-600" />
@@ -358,7 +373,7 @@ const CategoryManagement = () => {
                       setFormErrors({ ...formErrors, name: '' });
                     }
                   }}
-                  className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formErrors.name
+                  className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${formErrors.name
                     ? 'border-red-300 bg-red-50'
                     : 'border-gray-300 bg-white'
                     }`}
@@ -387,7 +402,7 @@ const CategoryManagement = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, parent_category_id: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
                 >
                   <option value="">None (Top Level Category)</option>
                   {/* Use _id for option value - this ensures we pass _id instead of name */}
@@ -407,7 +422,7 @@ const CategoryManagement = () => {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                 >
                   {submitting ? (
                     <>
@@ -443,9 +458,12 @@ const CategoryManagement = () => {
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1); // Reset to page 1 when search changes
+            }}
             placeholder="Search categories..."
-            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
             aria-label="Search categories"
           />
         </div>
@@ -455,9 +473,10 @@ const CategoryManagement = () => {
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         {loading ? (
           // Loading State
-          <div className="flex items-center justify-center py-10">
-            <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-            <span className="ml-2 text-sm text-gray-600">Loading categories...</span>
+          <div className="flex flex-col items-center justify-center py-16">
+            <Loader2 className="w-10 h-10 animate-spin text-green-600 mb-3" />
+            <span className="text-base font-medium text-gray-700">Loading categories...</span>
+            <span className="text-sm text-gray-500 mt-1">Please wait</span>
           </div>
         ) : filteredCategories.length === 0 ? (
           // Empty State
@@ -499,7 +518,7 @@ const CategoryManagement = () => {
                     {/* Category Name */}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <FolderTree className="w-3.5 h-3.5 text-blue-600" />
+                        <FolderTree className="w-3.5 h-3.5 text-green-600" />
                         <span className="text-sm font-medium text-gray-900">
                           {category.name}
                         </span>
@@ -518,7 +537,7 @@ const CategoryManagement = () => {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => handleEdit(category)}
-                          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                           aria-label={`Edit ${category.name}`}
                         >
                           <Edit2 className="w-4 h-4" />
@@ -554,7 +573,7 @@ const CategoryManagement = () => {
                   setItemsPerPage(Number(e.target.value));
                   setCurrentPage(1); // Reset to first page when changing items per page
                 }}
-                className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
               >
                 <option value={5}>5</option>
                 <option value={10}>10</option>
@@ -602,7 +621,7 @@ const CategoryManagement = () => {
                       key={pageNum}
                       onClick={() => setCurrentPage(pageNum)}
                       className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${currentPage === pageNum
-                        ? 'bg-blue-600 text-white'
+                        ? 'bg-green-600 text-white'
                         : 'border border-gray-300 hover:bg-gray-50'
                         }`}
                     >
