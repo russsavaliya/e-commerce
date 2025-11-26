@@ -19,6 +19,8 @@ import {
   Package,
   List,
   Plus,
+  Shield,
+  Users,
 } from 'lucide-react';
 import { ROUTES } from '../../utils/constants';
 
@@ -91,6 +93,16 @@ const AdminLayout = () => {
           name: 'Attributes',
           icon: Tag,
           path: ROUTES.ADMIN_ATTRIBUTES,
+        },
+        {
+          name: 'Roles',
+          icon: Shield,
+          path: ROUTES.ADMIN_ROLES,
+        },
+        {
+          name: 'Admins',
+          icon: Users,
+          path: ROUTES.ADMIN_MANAGEMENT,
         },
       ],
     },
@@ -249,10 +261,14 @@ const AdminLayout = () => {
           {/* User Info & Logout */}
           <div className="p-4 border-t border-gray-200">
             {sidebarOpen && (
-              <div className="mb-3 px-4 py-2">
+              <button
+                onClick={() => navigate(ROUTES.ADMIN_PROFILE)}
+                className="w-full mb-3 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors text-left"
+              >
                 <p className="text-sm font-semibold text-gray-900">{user?.name || 'Admin'}</p>
                 <p className="text-xs text-gray-500 truncate">{user?.email || ''}</p>
-              </div>
+                <p className="text-xs text-green-600 mt-1 font-medium">View Profile →</p>
+              </button>
             )}
             <button
               onClick={handleLogout}
@@ -290,6 +306,12 @@ const AdminLayout = () => {
                 ? 'Category Management'
                 : location.pathname === ROUTES.ADMIN_ATTRIBUTES
                 ? 'Attribute Management'
+                : location.pathname === ROUTES.ADMIN_ROLES
+                ? 'Role Management'
+                : location.pathname === ROUTES.ADMIN_MANAGEMENT
+                ? 'Admin Management'
+                : location.pathname === ROUTES.ADMIN_PROFILE
+                ? 'Profile'
                 : 'Settings'}
             </h2>
             <div className="w-10" /> {/* Spacer for mobile menu button */}

@@ -64,6 +64,9 @@ import AdminLayout from './components/admin/AdminLayout';
 import Dashboard from './pages/admin/Dashboard';
 import CategoryManagement from './pages/admin/CategoryManagement';
 import AttributeManagement from './pages/admin/AttributeManagement';
+import RoleManagement from './pages/admin/RoleManagement';
+import AdminManagement from './pages/admin/AdminManagement';
+import Profile from './pages/admin/Profile';
 import ProductAdd from './pages/admin/ProductAdd';
 import ProductList from './pages/admin/ProductList';
 import ProductEdit from './pages/admin/ProductEdit';
@@ -110,6 +113,21 @@ const ADMIN_ROUTES = [
     path: 'settings/attributes',          // URL path (will be /admin/settings/attributes)
     component: AttributeManagement,        // The component to show
     description: 'Attribute Management Page'
+  },
+  {
+    path: 'settings/roles',               // URL path (will be /admin/settings/roles)
+    component: RoleManagement,             // The component to show
+    description: 'Role Management Page'
+  },
+  {
+    path: 'settings/admins',              // URL path (will be /admin/settings/admins)
+    component: AdminManagement,            // The component to show
+    description: 'Admin Management Page'
+  },
+  {
+    path: 'profile',                      // URL path (will be /admin/profile)
+    component: Profile,                    // The component to show
+    description: 'Admin Profile Page'
   },
   {
     path: 'products/list',               // URL path (will be /admin/products/list)

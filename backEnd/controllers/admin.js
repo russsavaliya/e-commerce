@@ -82,11 +82,9 @@ exports.login = async function (req, res, next) {
         })
     }
 }
-
-
 exports.read = async function (req, res, next) {
     try {
-        let data = await adminModel.find().populate('role')
+        let data = await admin_model.find().populate('role')
         res.status(200).json({
             status: true,
             message: 'all user',
@@ -98,6 +96,179 @@ exports.read = async function (req, res, next) {
             message: error.message
 
         })
+    }
+}
+
+exports.get_admin_list = async (req, res) => {
+    try {
+        let { page = 1, limit = 10, search = '' } = req.query;
+
+        page = parseInt(page);
+        limit = parseInt(limit);
+        const skip = (page - 1) * limit;
+
+        // Build search condition
+        let searchCondition = {};
+        if (search && search.trim()) {
+            searchCondition = {
+                $or: [
+                    { name: { $regex: search.trim(), $options: 'i' } },
+                    { email: { $regex: search.trim(), $options: 'i' } }
+                ]
+            };
+        }
+
+        const admins = await admin_model.find(searchCondition).populate('role', 'name title').skip(skip).limit(limit);
+
+        const total_count = await admin_model.countDocuments(searchCondition);
+        const total_pages = Math.ceil(total_count / limit);
+
+        return res.status(200).json({
+            status: true,
+            message: "Admin list fetched successfully",
+            data: {
+                admins,
+                total_count,
+                total_pages,
+                page,
+                limit
+            }
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            status: false,
+            message: error.message
+        });
+    }
+}
+
+exports.delete_admin = async (req, res) => {
+    try {
+        let { id } = req.query;
+
+        if (!id) {
+            return res.status(400).json({
+                status: false,
+                message: "Admin id is required"
+            });
+        }
+
+        const admin = await admin_model.findById(id);
+
+        if (!admin) {
+            return res.status(404).json({
+                status: false,
+                message: "Admin not found"
+            });
+        }
+
+        // Prevent deletion of super admin
+        if (admin.isSuperAdmin === true) {
+            return res.status(403).json({
+                status: false,
+                message: "Cannot delete super admin"
+            });
+        }
+
+        await admin_model.findByIdAndDelete(id);
+
+        return res.status(200).json({
+            status: true,
+            message: "Admin deleted successfully",
+            data: admin
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            status: false,
+            message: error.message
+        });
+    }
+}
+
+exports.get_admin_profile = async (req, res) => {
+    try {
+        // Admin is already attached by authorization middleware
+        const adminId = req.admin._id;
+        
+        const admin = await admin_model.findById(adminId).populate('role', 'name title permissions');
+
+        if (!admin) {
+            return res.status(404).json({
+                status: false,
+                message: "Admin not found"
+            });
+        }
+
+        return res.status(200).json({
+            status: true,
+            message: "Admin profile fetched successfully",
+            data: admin
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            status: false,
+            message: error.message
+        });
+    }
+}
+
+exports.update_password = async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        const adminId = req.admin._id;
+
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({
+                status: false,
+                message: "Current password and new password are required"
+            });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({
+                status: false,
+                message: "New password must be at least 6 characters long"
+            });
+        }
+
+        const admin = await admin_model.findById(adminId);
+
+        if (!admin) {
+            return res.status(404).json({
+                status: false,
+                message: "Admin not found"
+            });
+        }
+
+        // Verify current password
+        const isPasswordValid = await bcrypt.compare(currentPassword, admin.password);
+        if (!isPasswordValid) {
+            return res.status(400).json({
+                status: false,
+                message: "Current password is incorrect"
+            });
+        }
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Update password
+        admin.password = hashedPassword;
+        await admin.save();
+
+        return res.status(200).json({
+            status: true,
+            message: "Password updated successfully"
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            status: false,
+            message: error.message
+        });
     }
 }
 
