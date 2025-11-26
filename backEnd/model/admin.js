@@ -21,7 +21,7 @@ const admin = new schema({
     },
     role: {
         type: mongoose.Types.ObjectId,
-        // required: true,
+        required: true,
     },
     createdAt: {
         type: Date,
