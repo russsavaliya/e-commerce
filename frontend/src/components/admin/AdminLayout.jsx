@@ -21,6 +21,7 @@ import {
   Plus,
   Shield,
   Users,
+  IndianRupee,
 } from 'lucide-react';
 import { ROUTES } from '../../utils/constants';
 
@@ -78,6 +79,11 @@ const AdminLayout = () => {
           path: ROUTES.ADMIN_PRODUCTS_ADD,
         },
       ],
+    },
+    {
+      name: 'Marketing Spend',
+      icon: IndianRupee,
+      path: ROUTES.ADMIN_MARKETING_SPEND,
     },
     {
       name: 'Settings',
@@ -300,6 +306,8 @@ const AdminLayout = () => {
                 ? 'Product List'
                 : location.pathname === ROUTES.ADMIN_PRODUCTS_ADD
                 ? 'Add New Product'
+                : location.pathname === ROUTES.ADMIN_MARKETING_SPEND
+                ? 'Marketing Spend Management'
                 : location.pathname.startsWith('/admin/products/edit/')
                 ? 'Edit Product'
                 : location.pathname === ROUTES.ADMIN_CATEGORIES

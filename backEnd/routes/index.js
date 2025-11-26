@@ -8,6 +8,8 @@ const category_controller = require('../controllers/category')
 const attributes_controller = require('../controllers/attributes')
 const product_controller = require('../controllers/product')
 const role_controller = require('../controllers/role')
+const marketing_spend_controller = require('../controllers/marketing_spend')
+const utils_controller = require('../controllers/utils')
 /* GET home page. */
 router.post('/admin/auth/signup', authorization.authorization, permission.checkPermission('admin_create'), admin_controller.signup);
 router.post('/admin/auth/login', admin_controller.login);
@@ -40,5 +42,15 @@ router.get('/role/list', authorization.authorization, role_controller.get_role_l
 router.get('/role/one', authorization.authorization, role_controller.get_role_one);
 router.put('/role/update', authorization.authorization, permission.checkPermission('role_update'), role_controller.update_role);
 router.delete('/role/delete', authorization.authorization, permission.checkPermission('role_delete'), role_controller.delete_role);
+
+// marketing spend routes
+router.post('/marketing-spend/create', authorization.authorization, permission.checkPermission('marketing_spend_add'), marketing_spend_controller.create_marketing_spend);
+router.get('/marketing-spend/list', authorization.authorization, marketing_spend_controller.get_marketing_spend_list);
+router.get('/marketing-spend/one/:id', authorization.authorization, marketing_spend_controller.get_marketing_spend_one);
+router.put('/marketing-spend/update/:id', authorization.authorization, permission.checkPermission('marketing_spend_update'), marketing_spend_controller.update_marketing_spend);
+router.delete('/marketing-spend/delete/:id', authorization.authorization, permission.checkPermission('marketing_spend_delete'), marketing_spend_controller.delete_marketing_spend);
+
+// utils routes
+router.post('/utils/add-random-data', authorization.authorization, utils_controller.add_random_data);
 
 module.exports = router;

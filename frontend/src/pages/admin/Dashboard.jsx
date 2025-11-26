@@ -11,6 +11,8 @@ import {
   TrendingUp,
   Activity,
   Users,
+  Database,
+  Loader2,
 } from 'lucide-react';
 import {
   LineChart,
@@ -25,10 +27,13 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { getAllCategories } from '../../services/admin/categoryService';
+import { addRandomData } from '../../services/admin/utilsService';
+import toast from 'react-hot-toast';
 
 const Dashboard = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [addingData, setAddingData] = useState(false);
 
   useEffect(() => {
     fetchCategories();
@@ -44,6 +49,31 @@ const Dashboard = () => {
       setCategories([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAddRandomData = async () => {
+    if (!window.confirm('Are you sure you want to add random data? This will create attributes, categories, and products.')) {
+      return;
+    }
+
+    try {
+      setAddingData(true);
+      const response = await addRandomData();
+      
+      if (response.status) {
+        toast.success(
+          `Successfully added: ${response.data.attributesCreated} attributes, ${response.data.categoriesCreated} categories, ${response.data.productsCreated} products!`
+        );
+        // Refresh categories
+        await fetchCategories();
+      } else {
+        toast.error(response.message || 'Failed to add random data');
+      }
+    } catch (error) {
+      toast.error(error.message || 'Failed to add random data');
+    } finally {
+      setAddingData(false);
     }
   };
 
@@ -107,14 +137,35 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-8">
-      {/* Welcome Section */}
+      {/* Welcome Section with Add Random Data Button */}
       <div className="bg-white rounded-xl shadow-sm p-6 lg:p-8 border border-gray-200">
-        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
-          Welcome to Admin Dashboard
-        </h1>
-        <p className="text-base text-gray-600">
-          Manage your e-commerce platform efficiently with real-time insights and analytics.
-        </p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
+              Welcome to Admin Dashboard
+            </h1>
+            <p className="text-base text-gray-600">
+              Manage your e-commerce platform efficiently with real-time insights and analytics.
+            </p>
+          </div>
+          <button
+            onClick={handleAddRandomData}
+            disabled={addingData}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {addingData ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Adding Data...
+              </>
+            ) : (
+              <>
+                <Database className="w-4 h-4" />
+                Add Random Data
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Metrics Cards */}

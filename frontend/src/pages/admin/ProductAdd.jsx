@@ -13,7 +13,7 @@ import {
   Upload,
   Image as ImageIcon,
   Package,
-  DollarSign,
+  IndianRupee,
   Tag,
   Layers,
   AlertCircle,
@@ -918,7 +918,7 @@ const ProductAdd = () => {
                 Selling Price <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <IndianRupee className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   type="number"
                   name="selling_price"
@@ -945,7 +945,7 @@ const ProductAdd = () => {
                 Original Price (MRP)
               </label>
               <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <IndianRupee className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   type="number"
                   name="original_price"
@@ -965,7 +965,7 @@ const ProductAdd = () => {
                 Cost Price
               </label>
               <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <IndianRupee className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   type="number"
                   name="cost_price"
@@ -1886,7 +1886,7 @@ const ProductAdd = () => {
                       Variant Price <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <DollarSign className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <IndianRupee className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
                         type="number"
                         value={variant.variant_price}

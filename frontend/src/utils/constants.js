@@ -79,6 +79,7 @@ export const ROUTES = {
   ADMIN_PRODUCTS_LIST: '/admin/products/list',
   ADMIN_PRODUCTS_ADD: '/admin/products/add',
   ADMIN_PRODUCTS_EDIT: '/admin/products/edit/:id',
+  ADMIN_MARKETING_SPEND: '/admin/marketing-spend',
   USER_LOGIN: '/user/login',
   USER_SIGNUP: '/user/signup',
   USER_DASHBOARD: '/user/dashboard',

@@ -70,6 +70,7 @@ import Profile from './pages/admin/Profile';
 import ProductAdd from './pages/admin/ProductAdd';
 import ProductList from './pages/admin/ProductList';
 import ProductEdit from './pages/admin/ProductEdit';
+import MarketingSpendManagement from './pages/admin/MarketingSpendManagement';
 
 // TODO: When you create new pages, import them here:
 // import ProductManagement from './pages/admin/ProductManagement';
@@ -143,6 +144,11 @@ const ADMIN_ROUTES = [
     path: 'products/edit/:id',            // URL path (will be /admin/products/edit/:id)
     component: ProductEdit,                // The component to show
     description: 'Edit Product Page'
+  },
+  {
+    path: 'marketing-spend',               // URL path (will be /admin/marketing-spend)
+    component: MarketingSpendManagement,    // The component to show
+    description: 'Marketing Spend Management Page'
   },
   // ============================================
   // ADD NEW ADMIN PAGES HERE - IT'S THAT EASY!
