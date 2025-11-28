@@ -85,24 +85,24 @@ const AdminManagement = () => {
         fetchPage = 1;
         fetchSearch = searchQuery;
         const params = { page: fetchPage, limit: fetchLimit, search: fetchSearch };
-        
+
         // Only fetch if parameters changed and not already fetching
-        if (!isFetchingRef.current && 
-            (lastParamsRef.current.page !== params.page || 
-             lastParamsRef.current.limit !== params.limit || 
-             lastParamsRef.current.search !== params.search)) {
+        if (!isFetchingRef.current &&
+          (lastParamsRef.current.page !== params.page ||
+            lastParamsRef.current.limit !== params.limit ||
+            lastParamsRef.current.search !== params.search)) {
           fetchAdmins(fetchPage, fetchLimit, fetchSearch);
         }
       }, 500);
     } else {
       // No search query - fetch immediately
       const params = { page: fetchPage, limit: fetchLimit, search: fetchSearch };
-      
+
       // Only fetch if parameters changed and not already fetching
-      if (!isFetchingRef.current && 
-          (lastParamsRef.current.page !== params.page || 
-           lastParamsRef.current.limit !== params.limit || 
-           lastParamsRef.current.search !== params.search)) {
+      if (!isFetchingRef.current &&
+        (lastParamsRef.current.page !== params.page ||
+          lastParamsRef.current.limit !== params.limit ||
+          lastParamsRef.current.search !== params.search)) {
         fetchAdmins(fetchPage, fetchLimit, fetchSearch);
       }
     }
@@ -149,10 +149,10 @@ const AdminManagement = () => {
     }
 
     // Check if same parameters (skip if forceRefresh is true)
-    if (!forceRefresh && 
-        lastParamsRef.current.page === page && 
-        lastParamsRef.current.limit === limit && 
-        lastParamsRef.current.search === search) {
+    if (!forceRefresh &&
+      lastParamsRef.current.page === page &&
+      lastParamsRef.current.limit === limit &&
+      lastParamsRef.current.search === search) {
       return;
     }
 
@@ -258,7 +258,7 @@ const AdminManagement = () => {
       };
 
       const response = await createAdmin(adminData);
-      
+
       // Store created admin info to show success message
       setCreatedAdmin({
         name: response.data?.name || formData.name,
@@ -267,11 +267,11 @@ const AdminManagement = () => {
       });
 
       toast.success('Admin created successfully!');
-      
+
       // Reset form and refresh list
       resetForm();
       await fetchAdmins(currentPage, itemsPerPage, searchQuery, true);
-      
+
       // Show success modal for 5 seconds
       setTimeout(() => {
         setCreatedAdmin(null);
@@ -443,11 +443,10 @@ const AdminManagement = () => {
                     }
                   }}
                   placeholder="Enter admin name"
-                  className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                    formErrors.name
+                  className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${formErrors.name
                       ? 'border-red-300 bg-red-50'
                       : 'border-gray-300 bg-white'
-                  }`}
+                    }`}
                   aria-invalid={!!formErrors.name}
                 />
                 {formErrors.name && (
@@ -476,11 +475,10 @@ const AdminManagement = () => {
                     }
                   }}
                   placeholder="Enter email address"
-                  className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                    formErrors.email
+                  className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${formErrors.email
                       ? 'border-red-300 bg-red-50'
                       : 'border-gray-300 bg-white'
-                  }`}
+                    }`}
                   aria-invalid={!!formErrors.email}
                 />
                 {formErrors.email && (
@@ -510,11 +508,10 @@ const AdminManagement = () => {
                       }
                     }}
                     placeholder="Enter password"
-                    className={`w-full px-3 py-2 pr-20 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                      formErrors.password
+                    className={`w-full px-3 py-2 pr-20 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${formErrors.password
                         ? 'border-red-300 bg-red-50'
                         : 'border-gray-300 bg-white'
-                    }`}
+                      }`}
                     aria-invalid={!!formErrors.password}
                   />
                   <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
@@ -564,11 +561,10 @@ const AdminManagement = () => {
                         setFormErrors({ ...formErrors, role: '' });
                       }
                     }}
-                    className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                      formErrors.role
+                    className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${formErrors.role
                         ? 'border-red-300 bg-red-50'
                         : 'border-gray-300 bg-white'
-                    }`}
+                      }`}
                     aria-invalid={!!formErrors.role}
                   >
                     <option value="">Select a role</option>
@@ -837,11 +833,10 @@ const AdminManagement = () => {
                     <button
                       key={pageNum}
                       onClick={() => setCurrentPage(pageNum)}
-                      className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                        currentPage === pageNum
+                      className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${currentPage === pageNum
                           ? 'bg-green-600 text-white'
                           : 'border border-gray-300 hover:bg-gray-50'
-                      }`}
+                        }`}
                     >
                       {pageNum}
                     </button>

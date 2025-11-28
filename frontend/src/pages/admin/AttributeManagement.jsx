@@ -76,24 +76,24 @@ const AttributeManagement = () => {
         fetchPage = 1;
         fetchSearch = searchQuery;
         const params = { page: fetchPage, limit: fetchLimit, search: fetchSearch };
-        
+
         // Only fetch if parameters changed and not already fetching
-        if (!isFetchingRef.current && 
-            (lastParamsRef.current.page !== params.page || 
-             lastParamsRef.current.limit !== params.limit || 
-             lastParamsRef.current.search !== params.search)) {
+        if (!isFetchingRef.current &&
+          (lastParamsRef.current.page !== params.page ||
+            lastParamsRef.current.limit !== params.limit ||
+            lastParamsRef.current.search !== params.search)) {
           fetchAttributes(fetchPage, fetchLimit, fetchSearch);
         }
       }, 500);
     } else {
       // No search query - fetch immediately
       const params = { page: fetchPage, limit: fetchLimit, search: fetchSearch };
-      
+
       // Only fetch if parameters changed and not already fetching
-      if (!isFetchingRef.current && 
-          (lastParamsRef.current.page !== params.page || 
-           lastParamsRef.current.limit !== params.limit || 
-           lastParamsRef.current.search !== params.search)) {
+      if (!isFetchingRef.current &&
+        (lastParamsRef.current.page !== params.page ||
+          lastParamsRef.current.limit !== params.limit ||
+          lastParamsRef.current.search !== params.search)) {
         fetchAttributes(fetchPage, fetchLimit, fetchSearch);
       }
     }
@@ -117,10 +117,10 @@ const AttributeManagement = () => {
     }
 
     // Check if same parameters (skip if forceRefresh is true)
-    if (!forceRefresh && 
-        lastParamsRef.current.page === page && 
-        lastParamsRef.current.limit === limit && 
-        lastParamsRef.current.search === search) {
+    if (!forceRefresh &&
+      lastParamsRef.current.page === page &&
+      lastParamsRef.current.limit === limit &&
+      lastParamsRef.current.search === search) {
       return;
     }
 

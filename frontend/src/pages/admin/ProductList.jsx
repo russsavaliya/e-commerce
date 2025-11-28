@@ -20,8 +20,8 @@ const normalizeImagePath = (imagePath) => {
   // Convert Windows backslashes to forward slashes for URLs
   const normalizedPath = imagePath.replace(/\\/g, '/');
   // Remove leading 'public/' if present (since express.static serves from public folder)
-  const cleanPath = normalizedPath.startsWith('public/') 
-    ? normalizedPath.replace('public/', '') 
+  const cleanPath = normalizedPath.startsWith('public/')
+    ? normalizedPath.replace('public/', '')
     : normalizedPath;
   return `${API_BASE_URL}/${cleanPath}`;
 };
@@ -61,24 +61,24 @@ const ProductList = () => {
         fetchPage = 1;
         fetchSearch = searchTerm;
         const params = { page: fetchPage, limit: fetchLimit, search: fetchSearch };
-        
+
         // Only fetch if parameters changed and not already fetching
-        if (!isFetchingRef.current && 
-            (lastParamsRef.current.page !== params.page || 
-             lastParamsRef.current.limit !== params.limit || 
-             lastParamsRef.current.search !== params.search)) {
+        if (!isFetchingRef.current &&
+          (lastParamsRef.current.page !== params.page ||
+            lastParamsRef.current.limit !== params.limit ||
+            lastParamsRef.current.search !== params.search)) {
           fetchProducts(fetchPage, fetchLimit, fetchSearch);
         }
       }, 500);
     } else {
       // No search term - fetch immediately
       const params = { page: fetchPage, limit: fetchLimit, search: fetchSearch };
-      
+
       // Only fetch if parameters changed and not already fetching
-      if (!isFetchingRef.current && 
-          (lastParamsRef.current.page !== params.page || 
-           lastParamsRef.current.limit !== params.limit || 
-           lastParamsRef.current.search !== params.search)) {
+      if (!isFetchingRef.current &&
+        (lastParamsRef.current.page !== params.page ||
+          lastParamsRef.current.limit !== params.limit ||
+          lastParamsRef.current.search !== params.search)) {
         fetchProducts(fetchPage, fetchLimit, fetchSearch);
       }
     }
@@ -99,9 +99,9 @@ const ProductList = () => {
     }
 
     // Check if same parameters
-    if (lastParamsRef.current.page === page && 
-        lastParamsRef.current.limit === limit && 
-        lastParamsRef.current.search === search) {
+    if (lastParamsRef.current.page === page &&
+      lastParamsRef.current.limit === limit &&
+      lastParamsRef.current.search === search) {
       return;
     }
 
@@ -113,21 +113,21 @@ const ProductList = () => {
       // Clear image errors when fetching new products
       setImageErrors(new Set());
       const response = await getAllProducts(page, limit, search);
-      
+
       if (response.status && response.data) {
         const productData = response.data.productData || [];
         setProducts(productData);
-        
+
         // Update pagination state only if values actually changed
         const newPage = response.data.page || page;
         const newLimit = response.data.limit || limit;
         const newTotalCount = response.data.total_count || 0;
         const newTotalPages = response.data.total_pages || 0;
-        
+
         setPagination(prev => {
-          if (prev.page !== newPage || prev.limit !== newLimit || 
-              prev.total_count !== newTotalCount || 
-              prev.total_pages !== newTotalPages) {
+          if (prev.page !== newPage || prev.limit !== newLimit ||
+            prev.total_count !== newTotalCount ||
+            prev.total_pages !== newTotalPages) {
             return {
               page: newPage,
               limit: newLimit,
@@ -252,8 +252,8 @@ const ProductList = () => {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-100">
                   {products.map((product) => (
-                    <tr 
-                      key={product._id || product.id} 
+                    <tr
+                      key={product._id || product.id}
                       className="hover:bg-green-50/50 transition-colors cursor-pointer"
                       onClick={() => navigate(`/admin/products/edit/${product._id || product.id}`)}
                     >
@@ -290,8 +290,8 @@ const ProductList = () => {
                       </td>
                       <td className="px-4 py-3">
                         <div className="text-sm text-gray-600">
-                          {Array.isArray(product.category) 
-                            ? product.category.join(', ') 
+                          {Array.isArray(product.category)
+                            ? product.category.join(', ')
                             : product.category || 'N/A'}
                         </div>
                       </td>
@@ -368,11 +368,10 @@ const ProductList = () => {
                           <button
                             key={pageNum}
                             onClick={() => handlePageChange(pageNum)}
-                            className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                              pagination.page === pageNum
+                            className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${pagination.page === pageNum
                                 ? 'bg-green-600 text-white'
                                 : 'border border-gray-300 hover:bg-gray-50'
-                            }`}
+                              }`}
                           >
                             {pageNum}
                           </button>

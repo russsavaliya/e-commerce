@@ -75,12 +75,11 @@ exports.get_product_list = async (req, res) => {
 
 exports.get_one_product = async (req, res, next) => {
     try {
-
         let { id } = req.params;
         const productData = await product_model.aggregate([
             {
                 $match: {
-                    _id: new mongoose.Types.ObjectId(req.params.id)
+                    _id: new mongoose.Types.ObjectId(id)
                 }
             },
             // Product level attributes lookup

@@ -160,17 +160,17 @@ const AdminLayout = () => {
           <nav className="flex-1 overflow-y-auto p-4 space-y-2">
             {menuItems.map((item) => {
               const Icon = item.icon;
-              const isItemActive = item.name === 'Settings' 
-                ? isSettingsActive 
+              const isItemActive = item.name === 'Settings'
+                ? isSettingsActive
                 : item.name === 'Products'
-                ? isProductsActive
-                : isActive(item.path);
+                  ? isProductsActive
+                  : isActive(item.path);
               // Only mark as active if this specific item is active, not if any submenu is active
               const active = isItemActive;
 
               if (item.submenu) {
                 const isOpen = item.name === 'Settings' ? settingsOpen : productsOpen;
-                const toggleOpen = item.name === 'Settings' 
+                const toggleOpen = item.name === 'Settings'
                   ? () => setSettingsOpen(!settingsOpen)
                   : () => setProductsOpen(!productsOpen);
 
@@ -181,10 +181,9 @@ const AdminLayout = () => {
                       className={`
                         w-full flex items-center gap-3 px-4 py-3 rounded-lg
                         transition-all duration-200 relative
-                        ${
-                          active
-                            ? 'text-white font-semibold shadow-md'
-                            : 'text-gray-700 hover:bg-gray-100'
+                        ${active
+                          ? 'text-white font-semibold shadow-md'
+                          : 'text-gray-700 hover:bg-gray-100'
                         }
                       `}
                       style={active ? { backgroundColor: '#4EA674' } : {}}
@@ -220,10 +219,9 @@ const AdminLayout = () => {
                               className={`
                                 w-full flex items-center gap-3 px-4 py-2.5 rounded-lg
                                 transition-all duration-200 text-base relative
-                                ${
-                                  subActive
-                                    ? 'text-white font-semibold shadow-md'
-                                    : 'text-gray-600 hover:bg-gray-50'
+                                ${subActive
+                                  ? 'text-white font-semibold shadow-md'
+                                  : 'text-gray-600 hover:bg-gray-50'
                                 }
                               `}
                               style={subActive ? { backgroundColor: '#4EA674' } : {}}
@@ -249,10 +247,9 @@ const AdminLayout = () => {
                   className={`
                     w-full flex items-center gap-3 px-4 py-3 rounded-lg
                     transition-all duration-200 text-base relative
-                    ${
-                      active
-                        ? 'text-white font-semibold shadow-md'
-                        : 'text-gray-700 hover:bg-gray-100'
+                    ${active
+                      ? 'text-white font-semibold shadow-md'
+                      : 'text-gray-700 hover:bg-gray-100'
                     }
                   `}
                   style={active ? { backgroundColor: '#4EA674' } : {}}
@@ -303,24 +300,24 @@ const AdminLayout = () => {
               {location.pathname === ROUTES.ADMIN_DASHBOARD
                 ? 'Dashboard'
                 : location.pathname === ROUTES.ADMIN_PRODUCTS_LIST
-                ? 'Product List'
-                : location.pathname === ROUTES.ADMIN_PRODUCTS_ADD
-                ? 'Add Product'
-                : location.pathname === ROUTES.ADMIN_MARKETING_SPEND
-                ? 'Marketing Spend Management'
-                : location.pathname.startsWith('/admin/products/edit/')
-                ? 'Update Product'
-                : location.pathname === ROUTES.ADMIN_CATEGORIES
-                ? 'Category Management'
-                : location.pathname === ROUTES.ADMIN_ATTRIBUTES
-                ? 'Attribute Management'
-                : location.pathname === ROUTES.ADMIN_ROLES
-                ? 'Role Management'
-                : location.pathname === ROUTES.ADMIN_MANAGEMENT
-                ? 'Admin Management'
-                : location.pathname === ROUTES.ADMIN_PROFILE
-                ? 'Profile'
-                : 'Settings'}
+                  ? 'Product List'
+                  : location.pathname === ROUTES.ADMIN_PRODUCTS_ADD
+                    ? 'Add Product'
+                    : location.pathname === ROUTES.ADMIN_MARKETING_SPEND
+                      ? 'Marketing Spend Management'
+                      : location.pathname.startsWith('/admin/products/edit/')
+                        ? 'Update Product'
+                        : location.pathname === ROUTES.ADMIN_CATEGORIES
+                          ? 'Category Management'
+                          : location.pathname === ROUTES.ADMIN_ATTRIBUTES
+                            ? 'Attribute Management'
+                            : location.pathname === ROUTES.ADMIN_ROLES
+                              ? 'Role Management'
+                              : location.pathname === ROUTES.ADMIN_MANAGEMENT
+                                ? 'Admin Management'
+                                : location.pathname === ROUTES.ADMIN_PROFILE
+                                  ? 'Profile'
+                                  : 'Settings'}
             </h2>
             <div className="w-10" /> {/* Spacer for mobile menu button */}
           </div>

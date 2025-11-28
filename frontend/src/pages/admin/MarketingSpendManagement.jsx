@@ -35,8 +35,8 @@ const normalizeImagePath = (imagePath) => {
   // Normalize path separators
   const normalizedPath = imagePath.replace(/\\/g, '/');
   // Remove 'public/' prefix if present
-  const cleanPath = normalizedPath.startsWith('public/') 
-    ? normalizedPath.replace('public/', '') 
+  const cleanPath = normalizedPath.startsWith('public/')
+    ? normalizedPath.replace('public/', '')
     : normalizedPath;
   return `${API_BASE_URL}/${cleanPath}`;
 };
@@ -141,7 +141,7 @@ const MarketingSpendManagement = () => {
     let fetchSearch = searchQuery;
     let fetchProductId = selectedProductId;
     let fetchDate = '';
-    
+
     // Build date filter from month and year
     if (selectedMonth && selectedYear) {
       fetchDate = `${selectedMonth}/${selectedYear}`;
@@ -153,28 +153,28 @@ const MarketingSpendManagement = () => {
         fetchPage = 1;
         fetchSearch = searchQuery;
         const params = { page: fetchPage, limit: fetchLimit, search: fetchSearch, product_id: fetchProductId, date: fetchDate };
-        
+
         // Only fetch if parameters changed and not already fetching
-        if (!isFetchingRef.current && 
-            (lastParamsRef.current.page !== params.page || 
-             lastParamsRef.current.limit !== params.limit || 
-             lastParamsRef.current.search !== params.search ||
-             lastParamsRef.current.product_id !== params.product_id ||
-             lastParamsRef.current.date !== params.date)) {
+        if (!isFetchingRef.current &&
+          (lastParamsRef.current.page !== params.page ||
+            lastParamsRef.current.limit !== params.limit ||
+            lastParamsRef.current.search !== params.search ||
+            lastParamsRef.current.product_id !== params.product_id ||
+            lastParamsRef.current.date !== params.date)) {
           fetchMarketingSpends(fetchPage, fetchLimit, fetchSearch, fetchProductId, fetchDate);
         }
       }, 500);
     } else {
       // No search query - fetch immediately
       const params = { page: fetchPage, limit: fetchLimit, search: fetchSearch, product_id: fetchProductId, date: fetchDate };
-      
+
       // Only fetch if parameters changed and not already fetching
-      if (!isFetchingRef.current && 
-          (lastParamsRef.current.page !== params.page || 
-           lastParamsRef.current.limit !== params.limit || 
-           lastParamsRef.current.search !== params.search ||
-           lastParamsRef.current.product_id !== params.product_id ||
-           lastParamsRef.current.date !== params.date)) {
+      if (!isFetchingRef.current &&
+        (lastParamsRef.current.page !== params.page ||
+          lastParamsRef.current.limit !== params.limit ||
+          lastParamsRef.current.search !== params.search ||
+          lastParamsRef.current.product_id !== params.product_id ||
+          lastParamsRef.current.date !== params.date)) {
         fetchMarketingSpends(fetchPage, fetchLimit, fetchSearch, fetchProductId, fetchDate);
       }
     }
@@ -194,12 +194,12 @@ const MarketingSpendManagement = () => {
     }
 
     // Check if same parameters
-    if (!forceRefresh && 
-        lastParamsRef.current.page === page && 
-        lastParamsRef.current.limit === limit && 
-        lastParamsRef.current.search === search &&
-        lastParamsRef.current.product_id === product_id &&
-        lastParamsRef.current.date === date) {
+    if (!forceRefresh &&
+      lastParamsRef.current.page === page &&
+      lastParamsRef.current.limit === limit &&
+      lastParamsRef.current.search === search &&
+      lastParamsRef.current.product_id === product_id &&
+      lastParamsRef.current.date === date) {
       return;
     }
 
@@ -209,7 +209,7 @@ const MarketingSpendManagement = () => {
     try {
       setLoading(true);
       const response = await getAllMarketingSpends(page, limit, search, product_id, date);
-      
+
       if (response.status && response.data) {
         setMarketingSpends(response.data.marketing_spends || []);
         setTotalSpends(response.data.total_count || 0);
@@ -234,7 +234,7 @@ const MarketingSpendManagement = () => {
       ...prev,
       [name]: value,
     }));
-    
+
     // Clear error for this field
     if (formErrors[name]) {
       setFormErrors((prev) => ({
@@ -246,19 +246,19 @@ const MarketingSpendManagement = () => {
 
   const validateForm = () => {
     const errors = {};
-    
+
     if (!formData.product_id.trim()) {
       errors.product_id = 'Product is required';
     }
-    
+
     if (!formData.month) {
       errors.month = 'Month is required';
     }
-    
+
     if (!formData.year) {
       errors.year = 'Year is required';
     }
-    
+
     if (!formData.amount.trim()) {
       errors.amount = 'Amount is required';
     }
@@ -269,14 +269,14 @@ const MarketingSpendManagement = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
     try {
       setSubmitting(true);
-      
+
       // Combine month and year into date format (MM/YYYY)
       const date = `${formData.month}/${formData.year}`;
       const submitData = {
@@ -286,7 +286,7 @@ const MarketingSpendManagement = () => {
       // Remove month and year from submitData as backend expects date
       delete submitData.month;
       delete submitData.year;
-      
+
       if (editingSpend) {
         await updateMarketingSpend(editingSpend._id, submitData);
         toast.success('Marketing spend updated successfully!');
@@ -294,7 +294,7 @@ const MarketingSpendManagement = () => {
         await createMarketingSpend(submitData);
         toast.success('Marketing spend created successfully!');
       }
-      
+
       setShowForm(false);
       setEditingSpend(null);
       setFormData({
@@ -305,10 +305,10 @@ const MarketingSpendManagement = () => {
         amount: '',
       });
       setFormErrors({});
-      
+
       // Build date filter
       const dateFilter = selectedMonth && selectedYear ? `${selectedMonth}/${selectedYear}` : '';
-      
+
       // Refresh list
       fetchMarketingSpends(currentPage, itemsPerPage, searchQuery, selectedProductId, dateFilter, true);
     } catch (error) {
@@ -320,7 +320,7 @@ const MarketingSpendManagement = () => {
 
   const handleEdit = (spend) => {
     setEditingSpend(spend);
-    
+
     // Parse date (format: MM/YYYY) into month and year
     let month = '';
     let year = '';
@@ -331,7 +331,7 @@ const MarketingSpendManagement = () => {
         year = dateParts[1];
       }
     }
-    
+
     setFormData({
       product_id: spend.product_id?._id || spend.product_id || '',
       month: month,
@@ -424,13 +424,12 @@ const MarketingSpendManagement = () => {
                 <span className="truncate">
                   {selectedProductId
                     ? products.find((p) => (p._id || p.id) === selectedProductId)?.name ||
-                      'Selected Product'
+                    'Selected Product'
                     : 'All Products'}
                 </span>
                 <svg
-                  className={`w-4 h-4 text-gray-400 transform transition-transform ${
-                    productFilterOpen ? 'rotate-180' : ''
-                  }`}
+                  className={`w-4 h-4 text-gray-400 transform transition-transform ${productFilterOpen ? 'rotate-180' : ''
+                    }`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -458,9 +457,8 @@ const MarketingSpendManagement = () => {
                       setCurrentPage(1);
                       setProductFilterOpen(false);
                     }}
-                    className={`w-full px-3 py-2 text-sm text-left hover:bg-gray-50 ${
-                      !selectedProductId ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-700'
-                    }`}
+                    className={`w-full px-3 py-2 text-sm text-left hover:bg-gray-50 ${!selectedProductId ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-700'
+                      }`}
                   >
                     All Products
                   </button>
@@ -474,25 +472,24 @@ const MarketingSpendManagement = () => {
                       );
                     })
                     .map((product) => {
-                    const id = product._id || product.id;
-                    const isActive = selectedProductId === id;
-                    return (
-                      <button
-                        key={id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedProductId(id);
-                          setCurrentPage(1);
-                          setProductFilterOpen(false);
-                        }}
-                        className={`w-full px-3 py-2 text-sm text-left hover:bg-gray-50 ${
-                          isActive ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-700'
-                        }`}
-                      >
-                        {product.name} ({product.SKU})
-                      </button>
-                    );
-                  })}
+                      const id = product._id || product.id;
+                      const isActive = selectedProductId === id;
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedProductId(id);
+                            setCurrentPage(1);
+                            setProductFilterOpen(false);
+                          }}
+                          className={`w-full px-3 py-2 text-sm text-left hover:bg-gray-50 ${isActive ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-700'
+                            }`}
+                        >
+                          {product.name} ({product.SKU})
+                        </button>
+                      );
+                    })}
                 </div>
               )}
             </div>
@@ -607,22 +604,20 @@ const MarketingSpendManagement = () => {
                   <button
                     type="button"
                     onClick={() => !loadingProducts && setFormProductDropdownOpen((prev) => !prev)}
-                    className={`w-full px-3 py-2 border rounded-lg text-sm bg-white text-left flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                      formErrors.product_id
+                    className={`w-full px-3 py-2 border rounded-lg text-sm bg-white text-left flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${formErrors.product_id
                         ? 'border-red-300 bg-red-50'
                         : 'border-gray-300'
-                    } ${loadingProducts ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      } ${loadingProducts ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <span className="truncate text-gray-900">
                       {formData.product_id
                         ? products.find((p) => (p._id || p.id) === formData.product_id)?.name ||
-                          'Selected Product'
+                        'Selected Product'
                         : 'Select a product'}
                     </span>
                     <svg
-                      className={`w-4 h-4 text-gray-400 transform transition-transform ${
-                        formProductDropdownOpen ? 'rotate-180' : ''
-                      }`}
+                      className={`w-4 h-4 text-gray-400 transform transition-transform ${formProductDropdownOpen ? 'rotate-180' : ''
+                        }`}
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -648,9 +643,8 @@ const MarketingSpendManagement = () => {
                         onClick={() => {
                           setFormData((prev) => ({ ...prev, product_id: '' }));
                         }}
-                        className={`w-full px-3 py-2 text-sm text-left hover:bg-gray-50 ${
-                          !formData.product_id ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-700'
-                        }`}
+                        className={`w-full px-3 py-2 text-sm text-left hover:bg-gray-50 ${!formData.product_id ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-700'
+                          }`}
                       >
                         Select a product
                       </button>
@@ -664,27 +658,26 @@ const MarketingSpendManagement = () => {
                           );
                         })
                         .map((product) => {
-                        const id = product._id || product.id;
-                        const isActive = formData.product_id === id;
-                        return (
-                          <button
-                            key={id}
-                            type="button"
-                            onClick={() => {
-                              setFormData((prev) => ({ ...prev, product_id: id }));
-                              if (formErrors.product_id) {
-                                setFormErrors((prev) => ({ ...prev, product_id: '' }));
-                              }
-                              setFormProductDropdownOpen(false);
-                            }}
-                            className={`w-full px-3 py-2 text-sm text-left hover:bg-gray-50 ${
-                              isActive ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-700'
-                            }`}
-                          >
-                            {product.name} ({product.SKU})
-                          </button>
-                        );
-                      })}
+                          const id = product._id || product.id;
+                          const isActive = formData.product_id === id;
+                          return (
+                            <button
+                              key={id}
+                              type="button"
+                              onClick={() => {
+                                setFormData((prev) => ({ ...prev, product_id: id }));
+                                if (formErrors.product_id) {
+                                  setFormErrors((prev) => ({ ...prev, product_id: '' }));
+                                }
+                                setFormProductDropdownOpen(false);
+                              }}
+                              className={`w-full px-3 py-2 text-sm text-left hover:bg-gray-50 ${isActive ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-700'
+                                }`}
+                            >
+                              {product.name} ({product.SKU})
+                            </button>
+                          );
+                        })}
                     </div>
                   )}
                 </div>
@@ -709,11 +702,10 @@ const MarketingSpendManagement = () => {
                       name="month"
                       value={formData.month}
                       onChange={handleInputChange}
-                      className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none bg-white ${
-                        formErrors.month
+                      className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none bg-white ${formErrors.month
                           ? 'border-red-300 bg-red-50'
                           : 'border-gray-300'
-                      }`}
+                        }`}
                       style={{ maxHeight: '200px' }}
                     >
                       <option value="">Select Month</option>
@@ -746,11 +738,10 @@ const MarketingSpendManagement = () => {
                       name="year"
                       value={formData.year}
                       onChange={handleInputChange}
-                      className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none bg-white ${
-                        formErrors.year
+                      className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none bg-white ${formErrors.year
                           ? 'border-red-300 bg-red-50'
                           : 'border-gray-300'
-                      }`}
+                        }`}
                       style={{ maxHeight: '200px' }}
                     >
                       <option value="">Select Year</option>
@@ -785,11 +776,10 @@ const MarketingSpendManagement = () => {
                   value={formData.amount}
                   onChange={handleInputChange}
                   placeholder="Enter amount"
-                  className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                    formErrors.amount
+                  className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${formErrors.amount
                       ? 'border-red-300 bg-red-50'
                       : 'border-gray-300 bg-white'
-                  }`}
+                    }`}
                 />
                 {formErrors.amount && (
                   <p className="mt-1.5 text-xs text-red-600">{formErrors.amount}</p>

@@ -60,7 +60,7 @@ const Dashboard = () => {
     try {
       setAddingData(true);
       const response = await addRandomData();
-      
+
       if (response.status) {
         toast.success(
           `Successfully added: ${response.data.attributesCreated} attributes, ${response.data.categoriesCreated} categories, ${response.data.productsCreated} products!`

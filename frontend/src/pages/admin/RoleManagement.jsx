@@ -94,24 +94,24 @@ const RoleManagement = () => {
         fetchPage = 1;
         fetchSearch = searchQuery;
         const params = { page: fetchPage, limit: fetchLimit, search: fetchSearch };
-        
+
         // Only fetch if parameters changed and not already fetching
-        if (!isFetchingRef.current && 
-            (lastParamsRef.current.page !== params.page || 
-             lastParamsRef.current.limit !== params.limit || 
-             lastParamsRef.current.search !== params.search)) {
+        if (!isFetchingRef.current &&
+          (lastParamsRef.current.page !== params.page ||
+            lastParamsRef.current.limit !== params.limit ||
+            lastParamsRef.current.search !== params.search)) {
           fetchRoles(fetchPage, fetchLimit, fetchSearch);
         }
       }, 500);
     } else {
       // No search query - fetch immediately
       const params = { page: fetchPage, limit: fetchLimit, search: fetchSearch };
-      
+
       // Only fetch if parameters changed and not already fetching
-      if (!isFetchingRef.current && 
-          (lastParamsRef.current.page !== params.page || 
-           lastParamsRef.current.limit !== params.limit || 
-           lastParamsRef.current.search !== params.search)) {
+      if (!isFetchingRef.current &&
+        (lastParamsRef.current.page !== params.page ||
+          lastParamsRef.current.limit !== params.limit ||
+          lastParamsRef.current.search !== params.search)) {
         fetchRoles(fetchPage, fetchLimit, fetchSearch);
       }
     }
@@ -135,10 +135,10 @@ const RoleManagement = () => {
     }
 
     // Check if same parameters (skip if forceRefresh is true)
-    if (!forceRefresh && 
-        lastParamsRef.current.page === page && 
-        lastParamsRef.current.limit === limit && 
-        lastParamsRef.current.search === search) {
+    if (!forceRefresh &&
+      lastParamsRef.current.page === page &&
+      lastParamsRef.current.limit === limit &&
+      lastParamsRef.current.search === search) {
       return;
     }
 
@@ -306,7 +306,7 @@ const RoleManagement = () => {
       const permissions = prev.permissions.includes(permission)
         ? prev.permissions.filter((p) => p !== permission)
         : [...prev.permissions, permission];
-      
+
       return {
         ...prev,
         permissions,
@@ -456,11 +456,10 @@ const RoleManagement = () => {
                     }
                   }}
                   placeholder="e.g., admin, manager, editor"
-                  className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                    formErrors.name
+                  className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${formErrors.name
                       ? 'border-red-300 bg-red-50'
                       : 'border-gray-300 bg-white'
-                  }`}
+                    }`}
                   aria-invalid={!!formErrors.name}
                   aria-describedby={formErrors.name ? 'name-error' : undefined}
                 />
@@ -490,11 +489,10 @@ const RoleManagement = () => {
                     }
                   }}
                   placeholder="e.g., Administrator, Manager, Editor"
-                  className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                    formErrors.title
+                  className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${formErrors.title
                       ? 'border-red-300 bg-red-50'
                       : 'border-gray-300 bg-white'
-                  }`}
+                    }`}
                   aria-invalid={!!formErrors.title}
                   aria-describedby={formErrors.title ? 'title-error' : undefined}
                 />
@@ -766,11 +764,10 @@ const RoleManagement = () => {
                     <button
                       key={pageNum}
                       onClick={() => setCurrentPage(pageNum)}
-                      className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                        currentPage === pageNum
+                      className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${currentPage === pageNum
                           ? 'bg-green-600 text-white'
                           : 'border border-gray-300 hover:bg-gray-50'
-                      }`}
+                        }`}
                     >
                       {pageNum}
                     </button>

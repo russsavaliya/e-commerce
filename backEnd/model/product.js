@@ -68,6 +68,10 @@ const productSchema = new mongoose.Schema({
     is_trending: {
         type: Boolean,
         default: false
+    },
+    sort_order: {
+        type: Number,
+        default: 0
     }
 }, {
     timestamps: true

@@ -15,6 +15,7 @@ exports.create_product = async (req, res) => {
             is_best_seller,
             is_new,
             is_trending,
+            sort_order,
             attributes,
             variants
         } = req.body;
@@ -72,6 +73,7 @@ exports.create_product = async (req, res) => {
             is_best_seller: is_best_seller === true || is_best_seller === 'true',
             is_new: is_new === true || is_new === 'true',
             is_trending: is_trending === true || is_trending === 'true',
+            sort_order: sort_order || 0,
             attributes,
             variants
         });
@@ -108,6 +110,7 @@ exports.update_product = async (req, res) => {
             is_best_seller,
             is_new,
             is_trending,
+            sort_order,
             attributes,
             variants,
             existing_images,           // existing product images (JSON array of URLs)
@@ -196,6 +199,7 @@ exports.update_product = async (req, res) => {
                 is_best_seller: is_best_seller !== undefined ? (is_best_seller === true || is_best_seller === 'true') : existingProduct.is_best_seller,
                 is_new: is_new !== undefined ? (is_new === true || is_new === 'true') : existingProduct.is_new,
                 is_trending: is_trending !== undefined ? (is_trending === true || is_trending === 'true') : existingProduct.is_trending,
+                sort_order: sort_order !== undefined ? sort_order : existingProduct.sort_order,
                 attributes,
                 variants
             },

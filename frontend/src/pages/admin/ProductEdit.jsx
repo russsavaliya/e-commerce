@@ -37,8 +37,8 @@ const normalizeImagePath = (imagePath) => {
   // Convert Windows backslashes to forward slashes for URLs
   const normalizedPath = imagePath.replace(/\\/g, '/');
   // Remove leading 'public/' if present (since express.static serves from public folder)
-  const cleanPath = normalizedPath.startsWith('public/') 
-    ? normalizedPath.replace('public/', '') 
+  const cleanPath = normalizedPath.startsWith('public/')
+    ? normalizedPath.replace('public/', '')
     : normalizedPath;
   return `${API_BASE_URL}/${cleanPath}`;
 };
@@ -69,6 +69,7 @@ const ProductEdit = () => {
     cost_price: '',
     quantity: '',
     discount_percentage: '',
+    sort_order: '',
     is_best_seller: false,
     is_new: false,
     is_trending: false,
@@ -100,7 +101,7 @@ const ProductEdit = () => {
   // Variant attribute dropdown states - for each variant and attribute index
   const [variantAttributeDropdownOpen, setVariantAttributeDropdownOpen] = useState({});
   const [variantAttributeSearchTerm, setVariantAttributeSearchTerm] = useState({});
-  
+
   // Variant attribute value dropdown states
   const [variantAttributeValueDropdownOpen, setVariantAttributeValueDropdownOpen] = useState({});
   const [variantAttributeValueSearchTerm, setVariantAttributeValueSearchTerm] = useState({});
@@ -128,18 +129,18 @@ const ProductEdit = () => {
   const fetchProduct = async () => {
     try {
       const response = await getProductById(id);
-      
+
       console.log('Full Product API Response:', JSON.stringify(response, null, 2));
-      
+
       // Backend returns: { data: [...], message: "...", success: true }
       // getProductById returns response.data from axios, so response = { data: [...], message: "...", success: true }
       let productData = [];
-      
+
       if (response && response.data) {
         // If response.data is an array, use it directly
         if (Array.isArray(response.data)) {
           productData = response.data;
-        } 
+        }
         // If response.data.data exists (nested), use that
         else if (response.data.data && Array.isArray(response.data.data)) {
           productData = response.data.data;
@@ -148,14 +149,14 @@ const ProductEdit = () => {
         // If response itself is an array
         productData = response;
       }
-      
+
       console.log('Extracted Product Data:', productData);
-      
+
       if (Array.isArray(productData) && productData.length > 0) {
         const product = productData[0];
-        
+
         console.log('Product Object:', product);
-        
+
         // Set basic form data
         setFormData({
           name: product.name || '',
@@ -168,6 +169,7 @@ const ProductEdit = () => {
           cost_price: product.cost_price || '',
           quantity: product.quantity || '',
           discount_percentage: product.discount_percentage || '',
+          sort_order: product.sort_order || '',
           is_best_seller: product.is_best_seller || false,
           is_new: product.is_new || false,
           is_trending: product.is_trending || false,
@@ -193,7 +195,7 @@ const ProductEdit = () => {
             variant_SKU: variant.variant_SKU || '',
             variant_price: variant.variant_price || '',
             variant_image: null, // New file if uploaded
-            variant_image_preview: variant.variant_image 
+            variant_image_preview: variant.variant_image
               ? normalizeImagePath(variant.variant_image)
               : null,
             variant_image_existing: variant.variant_image || null, // Existing image URL
@@ -426,7 +428,7 @@ const ProductEdit = () => {
     const selectedAttributeIds = productAttributes
       .map((attr, idx) => idx !== currentAttrIndex ? attr.attributeId : null)
       .filter(Boolean);
-    
+
     // Filter out already selected attributes
     return attributes.filter(
       (attr) => !selectedAttributeIds.includes(attr._id || attr.id)
@@ -439,11 +441,11 @@ const ProductEdit = () => {
     if (!variant || !variant.variant_attributes) {
       return attributes;
     }
-    
+
     const selectedAttributeIds = variant.variant_attributes
       .map((attr, idx) => idx !== currentAttrIndex ? attr.attribute_id : null)
       .filter(Boolean);
-    
+
     return attributes.filter(
       (attr) => !selectedAttributeIds.includes(attr._id || attr.id)
     );
@@ -491,8 +493,8 @@ const ProductEdit = () => {
     const generatedName = nameParts.join('-');
     // SKU format: "PROD-RED-PUMA"
     const baseSKU = formData.SKU.trim() || 'PROD';
-    const generatedSKU = skuParts.length > 0 
-      ? `${baseSKU}-${skuParts.join('-')}` 
+    const generatedSKU = skuParts.length > 0
+      ? `${baseSKU}-${skuParts.join('-')}`
       : '';
 
     return { name: generatedName, sku: generatedSKU };
@@ -635,10 +637,10 @@ const ProductEdit = () => {
       updated[variantIndex].variant_attributes = updated[
         variantIndex
       ].variant_attributes.filter((_, i) => i !== attrIndex);
-      
+
       // Regenerate variant name and SKU after removing attribute
       const { name, sku } = generateVariantNameAndSKU(updated[variantIndex].variant_attributes);
-      
+
       // Auto-update if generated values exist (user can still override)
       if (name) {
         updated[variantIndex].variant_name = name;
@@ -652,7 +654,7 @@ const ProductEdit = () => {
         // Clear if no attributes left
         updated[variantIndex].variant_SKU = '';
       }
-      
+
       return updated;
     });
   };
@@ -671,10 +673,10 @@ const ProductEdit = () => {
         // Reset value_id when attribute_id changes
         ...(field === 'attribute_id' ? { value_id: '' } : {}),
       };
-      
+
       // Auto-generate variant name and SKU from attributes
       const { name, sku } = generateVariantNameAndSKU(updated[variantIndex].variant_attributes);
-      
+
       // Always regenerate name and SKU when attributes change
       if (name) {
         updated[variantIndex].variant_name = name;
@@ -688,7 +690,7 @@ const ProductEdit = () => {
         // Clear if no complete attributes
         updated[variantIndex].variant_SKU = '';
       }
-      
+
       return updated;
     });
   };
@@ -771,6 +773,7 @@ const ProductEdit = () => {
       formDataToSend.append('cost_price', parseFloat(formData.cost_price) || 0);
       formDataToSend.append('quantity', parseInt(formData.quantity) || 0);
       formDataToSend.append('discount_percentage', parseFloat(formData.discount_percentage) || 0);
+      formDataToSend.append('sort_order', parseInt(formData.sort_order) || 0);
       formDataToSend.append('is_best_seller', formData.is_best_seller);
       formDataToSend.append('is_new', formData.is_new);
       formDataToSend.append('is_trending', formData.is_trending);
@@ -881,1281 +884,1281 @@ const ProductEdit = () => {
           {/* Form Content */}
           <div className="space-y-4">
 
-          {/* Form */}
-          <form id="product-form" onSubmit={handleSubmit} className="space-y-4">
-        {/* Basic Information */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-          <h2 className="text-lg font-semibold text-gray-900 mb-5 flex items-center gap-2">
-            <Package className="w-5 h-5 text-green-600" />
-            Basic Information
-          </h2>
+            {/* Form */}
+            <form id="product-form" onSubmit={handleSubmit} className="space-y-4">
+              {/* Basic Information */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+                <h2 className="text-lg font-semibold text-gray-900 mb-5 flex items-center gap-2">
+                  <Package className="w-5 h-5 text-green-600" />
+                  Basic Information
+                </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Product Name */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Product Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                  formErrors.name ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Enter product name"
-              />
-              {formErrors.name && (
-                <p className="text-xs text-red-500 mt-1">{formErrors.name}</p>
-              )}
-            </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Product Name */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Product Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${formErrors.name ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                      placeholder="Enter product name"
+                    />
+                    {formErrors.name && (
+                      <p className="text-xs text-red-500 mt-1">{formErrors.name}</p>
+                    )}
+                  </div>
 
-            {/* SKU */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                SKU <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="SKU"
-                value={formData.SKU}
-                onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                  formErrors.SKU ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Enter SKU"
-              />
-              {formErrors.SKU && (
-                <p className="text-xs text-red-500 mt-1">{formErrors.SKU}</p>
-              )}
-            </div>
+                  {/* SKU */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      SKU <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="SKU"
+                      value={formData.SKU}
+                      onChange={handleInputChange}
+                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${formErrors.SKU ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                      placeholder="Enter SKU"
+                    />
+                    {formErrors.SKU && (
+                      <p className="text-xs text-red-500 mt-1">{formErrors.SKU}</p>
+                    )}
+                  </div>
 
-            {/* Category - Searchable Dropdown */}
-            <div className="relative category-dropdown-container">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Category <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!loadingCategories) {
-                      setCategoryDropdownOpen(!categoryDropdownOpen);
-                      setCategorySearchTerm('');
-                    }
-                  }}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 flex items-center justify-between ${
-                    formErrors.category ? 'border-red-500' : 'border-gray-300'
-                  } ${loadingCategories ? 'bg-gray-100 cursor-not-allowed' : 'bg-white cursor-pointer'}`}
-                  disabled={loadingCategories}
-                >
-                  <span className={formData.category ? 'text-gray-900' : 'text-gray-500'}>
-                    {formData.category
-                      ? categories.find(cat => (cat._id || cat.id) === formData.category)?.name || 'Select Category'
-                      : 'Select Category'}
-                  </span>
-                  {categoryDropdownOpen ? (
-                    <ChevronUp className="w-4 h-4 text-gray-400" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 text-gray-400" />
-                  )}
-                </button>
-                
-                {categoryDropdownOpen && (
-                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-hidden">
-                    {/* Search Input */}
-                    <div className="p-2 border-b border-gray-200">
-                      <div className="relative">
-                        <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <input
-                          type="text"
-                          placeholder="Search category..."
-                          value={categorySearchTerm}
-                          onChange={(e) => setCategorySearchTerm(e.target.value)}
-                          className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                          autoFocus
-                        />
-                      </div>
-                    </div>
-                    
-                    {/* Category List */}
-                    <div className="overflow-y-auto max-h-48">
+                  {/* Category - Searchable Dropdown */}
+                  <div className="relative category-dropdown-container">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Category <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
                       <button
                         type="button"
                         onClick={() => {
-                          setFormData(prev => ({ ...prev, category: '' }));
-                          setCategoryDropdownOpen(false);
-                          setCategorySearchTerm('');
+                          if (!loadingCategories) {
+                            setCategoryDropdownOpen(!categoryDropdownOpen);
+                            setCategorySearchTerm('');
+                          }
                         }}
-                        className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 transition-colors ${
-                          !formData.category ? 'bg-green-50 text-green-600' : 'text-gray-700'
-                        }`}
+                        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 flex items-center justify-between ${formErrors.category ? 'border-red-500' : 'border-gray-300'
+                          } ${loadingCategories ? 'bg-gray-100 cursor-not-allowed' : 'bg-white cursor-pointer'}`}
+                        disabled={loadingCategories}
                       >
-                        Select Category
+                        <span className={formData.category ? 'text-gray-900' : 'text-gray-500'}>
+                          {formData.category
+                            ? categories.find(cat => (cat._id || cat.id) === formData.category)?.name || 'Select Category'
+                            : 'Select Category'}
+                        </span>
+                        {categoryDropdownOpen ? (
+                          <ChevronUp className="w-4 h-4 text-gray-400" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-gray-400" />
+                        )}
                       </button>
-                      {categories
-                        .filter(cat => 
-                          cat.name.toLowerCase().includes(categorySearchTerm.toLowerCase())
-                        )
-                        .map((cat) => (
-                          <button
-                            key={cat._id || cat.id}
-                            type="button"
-                            onClick={() => {
-                              setFormData(prev => ({ ...prev, category: cat._id || cat.id }));
-                              setCategoryDropdownOpen(false);
-                              setCategorySearchTerm('');
-                            }}
-                            className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 transition-colors ${
-                              formData.category === (cat._id || cat.id) 
-                                ? 'bg-green-50 text-green-600 font-medium' 
-                                : 'text-gray-700'
-                            }`}
-                          >
-                            {cat.name}
-                          </button>
-                        ))}
-                      {categories.filter(cat => 
-                        cat.name.toLowerCase().includes(categorySearchTerm.toLowerCase())
-                      ).length === 0 && (
-                        <div className="px-3 py-4 text-sm text-gray-500 text-center">
-                          No categories found
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-              {formErrors.category && (
-                <p className="text-xs text-red-500 mt-1">{formErrors.category}</p>
-              )}
-            </div>
 
-            {/* Status */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Status
-              </label>
-              <select
-                name="status"
-                value={formData.status}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-              >
-                <option value="ACTIVE">Active</option>
-                <option value="DRAFT">Draft</option>
-              </select>
-            </div>
+                      {categoryDropdownOpen && (
+                        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-hidden">
+                          {/* Search Input */}
+                          <div className="p-2 border-b border-gray-200">
+                            <div className="relative">
+                              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                              <input
+                                type="text"
+                                placeholder="Search category..."
+                                value={categorySearchTerm}
+                                onChange={(e) => setCategorySearchTerm(e.target.value)}
+                                className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                autoFocus
+                              />
+                            </div>
+                          </div>
 
-            {/* Selling Price */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Selling Price <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <IndianRupee className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="number"
-                  name="selling_price"
-                  value={formData.selling_price}
-                  onChange={handleInputChange}
-                  step="0.01"
-                  min="0"
-                  className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                    formErrors.selling_price ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  placeholder="0.00"
-                />
-              </div>
-              {formErrors.selling_price && (
-                <p className="text-xs text-red-500 mt-1">{formErrors.selling_price}</p>
-              )}
-            </div>
-
-            {/* Original Price (MRP) */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Original Price (MRP)
-              </label>
-              <div className="relative">
-                <IndianRupee className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="number"
-                  name="original_price"
-                  value={formData.original_price}
-                  onChange={handleInputChange}
-                  step="0.01"
-                  min="0"
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="0.00"
-                />
-              </div>
-            </div>
-
-            {/* Cost Price */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Cost Price
-              </label>
-              <div className="relative">
-                <IndianRupee className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="number"
-                  name="cost_price"
-                  value={formData.cost_price}
-                  onChange={handleInputChange}
-                  step="0.01"
-                  min="0"
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="0.00"
-                />
-              </div>
-            </div>
-
-            {/* Discount Percentage */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Discount Percentage
-              </label>
-              <input
-                type="number"
-                name="discount_percentage"
-                value={formData.discount_percentage}
-                onChange={handleInputChange}
-                step="0.01"
-                min="0"
-                max="100"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                placeholder="0.00"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Discount percentage (0-100)
-              </p>
-            </div>
-
-            {/* Quantity */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Quantity
-              </label>
-              <input
-                type="number"
-                name="quantity"
-                value={formData.quantity}
-                onChange={handleInputChange}
-                min="0"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                placeholder="0"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Product quantity (if no variants are added)
-              </p>
-            </div>
-          </div>
-
-          {/* Product Flags - Checkboxes */}
-          <div className="mt-3">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Product Flags
-            </label>
-            <div className="flex flex-wrap gap-3">
-              {/* Best Seller Checkbox */}
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="is_best_seller"
-                  checked={formData.is_best_seller}
-                  onChange={(e) => setFormData(prev => ({ ...prev, is_best_seller: e.target.checked }))}
-                  className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
-                />
-                <span className="text-sm font-medium text-gray-700">Best Seller</span>
-              </label>
-
-              {/* New Checkbox */}
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="is_new"
-                  checked={formData.is_new}
-                  onChange={(e) => setFormData(prev => ({ ...prev, is_new: e.target.checked }))}
-                  className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
-                />
-                <span className="text-sm font-medium text-gray-700">New</span>
-              </label>
-
-              {/* Trending Checkbox */}
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="is_trending"
-                  checked={formData.is_trending}
-                  onChange={(e) => setFormData(prev => ({ ...prev, is_trending: e.target.checked }))}
-                  className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
-                />
-                <span className="text-sm font-medium text-gray-700">Trending</span>
-              </label>
-            </div>
-          </div>
-
-          {/* Description */}
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Description
-            </label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-              placeholder="Enter product description"
-            />
-          </div>
-
-          {/* Product Images */}
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Product Images
-            </label>
-            <div className="flex flex-wrap gap-4">
-              {/* Existing Images */}
-              {formData.existingImages.map((imageUrl, index) => (
-                <div key={`existing-${index}`} className="relative">
-                  <img
-                    src={normalizeImagePath(imageUrl)}
-                    alt={`Product ${index + 1}`}
-                    className="w-24 h-24 object-cover rounded-lg border border-gray-300"
-                    onError={(e) => {
-                      console.error('Image load error:', imageUrl, 'Normalized:', normalizeImagePath(imageUrl));
-                      e.target.style.display = 'none';
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeProductImage(index, true)}
-                    className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              ))}
-
-              {/* New Image Previews */}
-              {formData.productImagePreviews.map((preview, index) => (
-                <div key={`new-${index}`} className="relative">
-                  <img
-                    src={preview}
-                    alt={`New Product ${index + 1}`}
-                    className="w-24 h-24 object-cover rounded-lg border border-gray-300"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeProductImage(index, false)}
-                    className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              ))}
-
-              {/* Upload Button */}
-              <label className="flex flex-col items-center justify-center w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-green-500 transition-colors">
-                <Upload className="w-6 h-6 text-gray-400" />
-                <span className="text-xs text-gray-500 mt-1">Upload</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleProductImagesChange}
-                  className="hidden"
-                />
-              </label>
-            </div>
-          </div>
-        </div>
-
-        {/* Product Attributes */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-                <Tag className="w-4 h-4 text-green-600" />
-                Product Attributes
-              </h2>
-              <p className="text-xs text-gray-500 mt-1">
-                Add multiple attributes (e.g., Brand, Material, Color) and select multiple values for each
-              </p>
-            </div>
-            {productAttributes.length > 0 && (
-              <button
-                type="button"
-                onClick={addProductAttribute}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                Add More
-              </button>
-            )}
-          </div>
-
-          {productAttributes.length === 0 ? (
-            <div className="text-center py-6 border-2 border-dashed border-green-200 rounded-lg bg-gradient-to-br from-green-50 to-green-100">
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                <Tag className="w-5 h-5 text-green-600" />
-              </div>
-              <p className="text-sm font-semibold text-gray-800 mb-1">
-                No attributes added yet
-              </p>
-              <p className="text-xs text-gray-600 mb-4 max-w-md mx-auto">
-                Start by adding your first product attribute. You can add multiple attributes like Brand, Material, Color, etc.
-              </p>
-              <button
-                type="button"
-                onClick={addProductAttribute}
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-sm"
-              >
-                <Plus className="w-4 h-4" />
-                Add Your First Attribute
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between text-sm text-gray-600 bg-green-50 px-3 py-2 rounded-lg">
-                <span>
-                  <span className="font-semibold text-blue-700">{productAttributes.length}</span> attribute{productAttributes.length !== 1 ? 's' : ''} added
-                </span>
-                <button
-                  type="button"
-                  onClick={addProductAttribute}
-                  className="text-green-600 hover:text-blue-700 font-medium flex items-center gap-1"
-                >
-                  <Plus className="w-3 h-3" />
-                  Add Another
-                </button>
-              </div>
-
-              {productAttributes.map((attr, index) => {
-                const selectedAttribute = attributes.find(
-                  (a) => (a._id || a.id) === attr.attributeId
-                );
-                const attributeValues = getAttributeValues(attr.attributeId);
-                const selectedValuesCount = attr.selectedValueIds?.length || 0;
-
-                return (
-                  <div
-                    key={index}
-                    className="p-5 border-2 border-gray-200 rounded-lg bg-white hover:border-blue-300 transition-colors"
-                  >
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-3">
-                          <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                            Attribute #{index + 1}
-                          </span>
-                          {selectedAttribute && (
-                            <span className="text-sm font-medium text-green-600">
-                              {selectedAttribute.name}
-                            </span>
-                          )}
-                          {selectedValuesCount > 0 && (
-                            <span className="text-xs text-gray-500">
-                              ({selectedValuesCount} value{selectedValuesCount !== 1 ? 's' : ''} selected)
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Attribute Selection - Searchable Dropdown */}
-                        <div className={`mb-3 relative attribute-dropdown-container-${index}`}>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Select Attribute <span className="text-red-500">*</span>
-                          </label>
-                          <div className="relative">
+                          {/* Category List */}
+                          <div className="overflow-y-auto max-h-48">
                             <button
                               type="button"
                               onClick={() => {
-                                if (!loadingAttributes) {
-                                  setAttributeDropdownOpen(prev => ({ ...prev, [index]: !prev[index] }));
-                                  setAttributeSearchTerm(prev => ({ ...prev, [index]: '' }));
-                                }
+                                setFormData(prev => ({ ...prev, category: '' }));
+                                setCategoryDropdownOpen(false);
+                                setCategorySearchTerm('');
                               }}
-                              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 flex items-center justify-between ${
-                                formErrors[`productAttribute_${index}`]
-                                  ? 'border-red-500'
-                                  : 'border-gray-300'
-                              } ${loadingAttributes ? 'bg-gray-100 cursor-not-allowed' : 'bg-white cursor-pointer'}`}
-                              disabled={loadingAttributes}
+                              className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 transition-colors ${!formData.category ? 'bg-green-50 text-green-600' : 'text-gray-700'
+                                }`}
                             >
-                              <span className={attr.attributeId ? 'text-gray-900' : 'text-gray-500'}>
-                                {attr.attributeId
-                                  ? attributes.find(a => (a._id || a.id) === attr.attributeId)?.name || 'Choose an attribute...'
-                                  : 'Choose an attribute...'}
-                              </span>
-                              {attributeDropdownOpen[index] ? (
-                                <ChevronUp className="w-4 h-4 text-gray-400" />
-                              ) : (
-                                <ChevronDown className="w-4 h-4 text-gray-400" />
-                              )}
+                              Select Category
                             </button>
-                            
-                            {attributeDropdownOpen[index] && (
-                              <div 
-                                className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-hidden"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                {/* Search Input */}
-                                <div className="p-2 border-b border-gray-200">
-                                  <div className="relative">
-                                    <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                    <input
-                                      type="text"
-                                      placeholder="Search attribute..."
-                                      value={attributeSearchTerm[index] || ''}
-                                      onChange={(e) => {
-                                        e.stopPropagation();
-                                        setAttributeSearchTerm(prev => ({ ...prev, [index]: e.target.value }));
-                                      }}
-                                      onClick={(e) => e.stopPropagation()}
-                                      className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                                      autoFocus
-                                    />
-                                  </div>
+                            {categories
+                              .filter(cat =>
+                                cat.name.toLowerCase().includes(categorySearchTerm.toLowerCase())
+                              )
+                              .map((cat) => (
+                                <button
+                                  key={cat._id || cat.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setFormData(prev => ({ ...prev, category: cat._id || cat.id }));
+                                    setCategoryDropdownOpen(false);
+                                    setCategorySearchTerm('');
+                                  }}
+                                  className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 transition-colors ${formData.category === (cat._id || cat.id)
+                                    ? 'bg-green-50 text-green-600 font-medium'
+                                    : 'text-gray-700'
+                                    }`}
+                                >
+                                  {cat.name}
+                                </button>
+                              ))}
+                            {categories.filter(cat =>
+                              cat.name.toLowerCase().includes(categorySearchTerm.toLowerCase())
+                            ).length === 0 && (
+                                <div className="px-3 py-4 text-sm text-gray-500 text-center">
+                                  No categories found
                                 </div>
-                                
-                                {/* Attribute List */}
-                                <div className="overflow-y-auto max-h-48">
+                              )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    {formErrors.category && (
+                      <p className="text-xs text-red-500 mt-1">{formErrors.category}</p>
+                    )}
+                  </div>
+
+                  {/* Status */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Status
+                    </label>
+                    <select
+                      name="status"
+                      value={formData.status}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    >
+                      <option value="ACTIVE">Active</option>
+                      <option value="DRAFT">Draft</option>
+                    </select>
+                  </div>
+
+                  {/* Selling Price */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Selling Price <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <IndianRupee className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="number"
+                        name="selling_price"
+                        value={formData.selling_price}
+                        onChange={handleInputChange}
+                        step="0.01"
+                        min="0"
+                        className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${formErrors.selling_price ? 'border-red-500' : 'border-gray-300'
+                          }`}
+                        placeholder="0.00"
+                      />
+                    </div>
+                    {formErrors.selling_price && (
+                      <p className="text-xs text-red-500 mt-1">{formErrors.selling_price}</p>
+                    )}
+                  </div>
+
+                  {/* Original Price (MRP) */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Original Price (MRP)
+                    </label>
+                    <div className="relative">
+                      <IndianRupee className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="number"
+                        name="original_price"
+                        value={formData.original_price}
+                        onChange={handleInputChange}
+                        step="0.01"
+                        min="0"
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Cost Price */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Cost Price
+                    </label>
+                    <div className="relative">
+                      <IndianRupee className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="number"
+                        name="cost_price"
+                        value={formData.cost_price}
+                        onChange={handleInputChange}
+                        step="0.01"
+                        min="0"
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Discount Percentage */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Discount Percentage (0-100)
+                    </label>
+                    <input
+                      type="number"
+                      name="discount_percentage"
+                      value={formData.discount_percentage}
+                      onChange={handleInputChange}
+                      step="0.01"
+                      min="0"
+                      max="100"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                      placeholder="0.00"
+                    />
+                  </div>
+
+                  {/* Quantity */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Quantity
+                    </label>
+                    <input
+                      type="number"
+                      name="quantity"
+                      value={formData.quantity}
+                      onChange={handleInputChange}
+                      min="0"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                      placeholder="0"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Product quantity (if no variants are added)
+                    </p>
+                  </div>
+
+                  {/* Sort Order */}
+                  <div>
+                    <label
+                      htmlFor="sort_order"
+                      className="block text-sm font-medium text-gray-700 mb-1.5"
+                    >
+                      Sort Order
+                    </label>
+                    <input
+                      type="number"
+                      id="sort_order"
+                      name="sort_order"
+                      value={formData.sort_order}
+                      onChange={handleInputChange}
+                      min="0"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                      placeholder="0"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Lower numbers appear first (used for sorting products)
+                    </p>
+                  </div>
+                </div>
+
+                {/* Product Flags - Checkboxes */}
+                <div className="mt-3">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Product Flags
+                  </label>
+                  <div className="flex flex-wrap gap-3">
+                    {/* Best Seller Checkbox */}
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="is_best_seller"
+                        checked={formData.is_best_seller}
+                        onChange={(e) => setFormData(prev => ({ ...prev, is_best_seller: e.target.checked }))}
+                        className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                      />
+                      <span className="text-sm font-medium text-gray-700">Best Seller</span>
+                    </label>
+
+                    {/* New Checkbox */}
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="is_new"
+                        checked={formData.is_new}
+                        onChange={(e) => setFormData(prev => ({ ...prev, is_new: e.target.checked }))}
+                        className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                      />
+                      <span className="text-sm font-medium text-gray-700">New</span>
+                    </label>
+
+                    {/* Trending Checkbox */}
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="is_trending"
+                        checked={formData.is_trending}
+                        onChange={(e) => setFormData(prev => ({ ...prev, is_trending: e.target.checked }))}
+                        className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                      />
+                      <span className="text-sm font-medium text-gray-700">Trending</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Description
+                  </label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    rows={4}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    placeholder="Enter product description"
+                  />
+                </div>
+
+                {/* Product Images */}
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Product Images
+                  </label>
+                  <div className="flex flex-wrap gap-4">
+                    {/* Existing Images */}
+                    {formData.existingImages.map((imageUrl, index) => (
+                      <div key={`existing-${index}`} className="relative">
+                        <img
+                          src={normalizeImagePath(imageUrl)}
+                          alt={`Product ${index + 1}`}
+                          className="w-24 h-24 object-cover rounded-lg border border-gray-300"
+                          onError={(e) => {
+                            console.error('Image load error:', imageUrl, 'Normalized:', normalizeImagePath(imageUrl));
+                            e.target.style.display = 'none';
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeProductImage(index, true)}
+                          className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+
+                    {/* New Image Previews */}
+                    {formData.productImagePreviews.map((preview, index) => (
+                      <div key={`new-${index}`} className="relative">
+                        <img
+                          src={preview}
+                          alt={`New Product ${index + 1}`}
+                          className="w-24 h-24 object-cover rounded-lg border border-gray-300"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeProductImage(index, false)}
+                          className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+
+                    {/* Upload Button */}
+                    <label className="flex flex-col items-center justify-center w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-green-500 transition-colors">
+                      <Upload className="w-6 h-6 text-gray-400" />
+                      <span className="text-xs text-gray-500 mt-1">Upload</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleProductImagesChange}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Product Attributes */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+                      <Tag className="w-4 h-4 text-green-600" />
+                      Product Attributes
+                    </h2>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Add multiple attributes (e.g., Brand, Material, Color) and select multiple values for each
+                    </p>
+                  </div>
+                  {productAttributes.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={addProductAttribute}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      Add More
+                    </button>
+                  )}
+                </div>
+
+                {productAttributes.length === 0 ? (
+                  <div className="text-center py-6 border-2 border-dashed border-green-200 rounded-lg bg-gradient-to-br from-green-50 to-green-100">
+                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                      <Tag className="w-5 h-5 text-green-600" />
+                    </div>
+                    <p className="text-sm font-semibold text-gray-800 mb-1">
+                      No attributes added yet
+                    </p>
+                    <p className="text-xs text-gray-600 mb-4 max-w-md mx-auto">
+                      Start by adding your first product attribute. You can add multiple attributes like Brand, Material, Color, etc.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={addProductAttribute}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-sm"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Your First Attribute
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between text-sm text-gray-600 bg-green-50 px-3 py-2 rounded-lg">
+                      <span>
+                        <span className="font-semibold text-blue-700">{productAttributes.length}</span> attribute{productAttributes.length !== 1 ? 's' : ''} added
+                      </span>
+                      <button
+                        type="button"
+                        onClick={addProductAttribute}
+                        className="text-green-600 hover:text-blue-700 font-medium flex items-center gap-1"
+                      >
+                        <Plus className="w-3 h-3" />
+                        Add Another
+                      </button>
+                    </div>
+
+                    {productAttributes.map((attr, index) => {
+                      const selectedAttribute = attributes.find(
+                        (a) => (a._id || a.id) === attr.attributeId
+                      );
+                      const attributeValues = getAttributeValues(attr.attributeId);
+                      const selectedValuesCount = attr.selectedValueIds?.length || 0;
+
+                      return (
+                        <div
+                          key={index}
+                          className="p-5 border-2 border-gray-200 rounded-lg bg-white hover:border-blue-300 transition-colors"
+                        >
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-3">
+                                <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                  Attribute #{index + 1}
+                                </span>
+                                {selectedAttribute && (
+                                  <span className="text-sm font-medium text-green-600">
+                                    {selectedAttribute.name}
+                                  </span>
+                                )}
+                                {selectedValuesCount > 0 && (
+                                  <span className="text-xs text-gray-500">
+                                    ({selectedValuesCount} value{selectedValuesCount !== 1 ? 's' : ''} selected)
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Attribute Selection - Searchable Dropdown */}
+                              <div className={`mb-3 relative attribute-dropdown-container-${index}`}>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  Select Attribute <span className="text-red-500">*</span>
+                                </label>
+                                <div className="relative">
                                   <button
                                     type="button"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      handleAttributeChange(index, '');
-                                      setAttributeDropdownOpen(prev => ({ ...prev, [index]: false }));
-                                      setAttributeSearchTerm(prev => ({ ...prev, [index]: '' }));
+                                    onClick={() => {
+                                      if (!loadingAttributes) {
+                                        setAttributeDropdownOpen(prev => ({ ...prev, [index]: !prev[index] }));
+                                        setAttributeSearchTerm(prev => ({ ...prev, [index]: '' }));
+                                      }
                                     }}
-                                    className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 transition-colors ${
-                                      !attr.attributeId ? 'bg-green-50 text-green-600' : 'text-gray-700'
-                                    }`}
+                                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 flex items-center justify-between ${formErrors[`productAttribute_${index}`]
+                                      ? 'border-red-500'
+                                      : 'border-gray-300'
+                                      } ${loadingAttributes ? 'bg-gray-100 cursor-not-allowed' : 'bg-white cursor-pointer'}`}
+                                    disabled={loadingAttributes}
                                   >
-                                    Choose an attribute...
+                                    <span className={attr.attributeId ? 'text-gray-900' : 'text-gray-500'}>
+                                      {attr.attributeId
+                                        ? attributes.find(a => (a._id || a.id) === attr.attributeId)?.name || 'Choose an attribute...'
+                                        : 'Choose an attribute...'}
+                                    </span>
+                                    {attributeDropdownOpen[index] ? (
+                                      <ChevronUp className="w-4 h-4 text-gray-400" />
+                                    ) : (
+                                      <ChevronDown className="w-4 h-4 text-gray-400" />
+                                    )}
                                   </button>
-                                  {getAvailableAttributesForProduct(index)
-                                    .filter(a => 
-                                      a.name.toLowerCase().includes((attributeSearchTerm[index] || '').toLowerCase())
-                                    )
-                                    .map((a) => (
-                                      <button
-                                        key={a._id || a.id}
-                                        type="button"
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                          handleAttributeChange(index, a._id || a.id);
-                                          setAttributeDropdownOpen(prev => ({ ...prev, [index]: false }));
-                                          setAttributeSearchTerm(prev => ({ ...prev, [index]: '' }));
-                                        }}
-                                        className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 transition-colors ${
-                                          attr.attributeId === (a._id || a.id) 
-                                            ? 'bg-green-50 text-green-600 font-medium' 
-                                            : 'text-gray-700'
-                                        }`}
-                                      >
-                                        {a.name}
-                                      </button>
-                                    ))}
-                                  {getAvailableAttributesForProduct(index).filter(a => 
-                                    a.name.toLowerCase().includes((attributeSearchTerm[index] || '').toLowerCase())
-                                  ).length === 0 && (
-                                    <div className="px-3 py-4 text-sm text-gray-500 text-center">
-                                      No attributes found
+
+                                  {attributeDropdownOpen[index] && (
+                                    <div
+                                      className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-hidden"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      {/* Search Input */}
+                                      <div className="p-2 border-b border-gray-200">
+                                        <div className="relative">
+                                          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                          <input
+                                            type="text"
+                                            placeholder="Search attribute..."
+                                            value={attributeSearchTerm[index] || ''}
+                                            onChange={(e) => {
+                                              e.stopPropagation();
+                                              setAttributeSearchTerm(prev => ({ ...prev, [index]: e.target.value }));
+                                            }}
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                            autoFocus
+                                          />
+                                        </div>
+                                      </div>
+
+                                      {/* Attribute List */}
+                                      <div className="overflow-y-auto max-h-48">
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            handleAttributeChange(index, '');
+                                            setAttributeDropdownOpen(prev => ({ ...prev, [index]: false }));
+                                            setAttributeSearchTerm(prev => ({ ...prev, [index]: '' }));
+                                          }}
+                                          className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 transition-colors ${!attr.attributeId ? 'bg-green-50 text-green-600' : 'text-gray-700'
+                                            }`}
+                                        >
+                                          Choose an attribute...
+                                        </button>
+                                        {getAvailableAttributesForProduct(index)
+                                          .filter(a =>
+                                            a.name.toLowerCase().includes((attributeSearchTerm[index] || '').toLowerCase())
+                                          )
+                                          .map((a) => (
+                                            <button
+                                              key={a._id || a.id}
+                                              type="button"
+                                              onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                handleAttributeChange(index, a._id || a.id);
+                                                setAttributeDropdownOpen(prev => ({ ...prev, [index]: false }));
+                                                setAttributeSearchTerm(prev => ({ ...prev, [index]: '' }));
+                                              }}
+                                              className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 transition-colors ${attr.attributeId === (a._id || a.id)
+                                                ? 'bg-green-50 text-green-600 font-medium'
+                                                : 'text-gray-700'
+                                                }`}
+                                            >
+                                              {a.name}
+                                            </button>
+                                          ))}
+                                        {getAvailableAttributesForProduct(index).filter(a =>
+                                          a.name.toLowerCase().includes((attributeSearchTerm[index] || '').toLowerCase())
+                                        ).length === 0 && (
+                                            <div className="px-3 py-4 text-sm text-gray-500 text-center">
+                                              No attributes found
+                                            </div>
+                                          )}
+                                      </div>
                                     </div>
                                   )}
                                 </div>
+                                {formErrors[`productAttribute_${index}`] && (
+                                  <p className="text-xs text-red-500 mt-1">
+                                    {formErrors[`productAttribute_${index}`]}
+                                  </p>
+                                )}
                               </div>
-                            )}
-                          </div>
-                          {formErrors[`productAttribute_${index}`] && (
-                            <p className="text-xs text-red-500 mt-1">
-                              {formErrors[`productAttribute_${index}`]}
-                            </p>
-                          )}
-                        </div>
 
-                        {selectedAttribute && (
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Select Values (You can select multiple) <span className="text-red-500">*</span>
-                            </label>
-                            {attributeValues.length === 0 ? (
-                              <p className="text-xs text-gray-500 italic">
-                                No values available for this attribute
-                              </p>
-                            ) : (
-                              <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-2 bg-gray-50">
-                                <div className="flex flex-wrap gap-2">
-                                  {attributeValues.map((valueObj) => {
-                                    const valueId = valueObj._id || valueObj.id;
-                                    const isSelected = attr.selectedValueIds?.includes(valueId);
+                              {selectedAttribute && (
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Select Values (You can select multiple) <span className="text-red-500">*</span>
+                                  </label>
+                                  {attributeValues.length === 0 ? (
+                                    <p className="text-xs text-gray-500 italic">
+                                      No values available for this attribute
+                                    </p>
+                                  ) : (
+                                    <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-2 bg-gray-50">
+                                      <div className="flex flex-wrap gap-2">
+                                        {attributeValues.map((valueObj) => {
+                                          const valueId = valueObj._id || valueObj.id;
+                                          const isSelected = attr.selectedValueIds?.includes(valueId);
 
-                                    return (
-                                      <button
-                                        key={valueId}
-                                        type="button"
-                                        onClick={() => handleAttributeValueToggle(index, valueId)}
-                                        className={`px-3 py-1.5 text-sm rounded-lg border transition-all ${
-                                          isSelected
-                                            ? 'bg-green-600 text-white border-blue-600 shadow-sm'
-                                            : 'bg-white text-gray-700 border-gray-300 hover:border-green-500 hover:bg-green-50'
-                                        }`}
-                                      >
-                                        {valueObj.value}
-                                      </button>
-                                    );
-                                  })}
+                                          return (
+                                            <button
+                                              key={valueId}
+                                              type="button"
+                                              onClick={() => handleAttributeValueToggle(index, valueId)}
+                                              className={`px-3 py-1.5 text-sm rounded-lg border transition-all ${isSelected
+                                                ? 'bg-green-600 text-white border-blue-600 shadow-sm'
+                                                : 'bg-white text-gray-700 border-gray-300 hover:border-green-500 hover:bg-green-50'
+                                                }`}
+                                            >
+                                              {valueObj.value}
+                                            </button>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  )}
+                                  {formErrors[`productAttributeValue_${index}`] && (
+                                    <p className="text-xs text-red-500 mt-2">
+                                      {formErrors[`productAttributeValue_${index}`]}
+                                    </p>
+                                  )}
+                                  {selectedValuesCount > 0 && (
+                                    <p className="text-xs text-green-600 mt-2">
+                                      ✓ {selectedValuesCount} value{selectedValuesCount !== 1 ? 's' : ''} selected
+                                    </p>
+                                  )}
                                 </div>
-                              </div>
-                            )}
-                            {formErrors[`productAttributeValue_${index}`] && (
-                              <p className="text-xs text-red-500 mt-2">
-                                {formErrors[`productAttributeValue_${index}`]}
-                              </p>
-                            )}
-                            {selectedValuesCount > 0 && (
-                              <p className="text-xs text-green-600 mt-2">
-                                ✓ {selectedValuesCount} value{selectedValuesCount !== 1 ? 's' : ''} selected
-                              </p>
-                            )}
-                          </div>
-                        )}
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => removeProductAttribute(index)}
-                        className="ml-4 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Remove this attribute"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Variants Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <Layers className="w-5 h-5 text-green-600" />
-                Product Variants
-              </h2>
-              <p className="text-xs text-gray-500 mt-1.5">
-                Variants are optional. Add variants if your product has different sizes, colors, etc.
-              </p>
-            </div>
-            {!showVariants && (
-              <button
-                type="button"
-                onClick={addVariant}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors shadow-sm"
-              >
-                <Plus className="w-4 h-4" />
-                Add Variant
-              </button>
-            )}
-          </div>
-
-          {!showVariants ? (
-            <div className="text-center py-6 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
-              <Layers className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-              <p className="text-sm font-medium text-gray-700 mb-1">
-                No variants added
-              </p>
-              <p className="text-xs text-gray-500">
-                Variants are optional. Click "Add Variant" button above to add variants.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <span className="font-semibold text-gray-700">{variants.length}</span> variant{variants.length !== 1 ? 's' : ''} added
-                </div>
-                <button
-                  type="button"
-                  onClick={addVariant}
-                  className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add More Variant
-                </button>
-              </div>
-              
-              {variants.map((variant, variantIndex) => {
-                const isAttributeMode = variantAttributeMode[variantIndex] === true;
-                
-                return (
-                  <div
-                    key={variantIndex}
-                    className="bg-gradient-to-br from-gray-50 to-blue-50 border border-gray-300 rounded-lg p-3 shadow-sm hover:shadow transition-all"
-                  >
-                    {/* Variant Header */}
-                    <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-200">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center text-white font-bold text-xs">
-                          {variantIndex + 1}
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-semibold text-gray-900">
-                            {isAttributeMode 
-                              ? `Variant ${variantIndex + 1} - Select Attributes`
-                              : (variant.variant_name || `Variant ${variantIndex + 1}`)
-                            }
-                          </h3>
-                          <p className="text-xs text-gray-500 mt-0.5">
-                            {isAttributeMode 
-                              ? 'Select attributes first, then add details'
-                              : (variant.variant_SKU || 'No SKU yet')
-                            }
-                          </p>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (variants.length === 1) {
-                            setShowVariants(false);
-                            setVariants([]);
-                            setVariantAttributeMode({});
-                          } else {
-                            removeVariant(variantIndex);
-                          }
-                        }}
-                        className="p-1.5 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                        title="Remove variant"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    {/* Selected Attributes - Show at top when in details mode */}
-                    {!isAttributeMode && variant.variant_attributes.length > 0 && (
-                      <div className="mb-3 pt-2 pb-2 border-b border-gray-300 bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-2 shadow-sm">
-                        <div className="flex items-center justify-between mb-2">
-                          <label className="block text-sm font-semibold text-gray-800 flex items-center gap-1.5">
-                            <Tag className="w-4 h-4 text-green-600" />
-                            Selected Attributes
-                          </label>
-                          <button
-                            type="button"
-                            onClick={() => setVariantAttributeMode((prev) => ({ ...prev, [variantIndex]: true }))}
-                            className="text-xs text-green-600 hover:text-green-700 font-medium flex items-center gap-1 px-2 py-1 rounded-md hover:bg-green-100 transition-colors"
-                          >
-                            <Tag className="w-3.5 h-3.5" />
-                            Edit Attributes
-                          </button>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {variant.variant_attributes.map((vAttr, vAttrIndex) => {
-                            const selectedAttr = attributes.find(
-                              (a) => (a._id || a.id) === vAttr.attribute_id
-                            );
-                            const selectedValue = selectedAttr?.values?.find(
-                              (v) => (v._id || v.id) === vAttr.value_id
-                            );
-                            
-                            return (
-                              <div
-                                key={vAttrIndex}
-                                className="px-2.5 py-1.5 bg-white text-blue-800 rounded-md text-xs font-semibold border border-green-300 shadow-sm hover:shadow transition-shadow flex items-center gap-1.5"
-                              >
-                                <span className="text-green-600 font-bold">{selectedAttr?.name || 'Unknown'}:</span>
-                                <span className="text-gray-700 font-medium">{selectedValue?.value || 'Unknown'}</span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Attribute Selection Mode */}
-                    {isAttributeMode ? (
-                      <div className="space-y-4">
-                        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                              1
+                              )}
                             </div>
-                            <h4 className="text-sm font-semibold text-gray-900">
-                              Select Variant Attributes
-                            </h4>
-                          </div>
-                          <p className="text-xs text-gray-600 ml-8">
-                            Add attributes like Color, Size, etc. for this variant. You can add multiple attributes.
-                          </p>
-                        </div>
 
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between mb-3">
-                            <label className="block text-sm font-semibold text-gray-700">
-                              Variant Attributes <span className="text-red-500">*</span>
-                            </label>
                             <button
                               type="button"
-                              onClick={() => addVariantAttribute(variantIndex)}
-                              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm"
+                              onClick={() => removeProductAttribute(index)}
+                              className="ml-4 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Remove this attribute"
                             >
-                              <Plus className="w-3.5 h-3.5" />
-                              Add Attribute
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Variants Section */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                      <Layers className="w-5 h-5 text-green-600" />
+                      Product Variants
+                    </h2>
+                    <p className="text-xs text-gray-500 mt-1.5">
+                      Variants are optional. Add variants if your product has different sizes, colors, etc.
+                    </p>
+                  </div>
+                  {!showVariants && (
+                    <button
+                      type="button"
+                      onClick={addVariant}
+                      className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors shadow-sm"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Variant
+                    </button>
+                  )}
+                </div>
+
+                {!showVariants ? (
+                  <div className="text-center py-6 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
+                    <Layers className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                    <p className="text-sm font-medium text-gray-700 mb-1">
+                      No variants added
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Variants are optional. Click "Add Variant" button above to add variants.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <span className="font-semibold text-gray-700">{variants.length}</span> variant{variants.length !== 1 ? 's' : ''} added
+                      </div>
+                      <button
+                        type="button"
+                        onClick={addVariant}
+                        className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Add More Variant
+                      </button>
+                    </div>
+
+                    {variants.map((variant, variantIndex) => {
+                      const isAttributeMode = variantAttributeMode[variantIndex] === true;
+
+                      return (
+                        <div
+                          key={variantIndex}
+                          className="bg-gradient-to-br from-gray-50 to-blue-50 border border-gray-300 rounded-lg p-3 shadow-sm hover:shadow transition-all"
+                        >
+                          {/* Variant Header */}
+                          <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-200">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center text-white font-bold text-xs">
+                                {variantIndex + 1}
+                              </div>
+                              <div>
+                                <h3 className="text-sm font-semibold text-gray-900">
+                                  {isAttributeMode
+                                    ? `Variant ${variantIndex + 1} - Select Attributes`
+                                    : (variant.variant_name || `Variant ${variantIndex + 1}`)
+                                  }
+                                </h3>
+                                <p className="text-xs text-gray-500 mt-0.5">
+                                  {isAttributeMode
+                                    ? 'Select attributes first, then add details'
+                                    : (variant.variant_SKU || 'No SKU yet')
+                                  }
+                                </p>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (variants.length === 1) {
+                                  setShowVariants(false);
+                                  setVariants([]);
+                                  setVariantAttributeMode({});
+                                } else {
+                                  removeVariant(variantIndex);
+                                }
+                              }}
+                              className="p-1.5 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                              title="Remove variant"
+                            >
+                              <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
 
-                          {variant.variant_attributes.length === 0 ? (
-                            <div className="text-center py-6 border-2 border-dashed border-gray-200 rounded-lg bg-white">
-                              <Tag className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                              <p className="text-sm font-medium text-gray-700 mb-1">
-                                No attributes added yet
-                              </p>
-                              <p className="text-xs text-gray-500 mb-4">
-                                Click "Add Attribute" to start adding attributes for this variant
-                              </p>
-                              <button
-                                type="button"
-                                onClick={() => addVariantAttribute(variantIndex)}
-                                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                              >
-                                <Plus className="w-4 h-4" />
-                                Add Your First Attribute
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="space-y-3">
-                              {variant.variant_attributes.map((vAttr, vAttrIndex) => {
-                                const selectedAttr = attributes.find(
-                                  (a) => (a._id || a.id) === vAttr.attribute_id
-                                );
-                                const vAttrValues = getAttributeValues(vAttr.attribute_id);
-                                const availableAttributes = getAvailableAttributesForVariant(variantIndex, vAttrIndex);
-
-                                return (
-                                  <div
-                                    key={vAttrIndex}
-                                    className="flex items-center gap-3 p-4 bg-white rounded-lg border-2 border-gray-200 hover:border-green-300 transition-colors"
-                                  >
-                                    {/* Attribute Selection - Searchable Dropdown */}
-                                    <div className={`flex-1 relative variant-attribute-dropdown-container-${variantIndex}-${vAttrIndex}`}>
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          if (!loadingAttributes) {
-                                            const key = `${variantIndex}-${vAttrIndex}`;
-                                            setVariantAttributeDropdownOpen(prev => ({ ...prev, [key]: !prev[key] }));
-                                            setVariantAttributeSearchTerm(prev => ({ ...prev, [key]: '' }));
-                                          }
-                                        }}
-                                        className={`w-full px-3 py-2 text-sm border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all flex items-center justify-between ${
-                                          formErrors[
-                                            `variant_attr_${variantIndex}_${vAttrIndex}`
-                                          ]
-                                            ? 'border-red-500 bg-red-50'
-                                            : 'border-gray-300 bg-white'
-                                        } ${loadingAttributes ? 'cursor-not-allowed' : 'cursor-pointer'}`}
-                                        disabled={loadingAttributes}
-                                      >
-                                        <span className={vAttr.attribute_id ? 'text-gray-900' : 'text-gray-500'}>
-                                          {vAttr.attribute_id
-                                            ? availableAttributes.find(a => (a._id || a.id) === vAttr.attribute_id)?.name || 'Select Attribute'
-                                            : 'Select Attribute'}
-                                        </span>
-                                        {variantAttributeDropdownOpen[`${variantIndex}-${vAttrIndex}`] ? (
-                                          <ChevronUp className="w-4 h-4 text-gray-400" />
-                                        ) : (
-                                          <ChevronDown className="w-4 h-4 text-gray-400" />
-                                        )}
-                                      </button>
-                                      
-                                      {variantAttributeDropdownOpen[`${variantIndex}-${vAttrIndex}`] && (
-                                        <div 
-                                          className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-hidden"
-                                          onClick={(e) => e.stopPropagation()}
-                                        >
-                                          {/* Search Input */}
-                                          <div className="p-2 border-b border-gray-200">
-                                            <div className="relative">
-                                              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                              <input
-                                                type="text"
-                                                placeholder="Search attribute..."
-                                                value={variantAttributeSearchTerm[`${variantIndex}-${vAttrIndex}`] || ''}
-                                                onChange={(e) => {
-                                                  e.stopPropagation();
-                                                  setVariantAttributeSearchTerm(prev => ({ ...prev, [`${variantIndex}-${vAttrIndex}`]: e.target.value }));
-                                                }}
-                                                onClick={(e) => e.stopPropagation()}
-                                                className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                                                autoFocus
-                                              />
-                                            </div>
-                                          </div>
-                                          
-                                          {/* Attribute List */}
-                                          <div className="overflow-y-auto max-h-48">
-                                            <button
-                                              type="button"
-                                              onClick={(e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                                handleVariantAttributeChange(variantIndex, vAttrIndex, 'attribute_id', '');
-                                                const key = `${variantIndex}-${vAttrIndex}`;
-                                                setVariantAttributeDropdownOpen(prev => ({ ...prev, [key]: false }));
-                                                setVariantAttributeSearchTerm(prev => ({ ...prev, [key]: '' }));
-                                              }}
-                                              className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 transition-colors ${
-                                                !vAttr.attribute_id ? 'bg-green-50 text-green-600' : 'text-gray-700'
-                                              }`}
-                                            >
-                                              Select Attribute
-                                            </button>
-                                            {availableAttributes
-                                              .filter(a => 
-                                                a.name.toLowerCase().includes((variantAttributeSearchTerm[`${variantIndex}-${vAttrIndex}`] || '').toLowerCase())
-                                              )
-                                              .map((a) => (
-                                                <button
-                                                  key={a._id || a.id}
-                                                  type="button"
-                                                  onClick={(e) => {
-                                                    e.preventDefault();
-                                                    e.stopPropagation();
-                                                    handleVariantAttributeChange(variantIndex, vAttrIndex, 'attribute_id', a._id || a.id);
-                                                    const key = `${variantIndex}-${vAttrIndex}`;
-                                                    setVariantAttributeDropdownOpen(prev => ({ ...prev, [key]: false }));
-                                                    setVariantAttributeSearchTerm(prev => ({ ...prev, [key]: '' }));
-                                                  }}
-                                                  className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 transition-colors ${
-                                                    vAttr.attribute_id === (a._id || a.id) 
-                                                      ? 'bg-green-50 text-green-600 font-medium' 
-                                                      : 'text-gray-700'
-                                                  }`}
-                                                >
-                                                  {a.name}
-                                                </button>
-                                              ))}
-                                            {availableAttributes.filter(a => 
-                                              a.name.toLowerCase().includes((variantAttributeSearchTerm[`${variantIndex}-${vAttrIndex}`] || '').toLowerCase())
-                                            ).length === 0 && (
-                                              <div className="px-3 py-4 text-sm text-gray-500 text-center">
-                                                No attributes found
-                                              </div>
-                                            )}
-                                          </div>
-                                        </div>
-                                      )}
-                                    </div>
-
-                                    {/* Value Selection - Searchable Dropdown */}
-                                    <div className={`flex-1 relative variant-attribute-value-dropdown-container-${variantIndex}-${vAttrIndex}`}>
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          if (vAttr.attribute_id && !loadingAttributes) {
-                                            const key = `${variantIndex}-${vAttrIndex}`;
-                                            setVariantAttributeValueDropdownOpen(prev => ({ ...prev, [key]: !prev[key] }));
-                                            setVariantAttributeValueSearchTerm(prev => ({ ...prev, [key]: '' }));
-                                          }
-                                        }}
-                                        disabled={!vAttr.attribute_id || loadingAttributes}
-                                        className={`w-full px-3 py-2 text-sm border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all flex items-center justify-between ${
-                                          formErrors[
-                                            `variant_value_${variantIndex}_${vAttrIndex}`
-                                          ]
-                                            ? 'border-red-500 bg-red-50'
-                                            : 'border-gray-300'
-                                        } ${!vAttr.attribute_id || loadingAttributes ? 'bg-gray-100 cursor-not-allowed' : 'bg-white cursor-pointer'}`}
-                                      >
-                                        <span className={vAttr.value_id ? 'text-gray-900' : 'text-gray-500'}>
-                                          {vAttr.value_id
-                                            ? vAttrValues.find(v => (v._id || v.id) === vAttr.value_id)?.value || 'Select Value'
-                                            : 'Select Value'}
-                                        </span>
-                                        {variantAttributeValueDropdownOpen[`${variantIndex}-${vAttrIndex}`] ? (
-                                          <ChevronUp className="w-4 h-4 text-gray-400" />
-                                        ) : (
-                                          <ChevronDown className="w-4 h-4 text-gray-400" />
-                                        )}
-                                      </button>
-                                      
-                                      {variantAttributeValueDropdownOpen[`${variantIndex}-${vAttrIndex}`] && vAttr.attribute_id && (
-                                        <div 
-                                          className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-hidden"
-                                          onClick={(e) => e.stopPropagation()}
-                                        >
-                                          {/* Search Input */}
-                                          <div className="p-2 border-b border-gray-200">
-                                            <div className="relative">
-                                              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                              <input
-                                                type="text"
-                                                placeholder="Search value..."
-                                                value={variantAttributeValueSearchTerm[`${variantIndex}-${vAttrIndex}`] || ''}
-                                                onChange={(e) => {
-                                                  e.stopPropagation();
-                                                  setVariantAttributeValueSearchTerm(prev => ({ ...prev, [`${variantIndex}-${vAttrIndex}`]: e.target.value }));
-                                                }}
-                                                onClick={(e) => e.stopPropagation()}
-                                                className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                                                autoFocus
-                                              />
-                                            </div>
-                                          </div>
-                                          
-                                          {/* Value List */}
-                                          <div className="overflow-y-auto max-h-48">
-                                            <button
-                                              type="button"
-                                              onClick={(e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                                handleVariantAttributeChange(variantIndex, vAttrIndex, 'value_id', '');
-                                                const key = `${variantIndex}-${vAttrIndex}`;
-                                                setVariantAttributeValueDropdownOpen(prev => ({ ...prev, [key]: false }));
-                                                setVariantAttributeValueSearchTerm(prev => ({ ...prev, [key]: '' }));
-                                              }}
-                                              className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 transition-colors ${
-                                                !vAttr.value_id ? 'bg-green-50 text-green-600' : 'text-gray-700'
-                                              }`}
-                                            >
-                                              Select Value
-                                            </button>
-                                            {vAttrValues
-                                              .filter(val => 
-                                                val.value.toLowerCase().includes((variantAttributeValueSearchTerm[`${variantIndex}-${vAttrIndex}`] || '').toLowerCase())
-                                              )
-                                              .map((val) => (
-                                                <button
-                                                  key={val._id || val.id}
-                                                  type="button"
-                                                  onClick={(e) => {
-                                                    e.preventDefault();
-                                                    e.stopPropagation();
-                                                    handleVariantAttributeChange(variantIndex, vAttrIndex, 'value_id', val._id || val.id);
-                                                    const key = `${variantIndex}-${vAttrIndex}`;
-                                                    setVariantAttributeValueDropdownOpen(prev => ({ ...prev, [key]: false }));
-                                                    setVariantAttributeValueSearchTerm(prev => ({ ...prev, [key]: '' }));
-                                                  }}
-                                                  className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 transition-colors ${
-                                                    vAttr.value_id === (val._id || val.id) 
-                                                      ? 'bg-green-50 text-green-600 font-medium' 
-                                                      : 'text-gray-700'
-                                                  }`}
-                                                >
-                                                  {val.value}
-                                                </button>
-                                              ))}
-                                            {vAttrValues.filter(val => 
-                                              val.value.toLowerCase().includes((variantAttributeValueSearchTerm[`${variantIndex}-${vAttrIndex}`] || '').toLowerCase())
-                                            ).length === 0 && (
-                                              <div className="px-3 py-4 text-sm text-gray-500 text-center">
-                                                No values found
-                                              </div>
-                                            )}
-                                          </div>
-                                        </div>
-                                      )}
-                                    </div>
-
-                                    <button
-                                      type="button"
-                                      onClick={() => removeVariantAttribute(variantIndex, vAttrIndex)}
-                                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
-                                      title="Remove attribute"
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </button>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="flex justify-end mt-6 pt-4 border-t border-gray-200">
-                          <button
-                            type="button"
-                            onClick={() => continueVariantDetails(variantIndex)}
-                            disabled={variant.variant_attributes.length === 0 || 
-                                     variant.variant_attributes.some(attr => !attr.attribute_id || !attr.value_id)}
-                            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow"
-                          >
-                            Continue to Details
-                            <ChevronDown className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      /* Details Mode */
-                      <>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          <div className="md:col-span-2">
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
-                              Variant Name <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                              type="text"
-                              value={variant.variant_name}
-                              onChange={(e) => handleVariantChange(variantIndex, 'variant_name', e.target.value)}
-                              className={`w-full px-3 py-1.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-sm ${
-                                formErrors[`variant_name_${variantIndex}`]
-                                  ? 'border-red-500 bg-red-50'
-                                  : 'border-gray-300'
-                              }`}
-                              placeholder="e.g., Red - Large"
-                            />
-                            {formErrors[`variant_name_${variantIndex}`] && (
-                              <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
-                                <AlertCircle className="w-3 h-3" />
-                                {formErrors[`variant_name_${variantIndex}`]}
-                              </p>
-                            )}
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
-                              Variant SKU <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                              type="text"
-                              value={variant.variant_SKU}
-                              onChange={(e) => handleVariantChange(variantIndex, 'variant_SKU', e.target.value)}
-                              className={`w-full px-3 py-1.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-sm ${
-                                formErrors[`variant_SKU_${variantIndex}`]
-                                  ? 'border-red-500 bg-red-50'
-                                  : 'border-gray-300'
-                              }`}
-                              placeholder="e.g., PROD-RED-L"
-                            />
-                            {formErrors[`variant_SKU_${variantIndex}`] && (
-                              <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
-                                <AlertCircle className="w-3 h-3" />
-                                {formErrors[`variant_SKU_${variantIndex}`]}
-                              </p>
-                            )}
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
-                              Variant Price <span className="text-red-500">*</span>
-                            </label>
-                            <div className="relative">
-                              <IndianRupee className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                              <input
-                                type="number"
-                                value={variant.variant_price}
-                                onChange={(e) => handleVariantChange(variantIndex, 'variant_price', e.target.value)}
-                                step="0.01"
-                                min="0"
-                                className={`w-full pl-9 pr-3 py-1.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-sm ${
-                                  formErrors[`variant_price_${variantIndex}`]
-                                    ? 'border-red-500 bg-red-50'
-                                    : 'border-gray-300'
-                                }`}
-                                placeholder="0.00"
-                              />
-                            </div>
-                            {formErrors[`variant_price_${variantIndex}`] && (
-                              <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
-                                <AlertCircle className="w-3 h-3" />
-                                {formErrors[`variant_price_${variantIndex}`]}
-                              </p>
-                            )}
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
-                              Quantity <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                              type="number"
-                              value={variant.quantity}
-                              onChange={(e) => handleVariantChange(variantIndex, 'quantity', e.target.value)}
-                              min="0"
-                              className={`w-full px-3 py-1.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-sm ${
-                                formErrors[`variant_quantity_${variantIndex}`]
-                                  ? 'border-red-500 bg-red-50'
-                                  : 'border-gray-300'
-                              }`}
-                              placeholder="0"
-                            />
-                            {formErrors[`variant_quantity_${variantIndex}`] && (
-                              <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
-                                <AlertCircle className="w-3 h-3" />
-                                {formErrors[`variant_quantity_${variantIndex}`]}
-                              </p>
-                            )}
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
-                              Status
-                            </label>
-                            <select
-                              value={variant.status}
-                              onChange={(e) => handleVariantChange(variantIndex, 'status', e.target.value)}
-                              className="w-full px-3 py-1.5 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-sm"
-                            >
-                              <option value="ACTIVE">Active</option>
-                              <option value="DRAFT">Draft</option>
-                            </select>
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
-                              Variant Image
-                            </label>
-                            {variant.variant_image_preview ? (
-                              <div className="relative inline-block">
-                                <img
-                                  src={variant.variant_image_preview}
-                                  alt={`Variant ${variantIndex + 1}`}
-                                  className="w-20 h-20 object-cover rounded-lg border border-gray-300 shadow-sm"
-                                />
+                          {/* Selected Attributes - Show at top when in details mode */}
+                          {!isAttributeMode && variant.variant_attributes.length > 0 && (
+                            <div className="mb-3 pt-2 pb-2 border-b border-gray-300 bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-2 shadow-sm">
+                              <div className="flex items-center justify-between mb-2">
+                                <label className="block text-sm font-semibold text-gray-800 flex items-center gap-1.5">
+                                  <Tag className="w-4 h-4 text-green-600" />
+                                  Selected Attributes
+                                </label>
                                 <button
                                   type="button"
-                                  onClick={() => removeVariantImage(variantIndex)}
-                                  className="absolute -top-1.5 -right-1.5 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 shadow transition-colors"
+                                  onClick={() => setVariantAttributeMode((prev) => ({ ...prev, [variantIndex]: true }))}
+                                  className="text-xs text-green-600 hover:text-green-700 font-medium flex items-center gap-1 px-2 py-1 rounded-md hover:bg-green-100 transition-colors"
                                 >
-                                  <X className="w-3 h-3" />
+                                  <Tag className="w-3.5 h-3.5" />
+                                  Edit Attributes
                                 </button>
                               </div>
-                            ) : (
-                              <label className="flex flex-col items-center justify-center w-20 h-20 border border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-green-500 hover:bg-green-50 transition-all bg-white">
-                                <Upload className="w-4 h-4 text-gray-400" />
-                                <span className="text-xs text-gray-500 mt-0.5 font-medium">Upload</span>
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  onChange={(e) => handleVariantImageChange(variantIndex, e)}
-                                  className="hidden"
-                                />
-                              </label>
-                            )}
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+                              <div className="flex flex-wrap gap-2">
+                                {variant.variant_attributes.map((vAttr, vAttrIndex) => {
+                                  const selectedAttr = attributes.find(
+                                    (a) => (a._id || a.id) === vAttr.attribute_id
+                                  );
+                                  const selectedValue = selectedAttr?.values?.find(
+                                    (v) => (v._id || v.id) === vAttr.value_id
+                                  );
 
-      </form>
-      </div>
+                                  return (
+                                    <div
+                                      key={vAttrIndex}
+                                      className="px-2.5 py-1.5 bg-white text-blue-800 rounded-md text-xs font-semibold border border-green-300 shadow-sm hover:shadow transition-shadow flex items-center gap-1.5"
+                                    >
+                                      <span className="text-green-600 font-bold">{selectedAttr?.name || 'Unknown'}:</span>
+                                      <span className="text-gray-700 font-medium">{selectedValue?.value || 'Unknown'}</span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Attribute Selection Mode */}
+                          {isAttributeMode ? (
+                            <div className="space-y-4">
+                              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <div className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                                    1
+                                  </div>
+                                  <h4 className="text-sm font-semibold text-gray-900">
+                                    Select Variant Attributes
+                                  </h4>
+                                </div>
+                                <p className="text-xs text-gray-600 ml-8">
+                                  Add attributes like Color, Size, etc. for this variant. You can add multiple attributes.
+                                </p>
+                              </div>
+
+                              <div className="space-y-3">
+                                <div className="flex items-center justify-between mb-3">
+                                  <label className="block text-sm font-semibold text-gray-700">
+                                    Variant Attributes <span className="text-red-500">*</span>
+                                  </label>
+                                  <button
+                                    type="button"
+                                    onClick={() => addVariantAttribute(variantIndex)}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm"
+                                  >
+                                    <Plus className="w-3.5 h-3.5" />
+                                    Add Attribute
+                                  </button>
+                                </div>
+
+                                {variant.variant_attributes.length === 0 ? (
+                                  <div className="text-center py-6 border-2 border-dashed border-gray-200 rounded-lg bg-white">
+                                    <Tag className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                                    <p className="text-sm font-medium text-gray-700 mb-1">
+                                      No attributes added yet
+                                    </p>
+                                    <p className="text-xs text-gray-500 mb-4">
+                                      Click "Add Attribute" to start adding attributes for this variant
+                                    </p>
+                                    <button
+                                      type="button"
+                                      onClick={() => addVariantAttribute(variantIndex)}
+                                      className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                    >
+                                      <Plus className="w-4 h-4" />
+                                      Add Your First Attribute
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div className="space-y-3">
+                                    {variant.variant_attributes.map((vAttr, vAttrIndex) => {
+                                      const selectedAttr = attributes.find(
+                                        (a) => (a._id || a.id) === vAttr.attribute_id
+                                      );
+                                      const vAttrValues = getAttributeValues(vAttr.attribute_id);
+                                      const availableAttributes = getAvailableAttributesForVariant(variantIndex, vAttrIndex);
+
+                                      return (
+                                        <div
+                                          key={vAttrIndex}
+                                          className="flex items-center gap-3 p-4 bg-white rounded-lg border-2 border-gray-200 hover:border-green-300 transition-colors"
+                                        >
+                                          {/* Attribute Selection - Searchable Dropdown */}
+                                          <div className={`flex-1 relative variant-attribute-dropdown-container-${variantIndex}-${vAttrIndex}`}>
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                if (!loadingAttributes) {
+                                                  const key = `${variantIndex}-${vAttrIndex}`;
+                                                  setVariantAttributeDropdownOpen(prev => ({ ...prev, [key]: !prev[key] }));
+                                                  setVariantAttributeSearchTerm(prev => ({ ...prev, [key]: '' }));
+                                                }
+                                              }}
+                                              className={`w-full px-3 py-2 text-sm border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all flex items-center justify-between ${formErrors[
+                                                `variant_attr_${variantIndex}_${vAttrIndex}`
+                                              ]
+                                                ? 'border-red-500 bg-red-50'
+                                                : 'border-gray-300 bg-white'
+                                                } ${loadingAttributes ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                                              disabled={loadingAttributes}
+                                            >
+                                              <span className={vAttr.attribute_id ? 'text-gray-900' : 'text-gray-500'}>
+                                                {vAttr.attribute_id
+                                                  ? availableAttributes.find(a => (a._id || a.id) === vAttr.attribute_id)?.name || 'Select Attribute'
+                                                  : 'Select Attribute'}
+                                              </span>
+                                              {variantAttributeDropdownOpen[`${variantIndex}-${vAttrIndex}`] ? (
+                                                <ChevronUp className="w-4 h-4 text-gray-400" />
+                                              ) : (
+                                                <ChevronDown className="w-4 h-4 text-gray-400" />
+                                              )}
+                                            </button>
+
+                                            {variantAttributeDropdownOpen[`${variantIndex}-${vAttrIndex}`] && (
+                                              <div
+                                                className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-hidden"
+                                                onClick={(e) => e.stopPropagation()}
+                                              >
+                                                {/* Search Input */}
+                                                <div className="p-2 border-b border-gray-200">
+                                                  <div className="relative">
+                                                    <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                                    <input
+                                                      type="text"
+                                                      placeholder="Search attribute..."
+                                                      value={variantAttributeSearchTerm[`${variantIndex}-${vAttrIndex}`] || ''}
+                                                      onChange={(e) => {
+                                                        e.stopPropagation();
+                                                        setVariantAttributeSearchTerm(prev => ({ ...prev, [`${variantIndex}-${vAttrIndex}`]: e.target.value }));
+                                                      }}
+                                                      onClick={(e) => e.stopPropagation()}
+                                                      className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                                      autoFocus
+                                                    />
+                                                  </div>
+                                                </div>
+
+                                                {/* Attribute List */}
+                                                <div className="overflow-y-auto max-h-48">
+                                                  <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                      e.preventDefault();
+                                                      e.stopPropagation();
+                                                      handleVariantAttributeChange(variantIndex, vAttrIndex, 'attribute_id', '');
+                                                      const key = `${variantIndex}-${vAttrIndex}`;
+                                                      setVariantAttributeDropdownOpen(prev => ({ ...prev, [key]: false }));
+                                                      setVariantAttributeSearchTerm(prev => ({ ...prev, [key]: '' }));
+                                                    }}
+                                                    className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 transition-colors ${!vAttr.attribute_id ? 'bg-green-50 text-green-600' : 'text-gray-700'
+                                                      }`}
+                                                  >
+                                                    Select Attribute
+                                                  </button>
+                                                  {availableAttributes
+                                                    .filter(a =>
+                                                      a.name.toLowerCase().includes((variantAttributeSearchTerm[`${variantIndex}-${vAttrIndex}`] || '').toLowerCase())
+                                                    )
+                                                    .map((a) => (
+                                                      <button
+                                                        key={a._id || a.id}
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                          e.preventDefault();
+                                                          e.stopPropagation();
+                                                          handleVariantAttributeChange(variantIndex, vAttrIndex, 'attribute_id', a._id || a.id);
+                                                          const key = `${variantIndex}-${vAttrIndex}`;
+                                                          setVariantAttributeDropdownOpen(prev => ({ ...prev, [key]: false }));
+                                                          setVariantAttributeSearchTerm(prev => ({ ...prev, [key]: '' }));
+                                                        }}
+                                                        className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 transition-colors ${vAttr.attribute_id === (a._id || a.id)
+                                                          ? 'bg-green-50 text-green-600 font-medium'
+                                                          : 'text-gray-700'
+                                                          }`}
+                                                      >
+                                                        {a.name}
+                                                      </button>
+                                                    ))}
+                                                  {availableAttributes.filter(a =>
+                                                    a.name.toLowerCase().includes((variantAttributeSearchTerm[`${variantIndex}-${vAttrIndex}`] || '').toLowerCase())
+                                                  ).length === 0 && (
+                                                      <div className="px-3 py-4 text-sm text-gray-500 text-center">
+                                                        No attributes found
+                                                      </div>
+                                                    )}
+                                                </div>
+                                              </div>
+                                            )}
+                                          </div>
+
+                                          {/* Value Selection - Searchable Dropdown */}
+                                          <div className={`flex-1 relative variant-attribute-value-dropdown-container-${variantIndex}-${vAttrIndex}`}>
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                if (vAttr.attribute_id && !loadingAttributes) {
+                                                  const key = `${variantIndex}-${vAttrIndex}`;
+                                                  setVariantAttributeValueDropdownOpen(prev => ({ ...prev, [key]: !prev[key] }));
+                                                  setVariantAttributeValueSearchTerm(prev => ({ ...prev, [key]: '' }));
+                                                }
+                                              }}
+                                              disabled={!vAttr.attribute_id || loadingAttributes}
+                                              className={`w-full px-3 py-2 text-sm border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all flex items-center justify-between ${formErrors[
+                                                `variant_value_${variantIndex}_${vAttrIndex}`
+                                              ]
+                                                ? 'border-red-500 bg-red-50'
+                                                : 'border-gray-300'
+                                                } ${!vAttr.attribute_id || loadingAttributes ? 'bg-gray-100 cursor-not-allowed' : 'bg-white cursor-pointer'}`}
+                                            >
+                                              <span className={vAttr.value_id ? 'text-gray-900' : 'text-gray-500'}>
+                                                {vAttr.value_id
+                                                  ? vAttrValues.find(v => (v._id || v.id) === vAttr.value_id)?.value || 'Select Value'
+                                                  : 'Select Value'}
+                                              </span>
+                                              {variantAttributeValueDropdownOpen[`${variantIndex}-${vAttrIndex}`] ? (
+                                                <ChevronUp className="w-4 h-4 text-gray-400" />
+                                              ) : (
+                                                <ChevronDown className="w-4 h-4 text-gray-400" />
+                                              )}
+                                            </button>
+
+                                            {variantAttributeValueDropdownOpen[`${variantIndex}-${vAttrIndex}`] && vAttr.attribute_id && (
+                                              <div
+                                                className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-hidden"
+                                                onClick={(e) => e.stopPropagation()}
+                                              >
+                                                {/* Search Input */}
+                                                <div className="p-2 border-b border-gray-200">
+                                                  <div className="relative">
+                                                    <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                                    <input
+                                                      type="text"
+                                                      placeholder="Search value..."
+                                                      value={variantAttributeValueSearchTerm[`${variantIndex}-${vAttrIndex}`] || ''}
+                                                      onChange={(e) => {
+                                                        e.stopPropagation();
+                                                        setVariantAttributeValueSearchTerm(prev => ({ ...prev, [`${variantIndex}-${vAttrIndex}`]: e.target.value }));
+                                                      }}
+                                                      onClick={(e) => e.stopPropagation()}
+                                                      className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                                      autoFocus
+                                                    />
+                                                  </div>
+                                                </div>
+
+                                                {/* Value List */}
+                                                <div className="overflow-y-auto max-h-48">
+                                                  <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                      e.preventDefault();
+                                                      e.stopPropagation();
+                                                      handleVariantAttributeChange(variantIndex, vAttrIndex, 'value_id', '');
+                                                      const key = `${variantIndex}-${vAttrIndex}`;
+                                                      setVariantAttributeValueDropdownOpen(prev => ({ ...prev, [key]: false }));
+                                                      setVariantAttributeValueSearchTerm(prev => ({ ...prev, [key]: '' }));
+                                                    }}
+                                                    className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 transition-colors ${!vAttr.value_id ? 'bg-green-50 text-green-600' : 'text-gray-700'
+                                                      }`}
+                                                  >
+                                                    Select Value
+                                                  </button>
+                                                  {vAttrValues
+                                                    .filter(val =>
+                                                      val.value.toLowerCase().includes((variantAttributeValueSearchTerm[`${variantIndex}-${vAttrIndex}`] || '').toLowerCase())
+                                                    )
+                                                    .map((val) => (
+                                                      <button
+                                                        key={val._id || val.id}
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                          e.preventDefault();
+                                                          e.stopPropagation();
+                                                          handleVariantAttributeChange(variantIndex, vAttrIndex, 'value_id', val._id || val.id);
+                                                          const key = `${variantIndex}-${vAttrIndex}`;
+                                                          setVariantAttributeValueDropdownOpen(prev => ({ ...prev, [key]: false }));
+                                                          setVariantAttributeValueSearchTerm(prev => ({ ...prev, [key]: '' }));
+                                                        }}
+                                                        className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 transition-colors ${vAttr.value_id === (val._id || val.id)
+                                                          ? 'bg-green-50 text-green-600 font-medium'
+                                                          : 'text-gray-700'
+                                                          }`}
+                                                      >
+                                                        {val.value}
+                                                      </button>
+                                                    ))}
+                                                  {vAttrValues.filter(val =>
+                                                    val.value.toLowerCase().includes((variantAttributeValueSearchTerm[`${variantIndex}-${vAttrIndex}`] || '').toLowerCase())
+                                                  ).length === 0 && (
+                                                      <div className="px-3 py-4 text-sm text-gray-500 text-center">
+                                                        No values found
+                                                      </div>
+                                                    )}
+                                                </div>
+                                              </div>
+                                            )}
+                                          </div>
+
+                                          <button
+                                            type="button"
+                                            onClick={() => removeVariantAttribute(variantIndex, vAttrIndex)}
+                                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
+                                            title="Remove attribute"
+                                          >
+                                            <Trash2 className="w-4 h-4" />
+                                          </button>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="flex justify-end mt-6 pt-4 border-t border-gray-200">
+                                <button
+                                  type="button"
+                                  onClick={() => continueVariantDetails(variantIndex)}
+                                  disabled={variant.variant_attributes.length === 0 ||
+                                    variant.variant_attributes.some(attr => !attr.attribute_id || !attr.value_id)}
+                                  className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow"
+                                >
+                                  Continue to Details
+                                  <ChevronDown className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            /* Details Mode */
+                            <>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div className="md:col-span-2">
+                                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                                    Variant Name <span className="text-red-500">*</span>
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={variant.variant_name}
+                                    onChange={(e) => handleVariantChange(variantIndex, 'variant_name', e.target.value)}
+                                    className={`w-full px-3 py-1.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-sm ${formErrors[`variant_name_${variantIndex}`]
+                                      ? 'border-red-500 bg-red-50'
+                                      : 'border-gray-300'
+                                      }`}
+                                    placeholder="e.g., Red - Large"
+                                  />
+                                  {formErrors[`variant_name_${variantIndex}`] && (
+                                    <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                                      <AlertCircle className="w-3 h-3" />
+                                      {formErrors[`variant_name_${variantIndex}`]}
+                                    </p>
+                                  )}
+                                </div>
+
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                                    Variant SKU <span className="text-red-500">*</span>
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={variant.variant_SKU}
+                                    onChange={(e) => handleVariantChange(variantIndex, 'variant_SKU', e.target.value)}
+                                    className={`w-full px-3 py-1.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-sm ${formErrors[`variant_SKU_${variantIndex}`]
+                                      ? 'border-red-500 bg-red-50'
+                                      : 'border-gray-300'
+                                      }`}
+                                    placeholder="e.g., PROD-RED-L"
+                                  />
+                                  {formErrors[`variant_SKU_${variantIndex}`] && (
+                                    <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                                      <AlertCircle className="w-3 h-3" />
+                                      {formErrors[`variant_SKU_${variantIndex}`]}
+                                    </p>
+                                  )}
+                                </div>
+
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                                    Variant Price <span className="text-red-500">*</span>
+                                  </label>
+                                  <div className="relative">
+                                    <IndianRupee className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <input
+                                      type="number"
+                                      value={variant.variant_price}
+                                      onChange={(e) => handleVariantChange(variantIndex, 'variant_price', e.target.value)}
+                                      step="0.01"
+                                      min="0"
+                                      className={`w-full pl-9 pr-3 py-1.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-sm ${formErrors[`variant_price_${variantIndex}`]
+                                        ? 'border-red-500 bg-red-50'
+                                        : 'border-gray-300'
+                                        }`}
+                                      placeholder="0.00"
+                                    />
+                                  </div>
+                                  {formErrors[`variant_price_${variantIndex}`] && (
+                                    <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                                      <AlertCircle className="w-3 h-3" />
+                                      {formErrors[`variant_price_${variantIndex}`]}
+                                    </p>
+                                  )}
+                                </div>
+
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                                    Quantity <span className="text-red-500">*</span>
+                                  </label>
+                                  <input
+                                    type="number"
+                                    value={variant.quantity}
+                                    onChange={(e) => handleVariantChange(variantIndex, 'quantity', e.target.value)}
+                                    min="0"
+                                    className={`w-full px-3 py-1.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-sm ${formErrors[`variant_quantity_${variantIndex}`]
+                                      ? 'border-red-500 bg-red-50'
+                                      : 'border-gray-300'
+                                      }`}
+                                    placeholder="0"
+                                  />
+                                  {formErrors[`variant_quantity_${variantIndex}`] && (
+                                    <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                                      <AlertCircle className="w-3 h-3" />
+                                      {formErrors[`variant_quantity_${variantIndex}`]}
+                                    </p>
+                                  )}
+                                </div>
+
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                                    Status
+                                  </label>
+                                  <select
+                                    value={variant.status}
+                                    onChange={(e) => handleVariantChange(variantIndex, 'status', e.target.value)}
+                                    className="w-full px-3 py-1.5 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-sm"
+                                  >
+                                    <option value="ACTIVE">Active</option>
+                                    <option value="DRAFT">Draft</option>
+                                  </select>
+                                </div>
+
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                                    Variant Image
+                                  </label>
+                                  {variant.variant_image_preview ? (
+                                    <div className="relative inline-block">
+                                      <img
+                                        src={variant.variant_image_preview}
+                                        alt={`Variant ${variantIndex + 1}`}
+                                        className="w-20 h-20 object-cover rounded-lg border border-gray-300 shadow-sm"
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => removeVariantImage(variantIndex)}
+                                        className="absolute -top-1.5 -right-1.5 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 shadow transition-colors"
+                                      >
+                                        <X className="w-3 h-3" />
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <label className="flex flex-col items-center justify-center w-20 h-20 border border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-green-500 hover:bg-green-50 transition-all bg-white">
+                                      <Upload className="w-4 h-4 text-gray-400" />
+                                      <span className="text-xs text-gray-500 mt-0.5 font-medium">Upload</span>
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => handleVariantImageChange(variantIndex, e)}
+                                        className="hidden"
+                                      />
+                                    </label>
+                                  )}
+                                </div>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+            </form>
+          </div>
         </>
       )}
     </div>

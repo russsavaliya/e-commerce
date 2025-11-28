@@ -13,7 +13,6 @@ import {
   UserCircle,
   Key,
   CheckCircle,
-  XCircle,
   Eye,
   EyeOff,
   Lock,
@@ -33,13 +32,13 @@ const Profile = () => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
   });
-  
+
   const [passwordErrors, setPasswordErrors] = useState({});
 
   useEffect(() => {
@@ -354,11 +353,10 @@ const Profile = () => {
                       }
                     }}
                     placeholder="Enter current password"
-                    className={`w-full px-3 py-2 pr-10 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                      passwordErrors.currentPassword
+                    className={`w-full px-3 py-2 pr-10 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${passwordErrors.currentPassword
                         ? 'border-red-300 bg-red-50'
                         : 'border-gray-300 bg-white'
-                    }`}
+                      }`}
                     aria-invalid={!!passwordErrors.currentPassword}
                   />
                   <button
@@ -396,11 +394,10 @@ const Profile = () => {
                       }
                     }}
                     placeholder="Enter new password (min 6 characters)"
-                    className={`w-full px-3 py-2 pr-10 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                      passwordErrors.newPassword
+                    className={`w-full px-3 py-2 pr-10 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${passwordErrors.newPassword
                         ? 'border-red-300 bg-red-50'
                         : 'border-gray-300 bg-white'
-                    }`}
+                      }`}
                     aria-invalid={!!passwordErrors.newPassword}
                   />
                   <button
@@ -438,11 +435,10 @@ const Profile = () => {
                       }
                     }}
                     placeholder="Confirm new password"
-                    className={`w-full px-3 py-2 pr-10 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                      passwordErrors.confirmPassword
+                    className={`w-full px-3 py-2 pr-10 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${passwordErrors.confirmPassword
                         ? 'border-red-300 bg-red-50'
                         : 'border-gray-300 bg-white'
-                    }`}
+                      }`}
                     aria-invalid={!!passwordErrors.confirmPassword}
                   />
                   <button
