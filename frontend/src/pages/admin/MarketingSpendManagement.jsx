@@ -13,6 +13,7 @@ import {
   FileText,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import {
@@ -22,11 +23,29 @@ import {
   deleteMarketingSpend,
 } from '../../services/admin/marketingSpendService';
 import { getAllProducts } from '../../services/admin/productService';
+import { API_BASE_URL } from '../../utils/constants';
+
+// Helper function to normalize image paths (convert backslashes to forward slashes for URLs)
+const normalizeImagePath = (imagePath) => {
+  if (!imagePath) return '';
+  // If already a full URL, return as is
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    return imagePath;
+  }
+  // Normalize path separators
+  const normalizedPath = imagePath.replace(/\\/g, '/');
+  // Remove 'public/' prefix if present
+  const cleanPath = normalizedPath.startsWith('public/') 
+    ? normalizedPath.replace('public/', '') 
+    : normalizedPath;
+  return `${API_BASE_URL}/${cleanPath}`;
+};
 
 const MarketingSpendManagement = () => {
   // State Management
   const [marketingSpends, setMarketingSpends] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [imageErrors, setImageErrors] = useState(new Set()); // Track which images failed to load
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProductId, setSelectedProductId] = useState('');
   const [selectedMonth, setSelectedMonth] = useState('');
@@ -50,12 +69,37 @@ const MarketingSpendManagement = () => {
 
   const [formData, setFormData] = useState({
     product_id: '',
-    date: '',
+    month: '',
+    year: '',
     description: '',
     amount: '',
   });
 
   const [formErrors, setFormErrors] = useState({});
+
+  // Generate years: current year and past 2 years
+  const getAvailableYears = () => {
+    const currentYear = new Date().getFullYear();
+    return [currentYear, currentYear - 1, currentYear - 2];
+  };
+
+  // Generate months
+  const getAvailableMonths = () => {
+    return [
+      { value: '1', label: 'January' },
+      { value: '2', label: 'February' },
+      { value: '3', label: 'March' },
+      { value: '4', label: 'April' },
+      { value: '5', label: 'May' },
+      { value: '6', label: 'June' },
+      { value: '7', label: 'July' },
+      { value: '8', label: 'August' },
+      { value: '9', label: 'September' },
+      { value: '10', label: 'October' },
+      { value: '11', label: 'November' },
+      { value: '12', label: 'December' },
+    ];
+  };
 
   const searchTimeoutRef = React.useRef(null);
   const isFetchingRef = React.useRef(false);
@@ -207,14 +251,12 @@ const MarketingSpendManagement = () => {
       errors.product_id = 'Product is required';
     }
     
-    if (!formData.date.trim()) {
-      errors.date = 'Date is required';
-    } else {
-      // Validate date format (should be like "1/2024" or "12/2024")
-      const datePattern = /^\d{1,2}\/\d{4}$/;
-      if (!datePattern.test(formData.date.trim())) {
-        errors.date = 'Date must be in format: MM/YYYY (e.g., 1/2024 or 12/2024)';
-      }
+    if (!formData.month) {
+      errors.month = 'Month is required';
+    }
+    
+    if (!formData.year) {
+      errors.year = 'Year is required';
     }
     
     if (!formData.amount.trim()) {
@@ -235,11 +277,21 @@ const MarketingSpendManagement = () => {
     try {
       setSubmitting(true);
       
+      // Combine month and year into date format (MM/YYYY)
+      const date = `${formData.month}/${formData.year}`;
+      const submitData = {
+        ...formData,
+        date: date,
+      };
+      // Remove month and year from submitData as backend expects date
+      delete submitData.month;
+      delete submitData.year;
+      
       if (editingSpend) {
-        await updateMarketingSpend(editingSpend._id, formData);
+        await updateMarketingSpend(editingSpend._id, submitData);
         toast.success('Marketing spend updated successfully!');
       } else {
-        await createMarketingSpend(formData);
+        await createMarketingSpend(submitData);
         toast.success('Marketing spend created successfully!');
       }
       
@@ -247,7 +299,8 @@ const MarketingSpendManagement = () => {
       setEditingSpend(null);
       setFormData({
         product_id: '',
-        date: '',
+        month: '',
+        year: '',
         description: '',
         amount: '',
       });
@@ -267,9 +320,22 @@ const MarketingSpendManagement = () => {
 
   const handleEdit = (spend) => {
     setEditingSpend(spend);
+    
+    // Parse date (format: MM/YYYY) into month and year
+    let month = '';
+    let year = '';
+    if (spend.date) {
+      const dateParts = spend.date.split('/');
+      if (dateParts.length === 2) {
+        month = dateParts[0];
+        year = dateParts[1];
+      }
+    }
+    
     setFormData({
       product_id: spend.product_id?._id || spend.product_id || '',
-      date: spend.date || '',
+      month: month,
+      year: year,
       description: spend.description || '',
       amount: spend.amount || '',
     });
@@ -294,7 +360,8 @@ const MarketingSpendManagement = () => {
     setEditingSpend(null);
     setFormData({
       product_id: '',
-      date: '',
+      month: '',
+      year: '',
       description: '',
       amount: '',
     });
@@ -326,7 +393,8 @@ const MarketingSpendManagement = () => {
             setEditingSpend(null);
             setFormData({
               product_id: selectedProductId || '',
-              date: '',
+              month: '',
+              year: '',
               description: '',
               amount: '',
             });
@@ -625,31 +693,81 @@ const MarketingSpendManagement = () => {
                 )}
               </div>
 
-              {/* Date */}
-              <div>
-                <label
-                  htmlFor="date"
-                  className="block text-sm font-medium text-gray-700 mb-1.5"
-                >
-                  Month/Year <span className="text-red-500">*</span>
-                  <span className="text-xs text-gray-500 ml-2">(Format: MM/YYYY, e.g., 1/2024 or 12/2024)</span>
-                </label>
-                <input
-                  type="text"
-                  id="date"
-                  name="date"
-                  value={formData.date}
-                  onChange={handleInputChange}
-                  placeholder="e.g., 1/2024 or 12/2024"
-                  className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                    formErrors.date
-                      ? 'border-red-300 bg-red-50'
-                      : 'border-gray-300 bg-white'
-                  }`}
-                />
-                {formErrors.date && (
-                  <p className="mt-1.5 text-xs text-red-600">{formErrors.date}</p>
-                )}
+              {/* Month and Year */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* Month */}
+                <div>
+                  <label
+                    htmlFor="month"
+                    className="block text-sm font-medium text-gray-700 mb-1.5"
+                  >
+                    Month <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="month"
+                      name="month"
+                      value={formData.month}
+                      onChange={handleInputChange}
+                      className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none bg-white ${
+                        formErrors.month
+                          ? 'border-red-300 bg-red-50'
+                          : 'border-gray-300'
+                      }`}
+                      style={{ maxHeight: '200px' }}
+                    >
+                      <option value="">Select Month</option>
+                      {getAvailableMonths().map((month) => (
+                        <option key={month.value} value={month.value}>
+                          {month.label}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                      <ChevronDown className="w-4 h-4 text-gray-400" />
+                    </div>
+                  </div>
+                  {formErrors.month && (
+                    <p className="mt-1.5 text-xs text-red-600">{formErrors.month}</p>
+                  )}
+                </div>
+
+                {/* Year */}
+                <div>
+                  <label
+                    htmlFor="year"
+                    className="block text-sm font-medium text-gray-700 mb-1.5"
+                  >
+                    Year <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="year"
+                      name="year"
+                      value={formData.year}
+                      onChange={handleInputChange}
+                      className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none bg-white ${
+                        formErrors.year
+                          ? 'border-red-300 bg-red-50'
+                          : 'border-gray-300'
+                      }`}
+                      style={{ maxHeight: '200px' }}
+                    >
+                      <option value="">Select Year</option>
+                      {getAvailableYears().map((year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                      <ChevronDown className="w-4 h-4 text-gray-400" />
+                    </div>
+                  </div>
+                  {formErrors.year && (
+                    <p className="mt-1.5 text-xs text-red-600">{formErrors.year}</p>
+                  )}
+                </div>
               </div>
 
               {/* Amount */}
@@ -774,8 +892,25 @@ const MarketingSpendManagement = () => {
                   {marketingSpends.map((spend) => (
                     <tr key={spend._id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <Package className="w-4 h-4 text-gray-400" />
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-md border border-gray-200 bg-gray-100 flex items-center justify-center flex-shrink-0 relative overflow-hidden">
+                            {spend.product_id?.images && spend.product_id.images.length > 0 && !imageErrors.has(spend._id) ? (
+                              <img
+                                src={normalizeImagePath(spend.product_id.images[0])}
+                                alt={spend.product_id?.name || 'Product'}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  // Add spend ID to error set to show default icon
+                                  setImageErrors(prev => new Set([...prev, spend._id]));
+                                  e.target.style.display = 'none';
+                                }}
+                              />
+                            ) : null}
+                            {/* Default icon - shown when no image, image fails to load, or image is in error set */}
+                            {(!spend.product_id?.images || spend.product_id.images.length === 0 || imageErrors.has(spend._id)) && (
+                              <Package className="w-5 h-5 text-gray-400" />
+                            )}
+                          </div>
                           <div>
                             <p className="text-sm font-medium text-gray-900">
                               {spend.product_id?.name || 'N/A'}
@@ -831,30 +966,85 @@ const MarketingSpendManagement = () => {
             </div>
 
             {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="px-4 py-3 border-t border-gray-200 bg-gray-50 flex items-center justify-between">
-                <div className="text-sm text-gray-700">
-                  Showing {((currentPage - 1) * itemsPerPage) + 1} to{' '}
-                  {Math.min(currentPage * itemsPerPage, totalSpends)} of {totalSpends} results
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="p-2 border border-gray-300 rounded-lg hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <span className="text-sm text-gray-700 px-3">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className="p-2 border border-gray-300 rounded-lg hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
+            {totalPages > 1 && !loading && (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  {/* Items per page selector */}
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm text-gray-700">Items per page:</label>
+                    <select
+                      value={itemsPerPage}
+                      onChange={(e) => {
+                        setItemsPerPage(Number(e.target.value));
+                        setCurrentPage(1); // Reset to first page when changing items per page
+                      }}
+                      className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                    >
+                      <option value={5}>5</option>
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                    </select>
+                  </div>
+
+                  {/* Page info */}
+                  <div className="text-sm text-gray-700">
+                    Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to{' '}
+                    <span className="font-medium">
+                      {Math.min(currentPage * itemsPerPage, totalSpends)}
+                    </span>{' '}
+                    of <span className="font-medium">{totalSpends}</span> marketing spends
+                  </div>
+
+                  {/* Pagination buttons */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                      className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label="Previous page"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+
+                    {/* Page numbers */}
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum;
+                        if (totalPages <= 5) {
+                          pageNum = i + 1;
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i;
+                        } else {
+                          pageNum = currentPage - 2 + i;
+                        }
+
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => setCurrentPage(pageNum)}
+                            className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${currentPage === pageNum
+                              ? 'bg-green-600 text-white'
+                              : 'border border-gray-300 hover:bg-gray-50'
+                              }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <button
+                      onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                      className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label="Next page"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

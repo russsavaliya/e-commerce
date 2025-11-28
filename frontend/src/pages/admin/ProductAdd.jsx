@@ -51,6 +51,10 @@ const ProductAdd = () => {
     original_price: '',
     cost_price: '',
     quantity: '',
+    discount_percentage: '',
+    is_best_seller: false,
+    is_new: false,
+    is_trending: false,
     productImages: [], // Array of File objects
     productImagePreviews: [], // Array of preview URLs
   });
@@ -297,6 +301,19 @@ const ProductAdd = () => {
       (attr) => (attr._id || attr.id) === attributeId
     );
     return attribute?.values || [];
+  };
+
+  // Get available attributes for product (excluding already selected ones)
+  const getAvailableAttributesForProduct = (currentAttrIndex) => {
+    // Get already selected attribute IDs (excluding the current one being edited)
+    const selectedAttributeIds = productAttributes
+      .map((attr, idx) => idx !== currentAttrIndex ? attr.attributeId : null)
+      .filter(Boolean);
+    
+    // Filter out already selected attributes
+    return attributes.filter(
+      (attr) => !selectedAttributeIds.includes(attr._id || attr.id)
+    );
   };
 
   // Get available attributes for a variant (excluding already selected ones)
@@ -654,6 +671,10 @@ const ProductAdd = () => {
       );
       formDataToSend.append('cost_price', parseFloat(formData.cost_price) || 0);
       formDataToSend.append('quantity', parseInt(formData.quantity) || 0);
+      formDataToSend.append('discount_percentage', parseFloat(formData.discount_percentage) || 0);
+      formDataToSend.append('is_best_seller', formData.is_best_seller);
+      formDataToSend.append('is_new', formData.is_new);
+      formDataToSend.append('is_trending', formData.is_trending);
 
       // Product images
       formData.productImages.forEach((file) => {
@@ -701,18 +722,8 @@ const ProductAdd = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 min-h-[400px]">
-        <Loader2 className="w-10 h-10 animate-spin text-green-600 mb-4" />
-        <span className="text-lg font-medium text-gray-700">Loading product form...</span>
-        <span className="text-sm text-gray-500 mt-2">Please wait while we fetch the data</span>
-      </div>
-    );
-  }
-
   return (
-    <div className="w-full space-y-4 px-4 relative">
+    <div className="w-full relative">
       {/* Loading Overlay */}
       {submitting && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
@@ -723,30 +734,50 @@ const ProductAdd = () => {
           </div>
         </div>
       )}
-      {/* Header */}
-      <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-xl border border-green-200 p-4 shadow-sm">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-              <Package className="w-6 h-6 text-green-600" />
-              Add New Product
-            </h1>
-            <p className="text-sm text-gray-600 mt-1.5">
-              Fill in the product details below. Fields marked with <span className="text-red-500">*</span> are required.
-            </p>
-          </div>
-          <button
-            onClick={() => navigate(-1)}
-            className="p-2 hover:bg-white/80 rounded-lg transition-colors"
-            aria-label="Go back"
-          >
-            <X className="w-5 h-5 text-gray-600" />
-          </button>
-        </div>
-      </div>
 
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Loading State */}
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20 min-h-[400px]">
+          <Loader2 className="w-10 h-10 animate-spin text-green-600 mb-4" />
+          <span className="text-lg font-medium text-gray-700">Loading product form...</span>
+          <span className="text-sm text-gray-500 mt-2">Please wait while we fetch the data</span>
+        </div>
+      ) : (
+        <>
+          {/* Action Buttons */}
+          <div className="flex items-center justify-end gap-3 mb-4">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              form="product-form"
+              disabled={submitting}
+              className="flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Creating...</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  <span>Create Product</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Form Content */}
+          <div className="space-y-4">
+
+          {/* Form */}
+          <form id="product-form" onSubmit={handleSubmit} className="space-y-4">
         {/* Basic Information */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
           <h2 className="text-lg font-semibold text-gray-900 mb-5 flex items-center gap-2">
@@ -979,6 +1010,27 @@ const ProductAdd = () => {
               </div>
             </div>
 
+            {/* Discount Percentage */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Discount Percentage
+              </label>
+              <input
+                type="number"
+                name="discount_percentage"
+                value={formData.discount_percentage}
+                onChange={handleInputChange}
+                step="0.01"
+                min="0"
+                max="100"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="0.00"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Discount percentage (0-100)
+              </p>
+            </div>
+
             {/* Quantity */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -996,6 +1048,50 @@ const ProductAdd = () => {
               <p className="text-xs text-gray-500 mt-1">
                 Product quantity (if no variants are added)
               </p>
+            </div>
+          </div>
+
+          {/* Product Flags - Checkboxes */}
+          <div className="mt-3">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Product Flags
+            </label>
+            <div className="flex flex-wrap gap-3">
+              {/* Best Seller Checkbox */}
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="is_best_seller"
+                  checked={formData.is_best_seller}
+                  onChange={(e) => setFormData(prev => ({ ...prev, is_best_seller: e.target.checked }))}
+                  className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                />
+                <span className="text-sm font-medium text-gray-700">Best Seller</span>
+              </label>
+
+              {/* New Checkbox */}
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="is_new"
+                  checked={formData.is_new}
+                  onChange={(e) => setFormData(prev => ({ ...prev, is_new: e.target.checked }))}
+                  className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                />
+                <span className="text-sm font-medium text-gray-700">New</span>
+              </label>
+
+              {/* Trending Checkbox */}
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="is_trending"
+                  checked={formData.is_trending}
+                  onChange={(e) => setFormData(prev => ({ ...prev, is_trending: e.target.checked }))}
+                  className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                />
+                <span className="text-sm font-medium text-gray-700">Trending</span>
+              </label>
             </div>
           </div>
 
@@ -1055,14 +1151,14 @@ const ProductAdd = () => {
         </div>
 
         {/* Product Attributes */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-between mb-5">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
+          <div className="flex items-center justify-between mb-3">
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <Tag className="w-5 h-5 text-green-600" />
+              <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+                <Tag className="w-4 h-4 text-green-600" />
                 Product Attributes
               </h2>
-              <p className="text-xs text-gray-500 mt-1.5">
+              <p className="text-xs text-gray-500 mt-1">
                 Add multiple attributes (e.g., Brand, Material, Color) and select multiple values for each
               </p>
             </div>
@@ -1070,31 +1166,31 @@ const ProductAdd = () => {
               <button
                 type="button"
                 onClick={addProductAttribute}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-3.5 h-3.5" />
                 Add More
               </button>
             )}
           </div>
 
           {productAttributes.length === 0 ? (
-            <div className="text-center py-10 border-2 border-dashed border-green-200 rounded-xl bg-gradient-to-br from-green-50 to-green-100">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Tag className="w-8 h-8 text-green-600" />
+            <div className="text-center py-6 border-2 border-dashed border-green-200 rounded-lg bg-gradient-to-br from-green-50 to-green-100">
+              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                <Tag className="w-5 h-5 text-green-600" />
               </div>
-              <p className="text-base font-semibold text-gray-800 mb-1">
+              <p className="text-sm font-semibold text-gray-800 mb-1">
                 No attributes added yet
               </p>
-              <p className="text-sm text-gray-600 mb-6 max-w-md mx-auto">
+              <p className="text-xs text-gray-600 mb-4 max-w-md mx-auto">
                 Start by adding your first product attribute. You can add multiple attributes like Brand, Material, Color, etc.
               </p>
               <button
                 type="button"
                 onClick={addProductAttribute}
-                className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-sm"
               >
-                <Plus className="w-5 h-5" />
+                <Plus className="w-4 h-4" />
                 Add Your First Attribute
               </button>
             </div>
@@ -1219,7 +1315,7 @@ const ProductAdd = () => {
                                   >
                                     Choose an attribute...
                                   </button>
-                                  {attributes
+                                  {getAvailableAttributesForProduct(index)
                                     .filter(a => 
                                       a.name.toLowerCase().includes((attributeSearchTerm[index] || '').toLowerCase())
                                     )
@@ -1243,7 +1339,7 @@ const ProductAdd = () => {
                                         {a.name}
                                       </button>
                                     ))}
-                                  {attributes.filter(a => 
+                                  {getAvailableAttributesForProduct(index).filter(a => 
                                     a.name.toLowerCase().includes((attributeSearchTerm[index] || '').toLowerCase())
                                   ).length === 0 && (
                                     <div className="px-3 py-4 text-sm text-gray-500 text-center">
@@ -1416,16 +1512,16 @@ const ProductAdd = () => {
               return (
               <div
                 key={variantIndex}
-                className="bg-gradient-to-br from-gray-50 to-blue-50 border-2 border-gray-300 rounded-xl p-4 shadow-sm hover:shadow-md transition-all"
+                className="bg-gradient-to-br from-gray-50 to-blue-50 border border-gray-300 rounded-lg p-3 shadow-sm hover:shadow transition-all"
               >
                 {/* Variant Header */}
-                <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-200">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center text-white font-bold text-xs">
                       {variantIndex + 1}
                     </div>
                     <div>
-                      <h3 className="text-base font-bold text-gray-900">
+                      <h3 className="text-sm font-semibold text-gray-900">
                         {isAttributeMode 
                           ? `Variant ${variantIndex + 1} - Select Attributes`
                           : (variant.variant_name || `Variant ${variantIndex + 1}`)
@@ -1450,31 +1546,31 @@ const ProductAdd = () => {
                         removeVariant(variantIndex);
                       }
                     }}
-                    className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                    className="p-1.5 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
                     title="Remove variant"
                   >
-                    <Trash2 className="w-5 h-5" />
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
 
                 {/* Selected Attributes - Show at top when in details mode */}
                 {!isAttributeMode && variant.variant_attributes.length > 0 && (
-                  <div className="mb-4 pt-3 pb-3 border-b-2 border-gray-300 bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 shadow-sm">
-                    <div className="flex items-center justify-between mb-4">
-                      <label className="block text-base font-bold text-gray-800 flex items-center gap-2">
-                        <Tag className="w-5 h-5 text-green-600" />
+                  <div className="mb-3 pt-2 pb-2 border-b border-gray-300 bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-2 shadow-sm">
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-sm font-semibold text-gray-800 flex items-center gap-1.5">
+                        <Tag className="w-4 h-4 text-green-600" />
                         Selected Attributes
                       </label>
                       <button
                         type="button"
                         onClick={() => setVariantAttributeMode((prev) => ({ ...prev, [variantIndex]: true }))}
-                        className="text-sm text-green-600 hover:text-green-700 font-semibold flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-green-100 transition-colors"
+                        className="text-xs text-green-600 hover:text-green-700 font-medium flex items-center gap-1 px-2 py-1 rounded-md hover:bg-green-100 transition-colors"
                       >
-                        <Tag className="w-4 h-4" />
+                        <Tag className="w-3.5 h-3.5" />
                         Edit Attributes
                       </button>
                     </div>
-                    <div className="flex flex-wrap gap-3">
+                    <div className="flex flex-wrap gap-2">
                       {variant.variant_attributes.map((vAttr, vAttrIndex) => {
                         const selectedAttr = attributes.find(
                           (a) => (a._id || a.id) === vAttr.attribute_id
@@ -1486,7 +1582,7 @@ const ProductAdd = () => {
                         return (
                           <div
                             key={vAttrIndex}
-                            className="px-4 py-2.5 bg-white text-blue-800 rounded-lg text-sm font-semibold border-2 border-green-300 shadow-sm hover:shadow-md transition-shadow flex items-center gap-2 min-w-[120px]"
+                            className="px-2.5 py-1.5 bg-white text-blue-800 rounded-md text-xs font-semibold border border-green-300 shadow-sm hover:shadow transition-shadow flex items-center gap-1.5"
                           >
                             <span className="text-green-600 font-bold">{selectedAttr?.name || 'Unknown'}:</span>
                             <span className="text-gray-700 font-medium">{selectedValue?.value || 'Unknown'}</span>
@@ -1819,10 +1915,10 @@ const ProductAdd = () => {
                 ) : (
                   /* Step 2: Details Mode - Show Name, Price, etc. */
                   <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {/* Variant Name */}
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
                       Variant Name <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -1835,7 +1931,7 @@ const ProductAdd = () => {
                           e.target.value
                         )
                       }
-                      className={`w-full px-4 py-2.5 border-2 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all ${
+                      className={`w-full px-3 py-1.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-sm ${
                         formErrors[`variant_name_${variantIndex}`]
                           ? 'border-red-500 bg-red-50'
                           : 'border-gray-300'
@@ -1843,7 +1939,7 @@ const ProductAdd = () => {
                       placeholder="e.g., Red - Large"
                     />
                     {formErrors[`variant_name_${variantIndex}`] && (
-                      <p className="text-xs text-red-600 mt-1.5 flex items-center gap-1">
+                      <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
                         <AlertCircle className="w-3 h-3" />
                         {formErrors[`variant_name_${variantIndex}`]}
                       </p>
@@ -1852,7 +1948,7 @@ const ProductAdd = () => {
 
                   {/* Variant SKU */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
                       Variant SKU <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -1865,7 +1961,7 @@ const ProductAdd = () => {
                           e.target.value
                         )
                       }
-                      className={`w-full px-4 py-2.5 border-2 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all ${
+                      className={`w-full px-3 py-1.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-sm ${
                         formErrors[`variant_SKU_${variantIndex}`]
                           ? 'border-red-500 bg-red-50'
                           : 'border-gray-300'
@@ -1873,7 +1969,7 @@ const ProductAdd = () => {
                       placeholder="e.g., PROD-RED-L"
                     />
                     {formErrors[`variant_SKU_${variantIndex}`] && (
-                      <p className="text-xs text-red-600 mt-1.5 flex items-center gap-1">
+                      <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
                         <AlertCircle className="w-3 h-3" />
                         {formErrors[`variant_SKU_${variantIndex}`]}
                       </p>
@@ -1882,11 +1978,11 @@ const ProductAdd = () => {
 
                   {/* Variant Price */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
                       Variant Price <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <IndianRupee className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <IndianRupee className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <input
                         type="number"
                         value={variant.variant_price}
@@ -1899,7 +1995,7 @@ const ProductAdd = () => {
                         }
                         step="0.01"
                         min="0"
-                        className={`w-full pl-12 pr-4 py-2.5 border-2 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all ${
+                        className={`w-full pl-9 pr-3 py-1.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-sm ${
                           formErrors[`variant_price_${variantIndex}`]
                             ? 'border-red-500 bg-red-50'
                             : 'border-gray-300'
@@ -1908,7 +2004,7 @@ const ProductAdd = () => {
                       />
                     </div>
                     {formErrors[`variant_price_${variantIndex}`] && (
-                      <p className="text-xs text-red-600 mt-1.5 flex items-center gap-1">
+                      <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
                         <AlertCircle className="w-3 h-3" />
                         {formErrors[`variant_price_${variantIndex}`]}
                       </p>
@@ -1917,7 +2013,7 @@ const ProductAdd = () => {
 
                   {/* Quantity */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
                       Quantity <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -1931,7 +2027,7 @@ const ProductAdd = () => {
                         )
                       }
                       min="0"
-                      className={`w-full px-4 py-2.5 border-2 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all ${
+                      className={`w-full px-3 py-1.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-sm ${
                         formErrors[`variant_quantity_${variantIndex}`]
                           ? 'border-red-500 bg-red-50'
                           : 'border-gray-300'
@@ -1939,7 +2035,7 @@ const ProductAdd = () => {
                       placeholder="0"
                     />
                     {formErrors[`variant_quantity_${variantIndex}`] && (
-                      <p className="text-xs text-red-600 mt-1.5 flex items-center gap-1">
+                      <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
                         <AlertCircle className="w-3 h-3" />
                         {formErrors[`variant_quantity_${variantIndex}`]}
                       </p>
@@ -1948,7 +2044,7 @@ const ProductAdd = () => {
 
                   {/* Variant Status */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
                       Status
                     </label>
                     <select
@@ -1960,7 +2056,7 @@ const ProductAdd = () => {
                           e.target.value
                         )
                       }
-                      className="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                      className="w-full px-3 py-1.5 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-sm"
                     >
                       <option value="ACTIVE">Active</option>
                       <option value="DRAFT">Draft</option>
@@ -1969,7 +2065,7 @@ const ProductAdd = () => {
 
                   {/* Variant Image */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
                       Variant Image
                     </label>
                     {variant.variant_image_preview ? (
@@ -1977,20 +2073,20 @@ const ProductAdd = () => {
                         <img
                           src={variant.variant_image_preview}
                           alt={`Variant ${variantIndex + 1}`}
-                          className="w-28 h-28 object-cover rounded-lg border-2 border-gray-300 shadow-sm"
+                          className="w-20 h-20 object-cover rounded-lg border border-gray-300 shadow-sm"
                         />
                         <button
                           type="button"
                           onClick={() => removeVariantImage(variantIndex)}
-                          className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 shadow-md transition-colors"
+                          className="absolute -top-1.5 -right-1.5 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 shadow transition-colors"
                         >
-                          <X className="w-4 h-4" />
+                          <X className="w-3 h-3" />
                         </button>
                       </div>
                     ) : (
-                      <label className="flex flex-col items-center justify-center w-28 h-28 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-green-500 hover:bg-green-50 transition-all bg-white">
-                        <Upload className="w-6 h-6 text-gray-400" />
-                        <span className="text-xs text-gray-500 mt-1 font-medium">Upload</span>
+                      <label className="flex flex-col items-center justify-center w-20 h-20 border border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-green-500 hover:bg-green-50 transition-all bg-white">
+                        <Upload className="w-4 h-4 text-gray-400" />
+                        <span className="text-xs text-gray-500 mt-0.5 font-medium">Upload</span>
                         <input
                           type="file"
                           accept="image/*"
@@ -2012,36 +2108,10 @@ const ProductAdd = () => {
           )}
         </div>
 
-        {/* Submit Button */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-end gap-4">
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="flex items-center gap-1.5 px-5 py-2 text-sm bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow font-medium"
-            >
-              {submitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Creating Product...</span>
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  <span>Create Product</span>
-                </>
-              )}
-            </button>
-          </div>
-        </div>
       </form>
+      </div>
+        </>
+      )}
     </div>
   );
 };

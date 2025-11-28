@@ -21,6 +21,10 @@ const productSchema = new mongoose.Schema({
         type: Number,
         default: 0      //MRP
     },
+    discount_percentage: {
+        type: Number,
+        default: 0
+    },
     cost_price: {
         type: Number,   //for profit calculate
         default: 0
@@ -51,8 +55,20 @@ const productSchema = new mongoose.Schema({
             type: String,
             enum: ['ACTIVE', 'DRAFT'],
             default: 'ACTIVE'
-        },
+        }
     }],
+    is_best_seller: {
+        type: Boolean,
+        default: false
+    },
+    is_new: {
+        type: Boolean,
+        default: false
+    },
+    is_trending: {
+        type: Boolean,
+        default: false
+    }
 }, {
     timestamps: true
 });

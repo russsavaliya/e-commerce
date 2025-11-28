@@ -305,11 +305,11 @@ const AdminLayout = () => {
                 : location.pathname === ROUTES.ADMIN_PRODUCTS_LIST
                 ? 'Product List'
                 : location.pathname === ROUTES.ADMIN_PRODUCTS_ADD
-                ? 'Add New Product'
+                ? 'Add Product'
                 : location.pathname === ROUTES.ADMIN_MARKETING_SPEND
                 ? 'Marketing Spend Management'
                 : location.pathname.startsWith('/admin/products/edit/')
-                ? 'Edit Product'
+                ? 'Update Product'
                 : location.pathname === ROUTES.ADMIN_CATEGORIES
                 ? 'Category Management'
                 : location.pathname === ROUTES.ADMIN_ATTRIBUTES

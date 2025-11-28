@@ -129,7 +129,7 @@ exports.get_marketing_spend_list = async (req, res) => {
 
         const marketing_spends = await marketing_spend_model
             .find(searchCondition)
-            .populate('product_id', 'name SKU')
+            .populate('product_id', 'name SKU images')
             .sort({ date: -1, createdAt: -1 })
             .skip(skip)
             .limit(limit);
@@ -162,7 +162,7 @@ exports.get_marketing_spend_one = async (req, res) => {
 
         const marketing_spend = await marketing_spend_model
             .findById(id)
-            .populate('product_id', 'name SKU');
+            .populate('product_id', 'name SKU images');
 
         if (!marketing_spend) {
             return res.status(404).json({
