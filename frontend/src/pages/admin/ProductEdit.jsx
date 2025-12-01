@@ -27,10 +27,11 @@ import { getAllCategories } from '../../services/admin/categoryService';
 import { getAllAttributes } from '../../services/admin/attributeService';
 import { API_BASE_URL } from '../../utils/constants';
 
-// Helper function to normalize image paths (convert backslashes to forward slashes for URLs)
+// Helper function to normalize image paths (supports Cloudinary URLs and local paths)
+// Cloudinary URLs (https://...) are returned as-is, local paths are normalized
 const normalizeImagePath = (imagePath) => {
   if (!imagePath) return '';
-  // If already a full URL, return as is
+  // If already a full URL (Cloudinary or other CDN), return as is
   if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
     return imagePath;
   }

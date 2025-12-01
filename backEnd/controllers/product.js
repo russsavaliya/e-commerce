@@ -1,5 +1,6 @@
 const product_model = require("../model/product");
 const mongoose = require("mongoose");
+const { uploadToCloudinary } = require("../helper/cloudinary_upload");
 exports.create_product = async (req, res) => {
     try {
         let {
@@ -25,25 +26,57 @@ exports.create_product = async (req, res) => {
         variants = typeof variants === "string" ? JSON.parse(variants) : variants;
 
         // -----------------------------------------
-        // 1️⃣ HANDLE FILES (images + variant_images)
+        // 1️⃣ HANDLE FILES (images + variant_images) - Upload to Cloudinary in PARALLEL
         // -----------------------------------------
         let productImages = [];
         let variantImages = [];
 
-        // Loop all uploaded files
-        req.files.forEach(file => {
+        // Upload all images in parallel for faster processing
+        if (req.files && req.files.length > 0) {
+            // Separate product images and variant images
+            const productImageFiles = req.files.filter(file => file.fieldname === "images");
+            const variantImageFiles = req.files.filter(file => file.fieldname.startsWith("variant_images["));
 
-            // product images
-            if (file.fieldname === "images") {
-                productImages.push(file.path);
+            // Upload all product images in parallel
+            if (productImageFiles.length > 0) {
+                try {
+                    const productUploadPromises = productImageFiles.map(file => 
+                        uploadToCloudinary(file.buffer, 'products')
+                    );
+                    const productResults = await Promise.all(productUploadPromises);
+                    productImages = productResults.map(result => result.secure_url);
+                } catch (error) {
+                    console.error('Error uploading product images to Cloudinary:', error);
+                    return res.status(500).json({
+                        status: false,
+                        message: `Failed to upload product images: ${error.message}`
+                    });
+                }
             }
 
-            // variant images: variant_images[0], variant_images[1]
-            if (file.fieldname.startsWith("variant_images[")) {
-                let index = file.fieldname.match(/\[(\d+)\]/)[1];
-                variantImages[index] = file.path;
+            // Upload all variant images in parallel
+            if (variantImageFiles.length > 0) {
+                try {
+                    const variantUploadPromises = variantImageFiles.map(file => {
+                        const index = file.fieldname.match(/\[(\d+)\]/)[1];
+                        return uploadToCloudinary(file.buffer, 'products/variants').then(result => ({
+                            index: parseInt(index),
+                            url: result.secure_url
+                        }));
+                    });
+                    const variantResults = await Promise.all(variantUploadPromises);
+                    variantResults.forEach(({ index, url }) => {
+                        variantImages[index] = url;
+                    });
+                } catch (error) {
+                    console.error('Error uploading variant images to Cloudinary:', error);
+                    return res.status(500).json({
+                        status: false,
+                        message: `Failed to upload variant images: ${error.message}`
+                    });
+                }
             }
-        });
+        }
 
         // Attach variant image to variant objects
         variants = variants.map((v, i) => ({
@@ -146,32 +179,60 @@ exports.update_product = async (req, res) => {
         }
 
         // -----------------------------------------
-        // 2️⃣ HANDLE PRODUCT IMAGES
+        // 2️⃣ HANDLE PRODUCT IMAGES - Upload new ones to Cloudinary in PARALLEL
         // -----------------------------------------
-        let productImages = [...existing_images]; // Start with existing images from FE
+        let productImages = [...existing_images]; // Start with existing images from FE (already on Cloudinary)
 
-        // Add new images from req.files (if uploaded)
+        // Upload new product images in parallel
         if (req.files && req.files.length > 0) {
-            req.files.forEach(file => {
-                if (file.fieldname === "images") {
-                    productImages.push(file.path);
+            const newProductImageFiles = req.files.filter(file => file.fieldname === "images");
+            if (newProductImageFiles.length > 0) {
+                try {
+                    const productUploadPromises = newProductImageFiles.map(file => 
+                        uploadToCloudinary(file.buffer, 'products')
+                    );
+                    const productResults = await Promise.all(productUploadPromises);
+                    const newProductImageUrls = productResults.map(result => result.secure_url);
+                    productImages = [...productImages, ...newProductImageUrls];
+                } catch (error) {
+                    console.error('Error uploading product images to Cloudinary:', error);
+                    return res.status(500).json({
+                        status: false,
+                        message: `Failed to upload product images: ${error.message}`
+                    });
                 }
-            });
+            }
         }
 
         // -----------------------------------------
-        // 3️⃣ HANDLE VARIANT IMAGES
+        // 3️⃣ HANDLE VARIANT IMAGES - Upload new ones to Cloudinary in PARALLEL
         // -----------------------------------------
-        let variantImages = [...existing_variant_images]; // Start with existing variant images
+        let variantImages = [...existing_variant_images]; // Start with existing variant images (already on Cloudinary)
 
-        // Add new variant images from req.files
+        // Upload new variant images in parallel
         if (req.files && req.files.length > 0) {
-            req.files.forEach(file => {
-                if (file.fieldname.startsWith("variant_images[")) {
-                    let index = file.fieldname.match(/\[(\d+)\]/)[1];
-                    variantImages[index] = file.path;
+            const newVariantImageFiles = req.files.filter(file => file.fieldname.startsWith("variant_images["));
+            if (newVariantImageFiles.length > 0) {
+                try {
+                    const variantUploadPromises = newVariantImageFiles.map(file => {
+                        const index = file.fieldname.match(/\[(\d+)\]/)[1];
+                        return uploadToCloudinary(file.buffer, 'products/variants').then(result => ({
+                            index: parseInt(index),
+                            url: result.secure_url
+                        }));
+                    });
+                    const variantResults = await Promise.all(variantUploadPromises);
+                    variantResults.forEach(({ index, url }) => {
+                        variantImages[index] = url;
+                    });
+                } catch (error) {
+                    console.error('Error uploading variant images to Cloudinary:', error);
+                    return res.status(500).json({
+                        status: false,
+                        message: `Failed to upload variant images: ${error.message}`
+                    });
                 }
-            });
+            }
         }
 
         // Attach variant images to variant objects
