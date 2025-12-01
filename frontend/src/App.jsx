@@ -46,13 +46,12 @@ import { Toaster } from 'react-hot-toast';
 // ============================================
 // These keep track of login status
 import { AdminAuthProvider } from './context/AdminAuthContext';
-import { UserAuthProvider } from './context/UserAuthContext';
 
 // ============================================
 // STEP 4: Import Protected Routes
 // ============================================
 // These check if user is logged in before showing pages
-import { AdminProtectedRoute, UserProtectedRoute } from './components/ProtectedRoute';
+import { AdminProtectedRoute } from './components/ProtectedRoute';
 
 // ============================================
 // STEP 5: Import Admin Pages
@@ -71,6 +70,7 @@ import ProductAdd from './pages/admin/ProductAdd';
 import ProductList from './pages/admin/ProductList';
 import ProductEdit from './pages/admin/ProductEdit';
 import MarketingSpendManagement from './pages/admin/MarketingSpendManagement';
+import BannerManagement from './pages/admin/BannerManagement';
 
 // TODO: When you create new pages, import them here:
 // import ProductManagement from './pages/admin/ProductManagement';
@@ -81,8 +81,8 @@ import MarketingSpendManagement from './pages/admin/MarketingSpendManagement';
 // STEP 6: Import User Pages
 // ============================================
 // Import all your user pages here
-import UserAuthPage from './pages/user/UserAuthPage';
-import UserDashboard from './pages/user/UserDashboard';
+import HomePage from './pages/user/HomePage';
+import SalePage from './pages/user/SalePage';
 
 // TODO: When you create new user pages, import them here:
 // import UserOrders from './pages/user/UserOrders';
@@ -150,6 +150,11 @@ const ADMIN_ROUTES = [
     component: MarketingSpendManagement,    // The component to show
     description: 'Marketing Spend Management Page'
   },
+  {
+    path: 'banners',                          // URL path (will be /admin/banners)
+    component: BannerManagement,              // The component to show
+    description: 'Banner Management Page'
+  },
   // ============================================
   // ADD NEW ADMIN PAGES HERE - IT'S THAT EASY!
   // ============================================
@@ -179,25 +184,10 @@ const ADMIN_ROUTES = [
 // ============================================
 // USER ROUTES CONFIGURATION
 // ============================================
-// This array makes it easy to add new user pages!
-const USER_ROUTES = [
-  {
-    path: ROUTES.USER_DASHBOARD,         // Full URL path
-    component: UserDashboard,             // The component to show
-    description: 'User Dashboard Page',
-    isProtected: true                     // Requires login
-  },
-  // ============================================
-  // ADD NEW USER PAGES HERE
-  // ============================================
-  // Example: To add a User Orders page:
-  // {
-  //   path: '/user/orders',
-  //   component: UserOrders,
-  //   description: 'User Orders Page',
-  //   isProtected: true
-  // },
-];
+// User pages (no authentication required)
+// ============================================
+// ADD NEW USER PAGES HERE
+// ============================================
 
 /**
  * Main App Function
@@ -211,23 +201,19 @@ function App() {
       {/* AdminAuthProvider: Wraps the app to provide admin login state to all components */}
       <AdminAuthProvider>
 
-        {/* UserAuthProvider: Wraps the app to provide user login state to all components */}
-        <UserAuthProvider>
-
-          {/* Toaster: Shows notification popups (like "Login successful!") */}
-          <Toaster position="top-right" />
+        {/* Toaster: Shows notification popups */}
+        <Toaster position="top-right" />
 
           {/* Routes: This is where we define all the pages in our app */}
           <Routes>
 
             {/* 
-              Route 1: Home Page
-              When someone visits "/" (home), redirect them to admin login page
+              Route 1: Home Page - User Homepage with banners and products
             */}
-            <Route
-              path={ROUTES.HOME}
-              element={<Navigate to={ROUTES.ADMIN_LOGIN} replace />}
-            />
+            <Route path={ROUTES.HOME} element={<HomePage />} />
+
+            {/* User sale page - products by category */}
+            <Route path="/sale/:categoryId" element={<SalePage />} />
 
             {/* 
               Route 2: Admin Protected Pages
@@ -278,35 +264,6 @@ function App() {
               element={<AdminAuthPage />}
             />
 
-            {/* 
-              Route 4: User Login Page
-              This handles user login and registration
-            */}
-            <Route
-              path="/user/*"
-              element={<UserAuthPage />}
-            />
-
-            {/* 
-              AUTO-GENERATED USER ROUTES
-              These routes are created automatically from the USER_ROUTES array!
-              When you add a new page to USER_ROUTES, it will automatically appear here.
-            */}
-            {USER_ROUTES.map((route) => (
-              <Route
-                key={route.path}
-                path={route.path}
-                element={
-                  route.isProtected ? (
-                    <UserProtectedRoute>
-                      <route.component />
-                    </UserProtectedRoute>
-                  ) : (
-                    <route.component />
-                  )
-                }
-              />
-            ))}
 
             {/* 
               Route 5: Catch All Route
@@ -320,7 +277,6 @@ function App() {
 
           </Routes>
 
-        </UserAuthProvider>
       </AdminAuthProvider>
 
     </BrowserRouter>
