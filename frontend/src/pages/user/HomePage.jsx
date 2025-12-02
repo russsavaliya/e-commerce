@@ -21,6 +21,7 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const [bannerImageErrors, setBannerImageErrors] = useState(new Set());
+    const [isMobile, setIsMobile] = useState(false);
 
   // Fetch data
   useEffect(() => {
@@ -54,6 +55,17 @@ const HomePage = () => {
     };
 
     fetchData();
+  }, []);
+
+  // Handle responsive behavior for curved strip (disable heavy transforms on mobile)
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   // Auto-rotate banners
@@ -182,38 +194,39 @@ const HomePage = () => {
 
       {/* Homepage Category Strip - Curved Cards */}
       {categoryStripBanners.length > 0 && (
-        <section className="px-4 md:px-8 py-12 bg-black text-white">
+        <section className="px-4 md:px-8 py-12 bg-gradient-to-b from-black via-black to-transparent text-white">
           <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h2
-                className="text-xl md:text-2xl font-bold"
-                style={{ fontFamily: "'Playfair Display', serif" }}
-              >
-                Shop by Occasion
-              </h2>
-            </div>
-
             {/* Perspective wrapper for curved effect */}
             <div
               className="relative w-full overflow-x-auto md:overflow-visible"
               style={{ perspective: '1200px' }}
             >
-              <div className="flex gap-4 md:gap-6 justify-center md:justify-between min-w-max md:min-w-0">
+              <div className="flex items-end gap-2 md:gap-4 lg:gap-6 justify-center min-w-max md:min-w-0" style={{ transformStyle: 'preserve-3d' }}>
                 {categoryStripBanners.map((banner, index) => {
-                  const total = categoryStripBanners.length;
-                  const middle = (total - 1) / 2;
-                  const offset = index - middle;
-
-                  // Values tuned to look like a soft curved strip
-                  const rotateY = offset * 10; // degrees
-                  const translateY = Math.abs(offset) * 12; // px
-                  const scale = 1 - Math.abs(offset) * 0.08; // center bigger
-
-                  const cardStyle = {
-                    transform: `translateY(${translateY}px) scale(${scale}) rotateY(${rotateY}deg)`,
-                    transformOrigin: '50% 100%',
+                  let cardStyle = {
                     transition: 'transform 500ms ease',
+                    transformOrigin: '50% 100%',
                   };
+
+                  if (!isMobile && categoryStripBanners.length > 1) {
+                    const total = categoryStripBanners.length;
+                    const middle = (total - 1) / 2;
+                    const offset = index - middle;
+                    const maxDistance = middle;
+
+                    // Desktop / tablet: strong curved strip
+                    const rotateY = 0; // keep images facing front
+                    const distanceFromCenter = Math.abs(offset);
+                    // Center lowest, edges highest
+                    const translateY = (maxDistance - distanceFromCenter) * 14; // px
+                    // Edges big, center smallest, middle smaller
+                    const scale = 0.7 + (distanceFromCenter / maxDistance) * 0.3;
+
+                    cardStyle.transform = `translateY(${translateY}px) scale(${scale}) rotateY(${rotateY}deg)`;
+                  } else {
+                    // Mobile: simple straight strip, fully visible
+                    cardStyle.transform = 'translateY(0) scale(1)';
+                  }
 
                   return (
                     <button
@@ -225,7 +238,7 @@ const HomePage = () => {
                         }
                       }}
                       style={cardStyle}
-                      className="relative min-w-[140px] md:min-w-[180px] h-60 md:h-72 rounded-[32px] overflow-hidden flex-shrink-0 bg-gray-900/60 border border-white/10 shadow-[0_18px_40px_rgba(0,0,0,0.7)] group focus:outline-none hover:translate-y-0 hover:scale-105"
+                      className="relative min-w-[120px] md:min-w-[150px] lg:min-w-[180px] h-56 md:h-64 lg:h-72 rounded-lg overflow-hidden flex-shrink-0 bg-gray-900/60 border border-white/10 shadow-[0_18px_40px_rgba(0,0,0,0.7)] group focus:outline-none hover:translate-y-0 hover:scale-105"
                     >
                       <img
                         src={banner.image_url}
@@ -236,15 +249,7 @@ const HomePage = () => {
                             'https://via.placeholder.com/300x400?text=Banner';
                         }}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-                      <div className="absolute bottom-4 left-4 right-4 text-left">
-                        <p
-                          className="text-sm md:text-base font-semibold leading-snug line-clamp-2"
-                          style={{ fontFamily: "'Playfair Display', serif" }}
-                        >
-                          {banner.title || banner.category?.name}
-                        </p>
-                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                     </button>
                   );
                 })}
