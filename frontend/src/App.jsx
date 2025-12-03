@@ -185,9 +185,9 @@ const ADMIN_ROUTES = [
 // USER ROUTES CONFIGURATION
 // ============================================
 // User pages (no authentication required)
-// ============================================
-// ADD NEW USER PAGES HERE
-// ============================================
+  // ============================================
+  // ADD NEW USER PAGES HERE
+  // ============================================
 
 /**
  * Main App Function
@@ -202,7 +202,7 @@ function App() {
       <AdminAuthProvider>
 
         {/* Toaster: Shows notification popups */}
-        <Toaster position="top-right" />
+          <Toaster position="top-right" />
 
           {/* Routes: This is where we define all the pages in our app */}
           <Routes>

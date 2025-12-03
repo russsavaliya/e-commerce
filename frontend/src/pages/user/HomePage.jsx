@@ -29,12 +29,13 @@ const HomePage = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        // Keep API payloads small for homepage (limit 4 products for each section)
         const [bannersRes, categoryStripRes, middleBannersRes, bestsellersRes, trendingRes] = await Promise.all([
           getActiveBanners('homepage_hero'), // hero
           getActiveBanners('homepage_category_strip'), // curved cards
           getActiveBanners('homepage_middle'), // middle banner
-          getBestsellerProducts(12),
-          getTrendingProducts(12),
+          getBestsellerProducts(4),
+          getTrendingProducts(4),
         ]);
 
         if (bannersRes.status) {
@@ -290,7 +291,8 @@ const HomePage = () => {
 
       {/* Middle Banner Section */}
       {middleBanners.length > 0 && (
-        <section className="w-full py-8 px-4 md:px-8 bg-white">
+        // Slightly smaller vertical padding so gap with Trending section is tighter
+        <section className="w-full pt-10 pb-8 px-4 md:px-8 bg-white">
           <div className="max-w-7xl mx-auto">
             {middleBanners.map((banner, index) => (
               <div
