@@ -8,6 +8,10 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Cabin', 'sans-serif'],
+        serif: ['Cabin', 'sans-serif'],
+      },
       fontSize: {
         base: '16px',
         sm: '14px',

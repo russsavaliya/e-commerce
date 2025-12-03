@@ -9,10 +9,17 @@
   box-sizing: border-box;
 }
 
+/* Global Font - Applied to all elements */
+*,
+*::before,
+*::after {
+  font-family: "Cabin", sans-serif;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
-  font-family: 'Playfair Display', 'Cormorant Garamond', serif;
+  font-family: "Cabin", sans-serif;
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -20,9 +27,10 @@ body {
 
 /* User-side specific font styling */
 .user-page {
-  font-family: 'Playfair Display', 'Cormorant Garamond', serif;
+  font-family: "Cabin", sans-serif;
 }
 
 #root {
   min-height: 100vh;
+  font-family: "Cabin", sans-serif;
 }

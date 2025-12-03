@@ -7,8 +7,7 @@
 import React, { useState } from 'react';
 import { IndianRupee, Star, Sparkles, Package, Heart } from 'lucide-react';
 
-// Luxury font style for saree website
-const luxuryFont = { fontFamily: "'Playfair Display', 'Cormorant Garamond', serif" };
+// Font is now applied globally via CSS
 
 const ProductCard = ({ product }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -37,7 +36,7 @@ const ProductCard = ({ product }) => {
 
   return (
     <div 
-      className="group relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100"
+      className="group relative bg-white overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -101,7 +100,6 @@ const ProductCard = ({ product }) => {
         {/* Product Name */}
         <h3 
           className="font-medium text-gray-900 mb-2 line-clamp-2 min-h-[2.75rem] text-sm leading-snug"
-          style={luxuryFont}
         >
           {product.name || 'Product Name'}
         </h3>

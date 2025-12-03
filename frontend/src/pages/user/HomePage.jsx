@@ -7,7 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Star, Sparkles, Loader2 } from 'lucide-react';
 import { getActiveBanners } from '../../services/user/bannerService';
 import { getBestsellerProducts, getTrendingProducts } from '../../services/user/productService';
-import ProductCard from '../../components/user/ProductCard';
+import ProductSection from '../../components/user/ProductSection';
 import Navbar from '../../components/user/Navbar';
 import { useNavigate } from 'react-router-dom';
 
@@ -16,21 +16,23 @@ const HomePage = () => {
   // State Management
   const [banners, setBanners] = useState([]);
   const [categoryStripBanners, setCategoryStripBanners] = useState([]);
+  const [middleBanners, setMiddleBanners] = useState([]);
   const [bestsellerProducts, setBestsellerProducts] = useState([]);
   const [trendingProducts, setTrendingProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const [bannerImageErrors, setBannerImageErrors] = useState(new Set());
-    const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Fetch data
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [bannersRes, categoryStripRes, bestsellersRes, trendingRes] = await Promise.all([
+        const [bannersRes, categoryStripRes, middleBannersRes, bestsellersRes, trendingRes] = await Promise.all([
           getActiveBanners('homepage_hero'), // hero
           getActiveBanners('homepage_category_strip'), // curved cards
+          getActiveBanners('homepage_middle'), // middle banner
           getBestsellerProducts(12),
           getTrendingProducts(12),
         ]);
@@ -40,6 +42,9 @@ const HomePage = () => {
         }
         if (categoryStripRes.status) {
           setCategoryStripBanners(categoryStripRes.data || []);
+        }
+        if (middleBannersRes.status) {
+          setMiddleBanners(middleBannersRes.data || []);
         }
         if (bestsellersRes.status) {
           setBestsellerProducts(bestsellersRes.data || []);
@@ -104,15 +109,22 @@ const HomePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white" style={{ fontFamily: "'Playfair Display', 'Cormorant Garamond', serif" }}>
+    <div className="min-h-screen bg-white">
       {/* Navbar */}
       <Navbar />
 
-      {/* Hero Banner Section */}
+      {/* Hero Banner Section - Responsive height maintaining 16:9 aspect ratio */}
       {banners.length > 0 && (
-        <section className="relative w-full h-[600px] md:h-[700px] overflow-hidden bg-gray-900">
-          {/* Banner Images */}
-          <div className="relative w-full h-full">
+        <section 
+          className="relative w-full overflow-hidden bg-gray-900 -mt-20" 
+          style={{ 
+            height: 'calc((100vw - 0px) * 9 / 16 + 20px)',
+            minHeight: '420px',
+            maxHeight: '920px'
+          }}
+        >
+          {/* Banner Images - Start below navbar, fill remaining space */}
+          <div className="absolute top-20 left-0 right-0 bottom-0 w-full" style={{ height: 'calc(100% - 0px)' }}>
             {banners.map((banner, index) => (
               <div
                 key={banner._id}
@@ -124,7 +136,15 @@ const HomePage = () => {
                   <img
                     src={banner.image_url}
                     alt={banner.title || 'Banner'}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full"
+                    style={{ 
+                      objectFit: 'cover',
+                      objectPosition: 'center 45%',
+                      width: '100%',
+                      height: '100%',
+                      display: 'block',
+                      minHeight: '100%'
+                    }}
                     onError={() => {
                       setBannerImageErrors((prev) => new Set([...prev, banner._id]));
                     }}
@@ -145,32 +165,32 @@ const HomePage = () => {
             <>
               <button
                 onClick={goToPreviousBanner}
-                className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-3 bg-white/10 backdrop-blur-sm text-white rounded-full hover:bg-white/20 transition-all duration-300 hover:scale-110"
+                className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-3 bg-white/10 backdrop-blur-sm text-white rounded-full hover:bg-white/20 transition-all duration-300 hover:scale-110"
                 aria-label="Previous banner"
               >
-                <ChevronLeft className="w-6 h-6" />
+                <ChevronLeft className="w-4 h-4 sm:w-6 sm:h-6" />
               </button>
               <button
                 onClick={goToNextBanner}
-                className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-3 bg-white/10 backdrop-blur-sm text-white rounded-full hover:bg-white/20 transition-all duration-300 hover:scale-110"
+                className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-3 bg-white/10 backdrop-blur-sm text-white rounded-full hover:bg-white/20 transition-all duration-300 hover:scale-110"
                 aria-label="Next banner"
               >
-                <ChevronRight className="w-6 h-6" />
+                <ChevronRight className="w-4 h-4 sm:w-6 sm:h-6" />
               </button>
             </>
           )}
 
           {/* Banner Indicators */}
           {banners.length > 1 && (
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
+            <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
               {banners.map((_, index) => (
                 <button
                   key={index}
                   onClick={() => goToBanner(index)}
-                  className={`h-2 rounded-full transition-all duration-300 ${
+                  className={`h-1.5 sm:h-2 rounded-full transition-all duration-300 ${
                     index === currentBannerIndex
-                      ? 'w-8 bg-white'
-                      : 'w-2 bg-white/50 hover:bg-white/75'
+                      ? 'w-6 sm:w-8 bg-white'
+                      : 'w-1.5 sm:w-2 bg-white/50 hover:bg-white/75'
                   }`}
                   aria-label={`Go to banner ${index + 1}`}
                 />
@@ -180,10 +200,9 @@ const HomePage = () => {
 
           {/* Banner Title (if available) */}
           {banners[currentBannerIndex]?.title && (
-            <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 text-center">
+            <div className="absolute bottom-12 sm:bottom-16 md:bottom-20 left-1/2 -translate-x-1/2 z-20 text-center px-4">
               <h2 
-                className="text-4xl md:text-5xl font-bold text-white mb-2 drop-shadow-lg"
-                style={{ fontFamily: "'Playfair Display', serif" }}
+                className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-2 drop-shadow-lg"
               >
                 {banners[currentBannerIndex].title}
               </h2>
@@ -260,45 +279,58 @@ const HomePage = () => {
       )}
 
       {/* Featured Products Section - Bestsellers */}
-      {bestsellerProducts.length > 0 && (
-        <section className="py-16 px-4 md:px-8 bg-gradient-to-b from-white to-gray-50">
+      <ProductSection
+        title="Bestsellers"
+        icon={Star}
+        iconColor="text-yellow-500"
+        iconFill={true}
+        products={bestsellerProducts}
+        backgroundClass="bg-gradient-to-b from-white to-gray-50"
+      />
+
+      {/* Middle Banner Section */}
+      {middleBanners.length > 0 && (
+        <section className="w-full py-8 px-4 md:px-8 bg-white">
           <div className="max-w-7xl mx-auto">
-            <div className="flex items-center gap-3 mb-8">
-              <Star className="w-8 h-8 text-yellow-500 fill-yellow-500" />
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
-                Bestsellers
-              </h2>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {bestsellerProducts.map((product) => (
-                <ProductCard key={product._id} product={product} />
-              ))}
-            </div>
+            {middleBanners.map((banner, index) => (
+              <div
+                key={banner._id || index}
+                className="relative w-full overflow-hidden rounded-lg"
+              >
+                <img
+                  src={banner.image_url}
+                  alt={banner.title || 'Banner'}
+                  className="w-full h-auto object-contain"
+                  style={{ 
+                    display: 'block',
+                    maxHeight: '600px'
+                  }}
+                  onError={(e) => {
+                    e.target.src = 'https://via.placeholder.com/1200x675?text=Banner';
+                  }}
+                />
+                {banner.title && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                    <h3 className="text-2xl md:text-3xl font-bold text-white text-center px-4">
+                      {banner.title}
+                    </h3>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </section>
       )}
 
       {/* Featured Products Section - Trending */}
-      {trendingProducts.length > 0 && (
-        <section className="py-16 px-4 md:px-8 bg-white">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-center gap-3 mb-8">
-              <Sparkles className="w-8 h-8 text-purple-500" />
-              <h2 
-                className="text-3xl md:text-4xl font-bold text-gray-900"
-                style={{ fontFamily: "'Playfair Display', serif" }}
-              >
-                Trending Now
-              </h2>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {trendingProducts.map((product) => (
-                <ProductCard key={product._id} product={product} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+      <ProductSection
+        title="Trending Now"
+        icon={Sparkles}
+        iconColor="text-purple-500"
+        iconFill={false}
+        products={trendingProducts}
+        backgroundClass="bg-white"
+      />
 
       {/* Empty State */}
       {banners.length === 0 && bestsellerProducts.length === 0 && trendingProducts.length === 0 && (
