@@ -21,20 +21,22 @@ const ProductSection = ({
   }
 
   return (
-    <section className={`py-16 px-4 md:px-8 ${backgroundClass}`}>
+    <section className={`pt-12 pb-16 px-4 md:px-8 ${backgroundClass}`}>
       <div className="max-w-7xl mx-auto">
-        {/* Section Header */}
-        <div className="flex items-center justify-center gap-3 mb-8">
-          {Icon && (
-            <Icon 
-              className={`w-6 h-6 ${iconColor} ${iconFill ? 'fill-current' : ''}`} 
-            />
-          )}
-          <h2 
-            className="text-xl md:text-2xl font-bold text-gray-900"
-          >
-            {title}
-          </h2>
+        {/* Section Header - match "Your Shaadi Wardrobe" style */}
+        <div className="mb-8 text-center">
+          <div className="flex items-center justify-center gap-2 mb-3">
+            {Icon && (
+              <Icon 
+                className={`w-5 h-5 ${iconColor} ${iconFill ? 'fill-current' : ''}`} 
+              />
+            )}
+            <h2 
+              className="text-xs tracking-[0.35em] text-gray-500 uppercase"
+            >
+              {title}
+            </h2>
+          </div>
         </div>
 
         {/* Products Grid */}

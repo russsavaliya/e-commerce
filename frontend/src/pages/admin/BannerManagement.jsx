@@ -196,11 +196,11 @@ const BannerManagement = () => {
       formDataToSend.append('order', formData.order);
       formDataToSend.append('is_active', formData.is_active);
 
+      // If new image selected, send only new image.
       if (formData.image) {
         formDataToSend.append('image', formData.image);
-      }
-
-      if (editingBanner && formData.existing_image) {
+      } else if (editingBanner && formData.existing_image) {
+        // If editing and no new image, send existing_image so backend keeps it
         formDataToSend.append('existing_image', formData.existing_image);
       }
 
@@ -333,6 +333,128 @@ const BannerManagement = () => {
     }
   };
 
+  // Helper: render banners section-wise so admin ko clearly dikhe kaunsa banner kahan use hoga
+  const renderBannerSection = (sectionBanners, title, description) => {
+    if (!sectionBanners || sectionBanners.length === 0) return null;
+
+    return (
+      <div className="mb-8">
+        <div className="flex items-baseline justify-between mb-3">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+            {description && (
+              <p className="text-xs text-gray-500 mt-1">{description}</p>
+            )}
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {sectionBanners.map((banner, index) => (
+            <div
+              key={banner._id}
+              draggable
+              onDragStart={() => handleDragStart(index)}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, index)}
+              className={`bg-white rounded-lg border-2 border-gray-200 overflow-hidden transition-all ${
+                draggedIndex === index
+                  ? 'opacity-50 border-green-500'
+                  : 'hover:border-green-300 hover:shadow-lg'
+              }`}
+            >
+              {/* Banner Image */}
+              <div className="relative h-48 bg-gray-100">
+                <img
+                  src={banner.image_url}
+                  alt={banner.title || 'Banner'}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.src = 'https://via.placeholder.com/400x200?text=Image+Error';
+                  }}
+                />
+                {/* Drag Handle */}
+                <div className="absolute top-2 left-2 p-2 bg-black/50 text-white rounded cursor-move">
+                  <GripVertical className="w-4 h-4" />
+                </div>
+                {/* Status Badge */}
+                <div className="absolute top-2 right-2">
+                  <button
+                    onClick={() => handleToggleStatus(banner._id)}
+                    className={`p-2 rounded-full ${
+                      banner.is_active
+                        ? 'bg-green-500 text-white'
+                        : 'bg-gray-400 text-white'
+                    }`}
+                    title={banner.is_active ? 'Active - Click to deactivate' : 'Inactive - Click to activate'}
+                  >
+                    {banner.is_active ? (
+                      <Eye className="w-4 h-4" />
+                    ) : (
+                      <EyeOff className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Banner Info */}
+              <div className="p-4">
+                <h3 className="font-semibold text-gray-900 mb-1">
+                  {banner.title || 'Untitled Banner'}
+                </h3>
+                <div className="flex items-center justify-between text-sm text-gray-500 mb-2">
+                  <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
+                    {banner.position === 'homepage_hero'
+                      ? 'Homepage Hero'
+                      : banner.position === 'homepage_category_strip'
+                      ? 'Homepage Category Strip'
+                      : banner.position === 'homepage_middle'
+                      ? 'Homepage Middle'
+                      : banner.position === 'homepage_bottom'
+                      ? 'Homepage Bottom'
+                      : banner.position === 'category_page'
+                      ? 'Category Page'
+                      : banner.position === 'product_page'
+                      ? 'Product Page'
+                      : banner.position}
+                  </span>
+                  <span
+                    className={`px-2 py-1 rounded ${
+                      banner.is_active
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-gray-100 text-gray-700'
+                    }`}
+                  >
+                    {banner.is_active ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+                <div className="text-xs text-gray-500 mb-3">
+                  Order: {banner.order}
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleEdit(banner)}
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => setDeleteConfirm(banner._id)}
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="w-full p-6">
       {/* Header */}
@@ -378,6 +500,7 @@ const BannerManagement = () => {
                   Banner Image {!editingBanner && <span className="text-red-500">*</span>}
                 </label>
                 <div className="flex items-center gap-4">
+                  {/* Preview (if any) */}
                   {formData.imagePreview || formData.existing_image ? (
                     <div className="relative">
                       <img
@@ -385,33 +508,22 @@ const BannerManagement = () => {
                         alt="Banner preview"
                         className="w-48 h-32 object-cover rounded-lg border border-gray-300"
                       />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFormData((prev) => ({
-                            ...prev,
-                            image: null,
-                            imagePreview: null,
-                            existing_image: editingBanner ? prev.existing_image : '',
-                          }));
-                        }}
-                        className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
                     </div>
-                  ) : (
-                    <label className="flex flex-col items-center justify-center w-48 h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-green-500 hover:bg-green-50 transition-all">
-                      <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                      <span className="text-sm text-gray-600">Upload Image</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                        className="hidden"
-                      />
-                    </label>
-                  )}
+                  ) : null}
+
+                  {/* Upload / Change button – always visible so admin can change image while editing */}
+                  <label className="flex flex-col items-center justify-center w-48 h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-green-500 hover:bg-green-50 transition-all">
+                    <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                    <span className="text-sm text-gray-600">
+                      {formData.imagePreview || formData.existing_image ? 'Change Image' : 'Upload Image'}
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="hidden"
+                    />
+                  </label>
                 </div>
                 {formErrors.image && (
                   <p className="text-xs text-red-600 mt-1">{formErrors.image}</p>
@@ -446,6 +558,7 @@ const BannerManagement = () => {
                   value={formData.category}
                   onChange={handleInputChange}
                   disabled={loadingCategories}
+                  size={6} // Show approx 6 categories before scroll
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white max-h-48 overflow-y-auto shadow-sm"
                 >
                   <option value="">Select category (optional)</option>
@@ -604,102 +717,59 @@ const BannerManagement = () => {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {banners.map((banner, index) => (
-            <div
-              key={banner._id}
-              draggable
-              onDragStart={() => handleDragStart(index)}
-              onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, index)}
-              className={`bg-white rounded-lg border-2 border-gray-200 overflow-hidden transition-all ${
-                draggedIndex === index
-                  ? 'opacity-50 border-green-500'
-                  : 'hover:border-green-300 hover:shadow-lg'
-              }`}
-            >
-              {/* Banner Image */}
-              <div className="relative h-48 bg-gray-100">
-                <img
-                  src={banner.image_url}
-                  alt={banner.title || 'Banner'}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.target.src = 'https://via.placeholder.com/400x200?text=Image+Error';
-                  }}
-                />
-                {/* Drag Handle */}
-                <div className="absolute top-2 left-2 p-2 bg-black/50 text-white rounded cursor-move">
-                  <GripVertical className="w-4 h-4" />
-                </div>
-                {/* Status Badge */}
-                <div className="absolute top-2 right-2">
-                  <button
-                    onClick={() => handleToggleStatus(banner._id)}
-                    className={`p-2 rounded-full ${
-                      banner.is_active
-                        ? 'bg-green-500 text-white'
-                        : 'bg-gray-400 text-white'
-                    }`}
-                    title={banner.is_active ? 'Active - Click to deactivate' : 'Inactive - Click to activate'}
-                  >
-                    {banner.is_active ? (
-                      <Eye className="w-4 h-4" />
-                    ) : (
-                      <EyeOff className="w-4 h-4" />
-                    )}
-                  </button>
-                </div>
-              </div>
+        <>
+          {renderBannerSection(
+            banners.filter((b) => b.position === 'homepage_hero'),
+            'Homepage Hero Banners',
+            'Top main slider banners (hero section).'
+          )}
 
-              {/* Banner Info */}
-              <div className="p-4">
-                <h3 className="font-semibold text-gray-900 mb-1">
-                  {banner.title || 'Untitled Banner'}
-                </h3>
-                <div className="flex items-center justify-between text-sm text-gray-500 mb-2">
-                  <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
-                    {banner.position === 'homepage_hero' ? 'Homepage Hero' :
-                     banner.position === 'homepage_middle' ? 'Homepage Middle' :
-                     banner.position === 'homepage_bottom' ? 'Homepage Bottom' :
-                     banner.position === 'category_page' ? 'Category Page' :
-                     banner.position === 'product_page' ? 'Product Page' : banner.position}
-                  </span>
-                  <span
-                    className={`px-2 py-1 rounded ${
-                      banner.is_active
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-gray-100 text-gray-700'
-                    }`}
-                  >
-                    {banner.is_active ? 'Active' : 'Inactive'}
-                  </span>
-                </div>
-                <div className="text-xs text-gray-500 mb-3">
-                  Order: {banner.order}
-                </div>
+          {renderBannerSection(
+            banners.filter((b) => b.position === 'homepage_category_strip'),
+            'Homepage Category Strip Banners',
+            'Curved category strip banners (Haldi, Marriage, etc.).'
+          )}
 
-                {/* Actions */}
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleEdit(banner)}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => setDeleteConfirm(banner._id)}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+          {renderBannerSection(
+            banners.filter((b) => b.position === 'homepage_middle'),
+            'Homepage Middle Banners',
+            'Homepage middle section banners (between product sections).'
+          )}
+
+          {renderBannerSection(
+            banners.filter((b) => b.position === 'homepage_bottom'),
+            'Homepage Bottom Banners',
+            'Banners shown at bottom of homepage.'
+          )}
+
+          {renderBannerSection(
+            banners.filter((b) => b.position === 'category_page'),
+            'Category Page Banners',
+            'Banners used on category detail pages.'
+          )}
+
+          {renderBannerSection(
+            banners.filter((b) => b.position === 'product_page'),
+            'Product Page Banners',
+            'Banners used on product detail pages.'
+          )}
+
+          {renderBannerSection(
+            banners.filter(
+              (b) =>
+                ![
+                  'homepage_hero',
+                  'homepage_category_strip',
+                  'homepage_middle',
+                  'homepage_bottom',
+                  'category_page',
+                  'product_page',
+                ].includes(b.position)
+            ),
+            'Other Banners',
+            'Banners with custom positions.'
+          )}
+        </>
       )}
 
       {/* Drag and Drop Hint */}

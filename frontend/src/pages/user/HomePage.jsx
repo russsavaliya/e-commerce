@@ -9,6 +9,7 @@ import { getActiveBanners } from '../../services/user/bannerService';
 import { getBestsellerProducts, getTrendingProducts } from '../../services/user/productService';
 import ProductSection from '../../components/user/ProductSection';
 import Navbar from '../../components/user/Navbar';
+import Footer from '../../components/user/Footer';
 import { useNavigate } from 'react-router-dom';
 
 const HomePage = () => {
@@ -17,6 +18,7 @@ const HomePage = () => {
   const [banners, setBanners] = useState([]);
   const [categoryStripBanners, setCategoryStripBanners] = useState([]);
   const [middleBanners, setMiddleBanners] = useState([]);
+  const [bottomBanners, setBottomBanners] = useState([]);
   const [bestsellerProducts, setBestsellerProducts] = useState([]);
   const [trendingProducts, setTrendingProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,10 +32,18 @@ const HomePage = () => {
       try {
         setLoading(true);
         // Keep API payloads small for homepage (limit 4 products for each section)
-        const [bannersRes, categoryStripRes, middleBannersRes, bestsellersRes, trendingRes] = await Promise.all([
+        const [
+          bannersRes,
+          categoryStripRes,
+          middleBannersRes,
+          bottomBannersRes,
+          bestsellersRes,
+          trendingRes,
+        ] = await Promise.all([
           getActiveBanners('homepage_hero'), // hero
-          getActiveBanners('homepage_category_strip'), // curved cards
+          getActiveBanners('homepage_category_strip'), // category strip
           getActiveBanners('homepage_middle'), // middle banner
+          getActiveBanners('homepage_bottom'), // bottom banner
           getBestsellerProducts(4),
           getTrendingProducts(4),
         ]);
@@ -46,6 +56,9 @@ const HomePage = () => {
         }
         if (middleBannersRes.status) {
           setMiddleBanners(middleBannersRes.data || []);
+        }
+        if (bottomBannersRes.status) {
+          setBottomBanners(bottomBannersRes.data || []);
         }
         if (bestsellersRes.status) {
           setBestsellerProducts(bestsellersRes.data || []);
@@ -212,68 +225,41 @@ const HomePage = () => {
         </section>
       )}
 
-      {/* Homepage Category Strip - Curved Cards */}
+      {/* Homepage Category Strip - Simple Cards like reference design */}
       {categoryStripBanners.length > 0 && (
-        <section className="px-4 md:px-8 py-12 bg-gradient-to-b from-black via-black to-transparent text-white">
+        <section className="px-4 md:px-8 py-12 bg-white">
           <div className="max-w-7xl mx-auto">
-            {/* Perspective wrapper for curved effect */}
-            <div
-              className="relative w-full overflow-x-auto md:overflow-visible"
-              style={{ perspective: '1200px' }}
-            >
-              <div className="flex items-end gap-2 md:gap-4 lg:gap-6 justify-center min-w-max md:min-w-0" style={{ transformStyle: 'preserve-3d' }}>
-                {categoryStripBanners.map((banner, index) => {
-                  let cardStyle = {
-                    transition: 'transform 500ms ease',
-                    transformOrigin: '50% 100%',
-                  };
+            {/* Section heading (small, elegant) */}
+            <div className="mb-8 text-center">
+              <h2 className="text-xs tracking-[0.35em] text-gray-500 uppercase">
+                Your Shaadi Wardrobe
+              </h2>
+            </div>
 
-                  if (!isMobile && categoryStripBanners.length > 1) {
-                    const total = categoryStripBanners.length;
-                    const middle = (total - 1) / 2;
-                    const offset = index - middle;
-                    const maxDistance = middle;
-
-                    // Desktop / tablet: strong curved strip
-                    const rotateY = 0; // keep images facing front
-                    const distanceFromCenter = Math.abs(offset);
-                    // Center lowest, edges highest
-                    const translateY = (maxDistance - distanceFromCenter) * 14; // px
-                    // Edges big, center smallest, middle smaller
-                    const scale = 0.7 + (distanceFromCenter / maxDistance) * 0.3;
-
-                    cardStyle.transform = `translateY(${translateY}px) scale(${scale}) rotateY(${rotateY}deg)`;
-                  } else {
-                    // Mobile: simple straight strip, fully visible
-                    cardStyle.transform = 'translateY(0) scale(1)';
-                  }
-
-                  return (
-                    <button
-                      key={banner._id}
-                      onClick={() => {
-                        if (banner.category?._id || banner.category) {
-                          const id = banner.category._id || banner.category;
-                          navigate(`/sale/${id}`);
-                        }
-                      }}
-                      style={cardStyle}
-                      className="relative min-w-[120px] md:min-w-[150px] lg:min-w-[180px] h-56 md:h-64 lg:h-72 rounded-lg overflow-hidden flex-shrink-0 bg-gray-900/60 border border-white/10 shadow-[0_18px_40px_rgba(0,0,0,0.7)] group focus:outline-none hover:translate-y-0 hover:scale-105"
-                    >
-                      <img
-                        src={banner.image_url}
-                        alt={banner.title || banner.category?.name || 'Banner'}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                        onError={(e) => {
-                          e.target.src =
-                            'https://via.placeholder.com/300x400?text=Banner';
-                        }}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                    </button>
-                  );
-                })}
-              </div>
+            {/* Simple responsive grid of banner-sized cards */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 justify-items-center">
+              {categoryStripBanners.map((banner) => (
+                <button
+                  key={banner._id}
+                  onClick={() => {
+                    if (banner.category?._id || banner.category) {
+                      const id = banner.category._id || banner.category;
+                      navigate(`/sale/${id}`);
+                    }
+                  }}
+                  className="w-full max-w-[320px] aspect-[2/3] overflow-hidden rounded-lg shadow-lg bg-white group focus:outline-none"
+                >
+                  <img
+                    src={banner.image_url}
+                    alt={banner.title || banner.category?.name || 'Banner'}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    onError={(e) => {
+                      e.target.src =
+                        'https://via.placeholder.com/400x533?text=Banner';
+                    }}
+                  />
+                </button>
+              ))}
             </div>
           </div>
         </section>
@@ -334,6 +320,39 @@ const HomePage = () => {
         backgroundClass="bg-white"
       />
 
+      {/* Bottom Banner Section (homepage_bottom) - full width, large banner */}
+      {bottomBanners.length > 0 && (
+        <section className="w-full pt-10 pb-6 px-0 bg-white">
+          <div className="w-full">
+            {bottomBanners.map((banner, index) => (
+              <div
+                key={banner._id || index}
+                className="relative w-full overflow-hidden"
+              >
+                {/* 16:9 full-width banner */}
+                <div className="relative w-full pb-[40%]">
+                  <img
+                    src={banner.image_url}
+                    alt={banner.title || 'Banner'}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.src = 'https://via.placeholder.com/1600x640?text=Banner';
+                    }}
+                  />
+                  {banner.title && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                      <h3 className="text-2xl md:text-3xl font-bold text-white text-center px-4">
+                        {banner.title}
+                      </h3>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Empty State */}
       {banners.length === 0 && bestsellerProducts.length === 0 && trendingProducts.length === 0 && (
         <div className="min-h-[60vh] flex items-center justify-center px-4">
@@ -343,6 +362,9 @@ const HomePage = () => {
           </div>
         </div>
       )}
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };
