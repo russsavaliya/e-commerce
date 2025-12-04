@@ -24,36 +24,60 @@ import Footer from '../../components/user/Footer';
 import { getAllProducts } from '../../services/user/productService';
 import { getCategoriesList } from '../../services/user/categoryService';
 import { getAttributesList } from '../../services/user/attributeService';
+import { Slider } from 'antd';
 
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+const PRICE_BOUNDS = { min: 200, max: 5000 };
+const ITEMS_PER_PAGE = 20;
+
+const SORT_OPTIONS = [
+  { value: 'createdAt-desc', label: 'Newest First' },
+  { value: 'createdAt-asc', label: 'Oldest First' },
+  { value: 'price-asc', label: 'Price: Low to High' },
+  { value: 'price-desc', label: 'Price: High to Low' },
+  { value: 'name-asc', label: 'Name: A to Z' },
+  { value: 'name-desc', label: 'Name: Z to A' },
+];
+
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
 const AllProductsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   
-  // State
+  // ============================================================================
+  // STATE MANAGEMENT
+  // ============================================================================
+  
+  // Products & Loading
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [categories, setCategories] = useState([]);
-  const [attributes, setAttributes] = useState([]);
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  
-  // Category dropdown state
-  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
-  const [categorySearchTerm, setCategorySearchTerm] = useState('');
-  
-  // Attribute dropdown state
-  const [attributeDropdownOpen, setAttributeDropdownOpen] = useState(false);
-  const [attributeSearchTerm, setAttributeSearchTerm] = useState('');
-  
-  // Attribute value dropdown state
-  const [attributeValueDropdownOpen, setAttributeValueDropdownOpen] = useState(false);
-  const [attributeValueSearchTerm, setAttributeValueSearchTerm] = useState('');
-  
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const limit = 20;
-
-  // Filters
+  const [currentPage, setCurrentPage] = useState(1);
+  
+  // Filter Data
+  const [categories, setCategories] = useState([]);
+  const [attributes, setAttributes] = useState([]);
+  
+  // UI State
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
+  const [attributeDropdownOpen, setAttributeDropdownOpen] = useState(false);
+  const [attributeValueDropdownOpen, setAttributeValueDropdownOpen] = useState(false);
+  
+  // Search Terms
+  const [categorySearchTerm, setCategorySearchTerm] = useState('');
+  const [attributeSearchTerm, setAttributeSearchTerm] = useState('');
+  const [attributeValueSearchTerm, setAttributeValueSearchTerm] = useState('');
+  
+  // Price Slider State - Single state for range [min, max]
+  const [priceRange, setPriceRange] = useState([PRICE_BOUNDS.min, PRICE_BOUNDS.max]);
+  
+  // Active Filters
   const [filters, setFilters] = useState({
     category_id: searchParams.get('category') || '',
     min_price: searchParams.get('min_price') || '',
@@ -64,7 +88,80 @@ const AllProductsPage = () => {
     sort_order: searchParams.get('sort_order') || 'desc',
   });
 
-  // Fetch categories and attributes on mount
+  // ============================================================================
+  // HELPER FUNCTIONS
+  // ============================================================================
+  
+  const updateFilters = (newFilters) => {
+    const updatedFilters = { ...filters, ...newFilters };
+    setFilters(updatedFilters);
+    setCurrentPage(1);
+
+    const params = new URLSearchParams();
+    Object.keys(updatedFilters).forEach(key => {
+      if (updatedFilters[key]) {
+        params.set(key, updatedFilters[key]);
+      }
+    });
+    params.set('page', '1');
+    setSearchParams(params);
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      category_id: '',
+      min_price: '',
+      max_price: '',
+      attribute_id: '',
+      attribute_value_id: '',
+      sort_by: 'createdAt',
+      sort_order: 'desc',
+    });
+    setPriceRange([PRICE_BOUNDS.min, PRICE_BOUNDS.max]);
+    setSearchParams({ page: '1' });
+  };
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      const params = new URLSearchParams(searchParams);
+      params.set('page', newPage.toString());
+      setSearchParams(params);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  // applyPriceFilter will be defined inside PriceRangeSlider component to access testRange
+  // resetPriceFilter will also be defined inside PriceRangeSlider component
+
+  const closeAllDropdowns = () => {
+    setCategoryDropdownOpen(false);
+    setAttributeDropdownOpen(false);
+    setAttributeValueDropdownOpen(false);
+    setCategorySearchTerm('');
+    setAttributeSearchTerm('');
+    setAttributeValueSearchTerm('');
+  };
+
+  // ============================================================================
+  // EFFECTS
+  // ============================================================================
+  
+  // Sync slider values with filters
+  useEffect(() => {
+    const filterMinPrice = Number(filters.min_price);
+    const filterMaxPrice = Number(filters.max_price);
+    
+    const min = filterMinPrice && filterMinPrice >= PRICE_BOUNDS.min && filterMinPrice <= PRICE_BOUNDS.max 
+      ? filterMinPrice 
+      : PRICE_BOUNDS.min;
+    const max = filterMaxPrice && filterMaxPrice >= PRICE_BOUNDS.min && filterMaxPrice <= PRICE_BOUNDS.max 
+      ? filterMaxPrice 
+      : PRICE_BOUNDS.max;
+    
+    setPriceRange([min, max]);
+  }, [filters.min_price, filters.max_price]);
+
+  // Fetch categories and attributes
   useEffect(() => {
     const fetchFilterData = async () => {
       try {
@@ -87,7 +184,7 @@ const AllProductsPage = () => {
     fetchFilterData();
   }, []);
 
-  // Close dropdowns when clicking outside
+  // Close dropdowns on outside click
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (categoryDropdownOpen && !event.target.closest('.category-dropdown-container')) {
@@ -113,7 +210,7 @@ const AllProductsPage = () => {
     };
   }, [categoryDropdownOpen, attributeDropdownOpen, attributeValueDropdownOpen]);
 
-  // Fetch products when filters or page changes
+  // Fetch products
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -123,7 +220,7 @@ const AllProductsPage = () => {
 
         const filterParams = {
           page,
-          limit,
+          limit: ITEMS_PER_PAGE,
           ...filters,
         };
 
@@ -151,51 +248,410 @@ const AllProductsPage = () => {
     fetchProducts();
   }, [filters, searchParams]);
 
-  // Update URL params when filters change
-  const updateFilters = (newFilters) => {
-    const updatedFilters = { ...filters, ...newFilters };
-    setFilters(updatedFilters);
-    setCurrentPage(1); // Reset to page 1 when filters change
+  // ============================================================================
+  // SUB-COMPONENTS
+  // ============================================================================
 
-    // Update URL params
-    const params = new URLSearchParams();
-    Object.keys(updatedFilters).forEach(key => {
-      if (updatedFilters[key]) {
-        params.set(key, updatedFilters[key]);
-      }
+  // Category Dropdown Component
+  const CategoryDropdown = () => {
+    const filteredCategories = categories.filter(cat =>
+      cat.name.toLowerCase().includes(categorySearchTerm.toLowerCase())
+    );
+
+    return (
+      <div className="mb-6 relative category-dropdown-container">
+        <label className="flex items-center gap-2 text-xs font-semibold text-gray-800 mb-2.5 uppercase tracking-wide">
+          <Tag className="w-4 h-4 text-rose-600" />
+          Category
+        </label>
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => {
+              setCategoryDropdownOpen(!categoryDropdownOpen);
+              setCategorySearchTerm('');
+            }}
+            className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 text-sm text-left flex items-center justify-between bg-white shadow-sm hover:border-gray-300 transition-colors"
+          >
+            <span className="truncate">
+              {filters.category_id
+                ? categories.find(c => c._id === filters.category_id)?.name || 'All Categories'
+                : 'All Categories'}
+            </span>
+            <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${categoryDropdownOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {categoryDropdownOpen && (
+            <div className="absolute z-50 w-full mt-2 bg-white border-2 border-gray-200 rounded-lg shadow-xl">
+              {/* Search Input */}
+              <div className="p-3 border-b border-gray-200 bg-gray-50">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search categories..."
+                    value={categorySearchTerm}
+                    onChange={(e) => setCategorySearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-3 py-2.5 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 bg-white"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+              </div>
+
+              {/* Category List */}
+              <div className="max-h-[210px] overflow-y-auto">
+                <button
+                  type="button"
+                  onClick={() => {
+                    updateFilters({ category_id: '', attribute_id: '', attribute_value_id: '' });
+                    setCategoryDropdownOpen(false);
+                    setCategorySearchTerm('');
+                  }}
+                  className={`w-full px-4 py-2.5 text-left text-sm hover:bg-rose-50 transition-colors ${
+                    !filters.category_id ? 'bg-rose-100 text-rose-700 font-semibold' : 'text-gray-700 hover:text-rose-600'
+                  }`}
+                >
+                  All Categories
+                </button>
+                {filteredCategories.map((cat) => (
+                  <button
+                    key={cat._id}
+                    type="button"
+                    onClick={() => {
+                      updateFilters({ category_id: cat._id, attribute_id: '', attribute_value_id: '' });
+                      setCategoryDropdownOpen(false);
+                      setCategorySearchTerm('');
+                    }}
+                    className={`w-full px-4 py-2.5 text-left text-sm hover:bg-rose-50 transition-colors ${
+                      filters.category_id === cat._id
+                        ? 'bg-rose-100 text-rose-700 font-semibold'
+                        : 'text-gray-700 hover:text-rose-600'
+                    }`}
+                  >
+                    {cat.name}
+                  </button>
+                ))}
+                {filteredCategories.length === 0 && (
+                  <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                    No categories found
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // Price Range Slider Component
+  const PriceRangeSlider = () => {
+    // Initialize testRange from priceRange or default bounds
+    const [testRange, setTestRange] = useState(() => {
+      const [min, max] = priceRange;
+      return [min, max];
     });
-    params.set('page', '1');
-    setSearchParams(params);
+
+    // Sync testRange when priceRange changes externally (from filters)
+    useEffect(() => {
+      const [min, max] = priceRange;
+      setTestRange([min, max]);
+    }, [priceRange]);
+
+    // Apply price filter using current testRange values
+    const applyPriceFilter = () => {
+      const [currentMin, currentMax] = testRange;
+
+      updateFilters({ 
+        min_price: currentMin !== PRICE_BOUNDS.min ? currentMin : '',
+        max_price: currentMax !== PRICE_BOUNDS.max ? currentMax : ''
+      });
+    };
+
+    // Reset price filter
+    const resetPriceFilter = () => {
+      setTestRange([PRICE_BOUNDS.min, PRICE_BOUNDS.max]);
+      updateFilters({ min_price: '', max_price: '' });
+    };
+
+    return (
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-2.5">
+          <label className="flex items-center gap-2 text-xs font-semibold text-gray-800 uppercase tracking-wide">
+            <IndianRupee className="w-4 h-4 text-rose-600" />
+            Price
+          </label>
+          <button
+            onClick={resetPriceFilter}
+            className="text-xs text-orange-500 hover:text-orange-600 font-medium uppercase tracking-wide"
+          >
+            Reset
+          </button>
+        </div>
+
+        {/* Ant Design Range Slider */}
+        <div className="mt-4 mb-4">
+         
+          <Slider
+            range
+            min={PRICE_BOUNDS.min}
+            max={PRICE_BOUNDS.max}
+            step={50}
+            value={testRange}
+            onChange={setTestRange}
+            tooltip={{
+              formatter: (value) => `₹${value?.toLocaleString('en-IN')}`,
+            }}
+          />
+        </div>
+
+        {/* Price Inputs and GO Button */}
+        <div className="flex items-center gap-3 mt-4">
+          <div className="flex-1 flex items-center gap-2">
+            <span className="text-[10px] text-gray-500">Rs.</span>
+            <input
+              type="number"
+              min={PRICE_BOUNDS.min}
+              max={PRICE_BOUNDS.max}
+              value={testRange[0]}
+              onChange={(e) => {
+                const value = Number(e.target.value);
+                if (value >= PRICE_BOUNDS.min && value <= PRICE_BOUNDS.max && value <= testRange[1]) {
+                  setTestRange([value, testRange[1]]);
+                }
+              }}
+              onBlur={(e) => {
+                const value = Number(e.target.value);
+                if (value < PRICE_BOUNDS.min) {
+                  setTestRange([PRICE_BOUNDS.min, testRange[1]]);
+                } else if (value > testRange[1]) {
+                  setTestRange([testRange[1], testRange[1]]);
+                } else if (value > PRICE_BOUNDS.max) {
+                  setTestRange([PRICE_BOUNDS.max, testRange[1]]);
+                }
+              }}
+              className="text-sm font-semibold text-gray-900 border-b border-gray-300 pb-0.5 focus:outline-none focus:border-rose-500 w-full bg-transparent"
+            />
+          </div>
+          <div className="flex-1 flex items-center gap-2">
+            <span className="text-[10px] text-gray-500">Rs.</span>
+            <input
+              type="number"
+              min={PRICE_BOUNDS.min}
+              max={PRICE_BOUNDS.max}
+              value={testRange[1]}
+              onChange={(e) => {
+                const value = Number(e.target.value);
+                if (value >= PRICE_BOUNDS.min && value <= PRICE_BOUNDS.max && value >= testRange[0]) {
+                  setTestRange([testRange[0], value]);
+                }
+              }}
+              onBlur={(e) => {
+                const value = Number(e.target.value);
+                if (value < testRange[0]) {
+                  setTestRange([testRange[0], testRange[0]]);
+                } else if (value < PRICE_BOUNDS.min) {
+                  setTestRange([testRange[0], PRICE_BOUNDS.min]);
+                } else if (value > PRICE_BOUNDS.max) {
+                  setTestRange([testRange[0], PRICE_BOUNDS.max]);
+                }
+              }}
+              className="text-sm font-semibold text-gray-900 border-b border-gray-300 pb-0.5 focus:outline-none focus:border-rose-500 w-full bg-transparent"
+            />
+          </div>
+          <button
+            onClick={applyPriceFilter}
+            className="px-4 py-2 bg-orange-400 hover:bg-orange-500 text-white text-sm font-semibold rounded-lg transition-colors"
+          >
+            GO
+          </button>
+        </div>
+      </div>
+    );
   };
 
-  // Handle page change
-  const handlePageChange = (newPage) => {
-    if (newPage >= 1 && newPage <= totalPages) {
-      const params = new URLSearchParams(searchParams);
-      params.set('page', newPage.toString());
-      setSearchParams(params);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
-
-  // Clear all filters
-  const clearFilters = () => {
-    setFilters({
-      category_id: '',
-      min_price: '',
-      max_price: '',
-      attribute_id: '',
-      attribute_value_id: '',
-      sort_by: 'createdAt',
-      sort_order: 'desc',
-    });
-    setSearchParams({ page: '1' });
-  };
-
-  // Filter sidebar component
-  const FilterSidebar = ({ isMobile = false }) => {
+  // Attribute Filter Component
+  const AttributeFilter = () => {
     const selectedAttribute = attributes.find(a => a._id === filters.attribute_id);
+    const filteredAttributes = attributes.filter(attr =>
+      attr.name.toLowerCase().includes(attributeSearchTerm.toLowerCase())
+    );
+    const filteredAttributeValues = selectedAttribute
+      ? selectedAttribute.values.filter(val =>
+          val.value.toLowerCase().includes(attributeValueSearchTerm.toLowerCase())
+        )
+      : [];
 
+    return (
+      <div className="mb-6">
+        <label className="flex items-center gap-2 text-xs font-semibold text-gray-800 mb-2.5 uppercase tracking-wide">
+          <Tag className="w-4 h-4 text-rose-600" />
+          Options
+        </label>
+        
+        {/* Attribute Dropdown */}
+        <div className="mb-2.5 relative attribute-dropdown-container">
+          <button
+            type="button"
+            onClick={() => {
+              setAttributeDropdownOpen(!attributeDropdownOpen);
+              setAttributeSearchTerm('');
+            }}
+            className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 text-sm text-left flex items-center justify-between bg-white shadow-sm hover:border-gray-300 transition-colors"
+          >
+            <span className="truncate">
+              {filters.attribute_id
+                ? attributes.find(a => a._id === filters.attribute_id)?.name || 'Select Attribute'
+                : 'Select Attribute'}
+            </span>
+            <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform flex-shrink-0 ${attributeDropdownOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {attributeDropdownOpen && (
+            <div className="absolute z-50 w-full mt-2 bg-white border-2 border-gray-200 rounded-lg shadow-xl">
+              {/* Search Input */}
+              <div className="p-3 border-b border-gray-200 bg-gray-50">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search attributes..."
+                    value={attributeSearchTerm}
+                    onChange={(e) => setAttributeSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-3 py-2.5 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 bg-white"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+              </div>
+
+              {/* Attribute List */}
+              <div className="max-h-[210px] overflow-y-auto">
+                <button
+                  type="button"
+                  onClick={() => {
+                    updateFilters({ attribute_id: '', attribute_value_id: '' });
+                    setAttributeDropdownOpen(false);
+                    setAttributeSearchTerm('');
+                  }}
+                  className={`w-full px-4 py-2.5 text-left text-sm hover:bg-rose-50 transition-colors ${
+                    !filters.attribute_id ? 'bg-rose-100 text-rose-700 font-semibold' : 'text-gray-700 hover:text-rose-600'
+                  }`}
+                >
+                  Select Attribute
+                </button>
+                {filteredAttributes.map((attr) => (
+                  <button
+                    key={attr._id}
+                    type="button"
+                    onClick={() => {
+                      updateFilters({ attribute_id: attr._id, attribute_value_id: '' });
+                      setAttributeDropdownOpen(false);
+                      setAttributeSearchTerm('');
+                    }}
+                    className={`w-full px-4 py-2.5 text-left text-sm hover:bg-rose-50 transition-colors ${
+                      filters.attribute_id === attr._id
+                        ? 'bg-rose-100 text-rose-700 font-semibold'
+                        : 'text-gray-700 hover:text-rose-600'
+                    }`}
+                  >
+                    {attr.name}
+                  </button>
+                ))}
+                {filteredAttributes.length === 0 && (
+                  <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                    No attributes found
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Attribute Value Dropdown */}
+        {selectedAttribute && (
+          <div className="relative attribute-value-dropdown-container">
+            <button
+              type="button"
+              onClick={() => {
+                setAttributeValueDropdownOpen(!attributeValueDropdownOpen);
+                setAttributeValueSearchTerm('');
+              }}
+              className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 text-sm text-left flex items-center justify-between bg-white shadow-sm hover:border-gray-300 transition-colors"
+            >
+              <span className="truncate">
+                {filters.attribute_value_id
+                  ? selectedAttribute.values.find(v => v._id === filters.attribute_value_id)?.value || 'All Values'
+                  : `All Values (${selectedAttribute.name})`}
+              </span>
+              <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform flex-shrink-0 ${attributeValueDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {attributeValueDropdownOpen && (
+              <div className="absolute z-50 w-full mt-2 bg-white border-2 border-gray-200 rounded-lg shadow-xl">
+                {/* Search Input */}
+                <div className="p-3 border-b border-gray-200 bg-gray-50">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search values..."
+                      value={attributeValueSearchTerm}
+                      onChange={(e) => setAttributeValueSearchTerm(e.target.value)}
+                      className="w-full pl-10 pr-3 py-2.5 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 bg-white"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                </div>
+
+                {/* Attribute Value List */}
+                <div className="max-h-[210px] overflow-y-auto">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateFilters({ attribute_value_id: '' });
+                      setAttributeValueDropdownOpen(false);
+                      setAttributeValueSearchTerm('');
+                    }}
+                    className={`w-full px-4 py-2.5 text-left text-sm hover:bg-rose-50 transition-colors ${
+                      !filters.attribute_value_id ? 'bg-rose-100 text-rose-700 font-semibold' : 'text-gray-700 hover:text-rose-600'
+                    }`}
+                  >
+                    All Values ({selectedAttribute.name})
+                  </button>
+                  {filteredAttributeValues.map((val) => (
+                    <button
+                      key={val._id}
+                      type="button"
+                      onClick={() => {
+                        updateFilters({ attribute_value_id: val._id });
+                        setAttributeValueDropdownOpen(false);
+                        setAttributeValueSearchTerm('');
+                      }}
+                      className={`w-full px-4 py-2.5 text-left text-sm hover:bg-rose-50 transition-colors ${
+                        filters.attribute_value_id === val._id
+                          ? 'bg-rose-100 text-rose-700 font-semibold'
+                          : 'text-gray-700 hover:text-rose-600'
+                      }`}
+                    >
+                      {val.value}
+                    </button>
+                  ))}
+                  {filteredAttributeValues.length === 0 && (
+                    <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                      No values found
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Filter Sidebar Component
+  const FilterSidebar = ({ isMobile = false }) => {
     return (
       <div className={`bg-white ${isMobile ? 'p-6' : 'p-5'} rounded-lg border border-gray-200 shadow-md`}>
         {/* Header */}
@@ -229,317 +685,77 @@ const AllProductsPage = () => {
               }}
               className="w-full px-3 py-2.5 pr-10 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 text-sm bg-white shadow-sm hover:border-gray-300 transition-colors appearance-none"
             >
-              <option value="createdAt-desc">Newest First</option>
-              <option value="createdAt-asc">Oldest First</option>
-              <option value="price-asc">Price: Low to High</option>
-              <option value="price-desc">Price: High to Low</option>
-              <option value="name-asc">Name: A to Z</option>
-              <option value="name-desc">Name: Z to A</option>
+              {SORT_OPTIONS.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
             <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
           </div>
         </div>
 
-        {/* Category Filter - Custom Dropdown with Search */}
-        <div className="mb-6 relative category-dropdown-container">
-          <label className="flex items-center gap-2 text-xs font-semibold text-gray-800 mb-2.5 uppercase tracking-wide">
-            <Tag className="w-4 h-4 text-rose-600" />
-            Category
-          </label>
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => {
-                setCategoryDropdownOpen(!categoryDropdownOpen);
-                setCategorySearchTerm('');
-              }}
-              className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 text-sm text-left flex items-center justify-between bg-white shadow-sm hover:border-gray-300 transition-colors"
-            >
-              <span className="truncate">
-                {filters.category_id
-                  ? categories.find(c => c._id === filters.category_id)?.name || 'All Categories'
-                  : 'All Categories'}
-              </span>
-              <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${categoryDropdownOpen ? 'rotate-180' : ''}`} />
-            </button>
-
-            {categoryDropdownOpen && (
-              <div className="absolute z-50 w-full mt-2 bg-white border-2 border-gray-200 rounded-lg shadow-xl">
-                {/* Search Input */}
-                <div className="p-3 border-b border-gray-200 bg-gray-50">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Search categories..."
-                      value={categorySearchTerm}
-                      onChange={(e) => setCategorySearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-3 py-2.5 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 bg-white"
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  </div>
-                </div>
-
-                {/* Category List - Shows 6-7 items, then scroll */}
-                <div className="max-h-[210px] overflow-y-auto">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      updateFilters({ category_id: '', attribute_id: '', attribute_value_id: '' });
-                      setCategoryDropdownOpen(false);
-                      setCategorySearchTerm('');
-                    }}
-                    className={`w-full px-4 py-2.5 text-left text-sm hover:bg-rose-50 transition-colors ${
-                      !filters.category_id ? 'bg-rose-100 text-rose-700 font-semibold' : 'text-gray-700 hover:text-rose-600'
-                    }`}
-                  >
-                    All Categories
-                  </button>
-                  {categories
-                    .filter(cat =>
-                      cat.name.toLowerCase().includes(categorySearchTerm.toLowerCase())
-                    )
-                    .map((cat) => (
-                      <button
-                        key={cat._id}
-                        type="button"
-                        onClick={() => {
-                          updateFilters({ category_id: cat._id, attribute_id: '', attribute_value_id: '' });
-                          setCategoryDropdownOpen(false);
-                          setCategorySearchTerm('');
-                        }}
-                        className={`w-full px-4 py-2.5 text-left text-sm hover:bg-rose-50 transition-colors ${
-                          filters.category_id === cat._id
-                            ? 'bg-rose-100 text-rose-700 font-semibold'
-                            : 'text-gray-700 hover:text-rose-600'
-                        }`}
-                      >
-                        {cat.name}
-                      </button>
-                    ))}
-                  {categories.filter(cat =>
-                    cat.name.toLowerCase().includes(categorySearchTerm.toLowerCase())
-                  ).length === 0 && (
-                    <div className="px-4 py-3 text-sm text-gray-500 text-center">
-                      No categories found
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Price Range Filter */}
-        <div className="mb-6">
-          <label className="flex items-center gap-2 text-xs font-semibold text-gray-800 mb-2.5 uppercase tracking-wide">
-            <IndianRupee className="w-4 h-4 text-rose-600" />
-            Price Range
-          </label>
-          <div className="flex gap-2">
-            <div className="flex-1">
-              <input
-                type="number"
-                placeholder="Min"
-                value={filters.min_price}
-                onChange={(e) => updateFilters({ min_price: e.target.value })}
-                className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 text-sm bg-white shadow-sm hover:border-gray-300 transition-colors"
-              />
-            </div>
-            <div className="flex-1">
-              <input
-                type="number"
-                placeholder="Max"
-                value={filters.max_price}
-                onChange={(e) => updateFilters({ max_price: e.target.value })}
-                className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 text-sm bg-white shadow-sm hover:border-gray-300 transition-colors"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Attribute Filter - Custom Dropdown with Search */}
-        <div className="mb-6">
-          <label className="flex items-center gap-2 text-xs font-semibold text-gray-800 mb-2.5 uppercase tracking-wide">
-            <Tag className="w-4 h-4 text-rose-600" />
-            Options
-          </label>
-          
-          {/* Attribute Dropdown */}
-          <div className="mb-2.5 relative attribute-dropdown-container">
-            <button
-              type="button"
-              onClick={() => {
-                setAttributeDropdownOpen(!attributeDropdownOpen);
-                setAttributeSearchTerm('');
-              }}
-              className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 text-sm text-left flex items-center justify-between bg-white shadow-sm hover:border-gray-300 transition-colors"
-            >
-              <span className="truncate">
-                {filters.attribute_id
-                  ? attributes.find(a => a._id === filters.attribute_id)?.name || 'Select Attribute'
-                  : 'Select Attribute'}
-              </span>
-              <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform flex-shrink-0 ${attributeDropdownOpen ? 'rotate-180' : ''}`} />
-            </button>
-
-            {attributeDropdownOpen && (
-              <div className="absolute z-50 w-full mt-2 bg-white border-2 border-gray-200 rounded-lg shadow-xl">
-                {/* Search Input */}
-                <div className="p-3 border-b border-gray-200 bg-gray-50">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Search attributes..."
-                      value={attributeSearchTerm}
-                      onChange={(e) => setAttributeSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-3 py-2.5 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 bg-white"
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  </div>
-                </div>
-
-                {/* Attribute List - Shows 6-7 items, then scroll */}
-                <div className="max-h-[210px] overflow-y-auto">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      updateFilters({ attribute_id: '', attribute_value_id: '' });
-                      setAttributeDropdownOpen(false);
-                      setAttributeSearchTerm('');
-                    }}
-                    className={`w-full px-4 py-2.5 text-left text-sm hover:bg-rose-50 transition-colors ${
-                      !filters.attribute_id ? 'bg-rose-100 text-rose-700 font-semibold' : 'text-gray-700 hover:text-rose-600'
-                    }`}
-                  >
-                    Select Attribute
-                  </button>
-                  {attributes
-                    .filter(attr =>
-                      attr.name.toLowerCase().includes(attributeSearchTerm.toLowerCase())
-                    )
-                    .map((attr) => (
-                      <button
-                        key={attr._id}
-                        type="button"
-                        onClick={() => {
-                          updateFilters({ attribute_id: attr._id, attribute_value_id: '' });
-                          setAttributeDropdownOpen(false);
-                          setAttributeSearchTerm('');
-                          setAttributeValueDropdownOpen(false);
-                          setAttributeValueSearchTerm('');
-                        }}
-                        className={`w-full px-4 py-2.5 text-left text-sm hover:bg-rose-50 transition-colors ${
-                          filters.attribute_id === attr._id
-                            ? 'bg-rose-100 text-rose-700 font-semibold'
-                            : 'text-gray-700 hover:text-rose-600'
-                        }`}
-                      >
-                        {attr.name}
-                      </button>
-                    ))}
-                  {attributes.filter(attr =>
-                    attr.name.toLowerCase().includes(attributeSearchTerm.toLowerCase())
-                  ).length === 0 && (
-                    <div className="px-4 py-3 text-sm text-gray-500 text-center">
-                      No attributes found
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Attribute Value Dropdown - Only show if attribute is selected */}
-          {selectedAttribute && (
-            <div className="relative attribute-value-dropdown-container">
-              <button
-                type="button"
-                onClick={() => {
-                  setAttributeValueDropdownOpen(!attributeValueDropdownOpen);
-                  setAttributeValueSearchTerm('');
-                }}
-                className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 text-sm text-left flex items-center justify-between bg-white shadow-sm hover:border-gray-300 transition-colors"
-              >
-                <span className="truncate">
-                  {filters.attribute_value_id
-                    ? selectedAttribute.values.find(v => v._id === filters.attribute_value_id)?.value || 'All Values'
-                    : `All Values (${selectedAttribute.name})`}
-                </span>
-                <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform flex-shrink-0 ${attributeValueDropdownOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              {attributeValueDropdownOpen && (
-                <div className="absolute z-50 w-full mt-2 bg-white border-2 border-gray-200 rounded-lg shadow-xl">
-                  {/* Search Input */}
-                  <div className="p-3 border-b border-gray-200 bg-gray-50">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      <input
-                        type="text"
-                        placeholder="Search values..."
-                        value={attributeValueSearchTerm}
-                        onChange={(e) => setAttributeValueSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-3 py-2.5 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 bg-white"
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Attribute Value List - Shows 6-7 items, then scroll */}
-                  <div className="max-h-[210px] overflow-y-auto">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        updateFilters({ attribute_value_id: '' });
-                        setAttributeValueDropdownOpen(false);
-                        setAttributeValueSearchTerm('');
-                      }}
-                      className={`w-full px-4 py-2.5 text-left text-sm hover:bg-rose-50 transition-colors ${
-                        !filters.attribute_value_id ? 'bg-rose-100 text-rose-700 font-semibold' : 'text-gray-700 hover:text-rose-600'
-                      }`}
-                    >
-                      All Values ({selectedAttribute.name})
-                    </button>
-                    {selectedAttribute.values
-                      .filter(val =>
-                        val.value.toLowerCase().includes(attributeValueSearchTerm.toLowerCase())
-                      )
-                      .map((val) => (
-                        <button
-                          key={val._id}
-                          type="button"
-                          onClick={() => {
-                            updateFilters({ attribute_value_id: val._id });
-                            setAttributeValueDropdownOpen(false);
-                            setAttributeValueSearchTerm('');
-                          }}
-                          className={`w-full px-4 py-2.5 text-left text-sm hover:bg-rose-50 transition-colors ${
-                            filters.attribute_value_id === val._id
-                              ? 'bg-rose-100 text-rose-700 font-semibold'
-                              : 'text-gray-700 hover:text-rose-600'
-                          }`}
-                        >
-                          {val.value}
-                        </button>
-                      ))}
-                    {selectedAttribute.values.filter(val =>
-                      val.value.toLowerCase().includes(attributeValueSearchTerm.toLowerCase())
-                    ).length === 0 && (
-                      <div className="px-4 py-3 text-sm text-gray-500 text-center">
-                        No values found
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+        <CategoryDropdown />
+        <PriceRangeSlider />
+        <AttributeFilter />
       </div>
     );
   };
+
+  // Pagination Component
+  const Pagination = () => {
+    if (totalPages <= 1) return null;
+
+    return (
+      <div className="flex items-center justify-center gap-2 mt-8">
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+
+        {[...Array(totalPages)].map((_, index) => {
+          const page = index + 1;
+          if (
+            page === 1 ||
+            page === totalPages ||
+            (page >= currentPage - 1 && page <= currentPage + 1)
+          ) {
+            return (
+              <button
+                key={page}
+                onClick={() => handlePageChange(page)}
+                className={`px-4 py-2 border rounded-lg font-medium transition-colors ${
+                  currentPage === page
+                    ? 'bg-rose-600 text-white border-rose-600'
+                    : 'border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                {page}
+              </button>
+            );
+          } else if (page === currentPage - 2 || page === currentPage + 2) {
+            return <span key={page} className="px-2">...</span>;
+          }
+          return null;
+        })}
+
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
+      </div>
+    );
+  };
+
+  // ============================================================================
+  // RENDER
+  // ============================================================================
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -559,13 +775,16 @@ const AllProductsPage = () => {
       {/* Mobile Filter Overlay */}
       {mobileFiltersOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileFiltersOpen(false)} />
+          <div 
+            className="absolute inset-0 bg-black/50" 
+            onClick={() => setMobileFiltersOpen(false)} 
+          />
           <div className="absolute right-0 top-0 h-full w-80 bg-white shadow-xl overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between z-10">
               <h3 className="text-lg font-semibold text-gray-900 uppercase">Filters</h3>
               <button
                 onClick={() => setMobileFiltersOpen(false)}
-                className="p-2 hover:bg-gray-100 rounded-full"
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -588,7 +807,7 @@ const AllProductsPage = () => {
 
         <div className="flex gap-6 lg:gap-8">
           {/* Desktop Sidebar */}
-          <aside className="hidden lg:block w-72 flex-shrink-0 -ml-4">
+          <aside className="hidden lg:block w-72 flex-shrink-0">
             <div className="sticky top-24">
               <FilterSidebar />
             </div>
@@ -605,7 +824,7 @@ const AllProductsPage = () => {
                 <p className="text-gray-600 mb-4">No products found matching your filters.</p>
                 <button
                   onClick={clearFilters}
-                  className="text-rose-600 hover:text-rose-700 font-medium uppercase tracking-wide"
+                  className="text-rose-600 hover:text-rose-700 font-medium uppercase tracking-wide transition-colors"
                 >
                   Clear Filters
                 </button>
@@ -617,57 +836,7 @@ const AllProductsPage = () => {
                     <ProductCard key={product._id} product={product} />
                   ))}
                 </div>
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="flex items-center justify-center gap-2 mt-8">
-                    <button
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage === 1}
-                      className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <ChevronLeft className="w-5 h-5" />
-                    </button>
-
-                    {[...Array(totalPages)].map((_, index) => {
-                      const page = index + 1;
-                      // Show first page, last page, current page, and pages around current
-                      if (
-                        page === 1 ||
-                        page === totalPages ||
-                        (page >= currentPage - 1 && page <= currentPage + 1)
-                      ) {
-                        return (
-                          <button
-                            key={page}
-                            onClick={() => handlePageChange(page)}
-                            className={`px-4 py-2 border rounded-lg font-medium transition-colors ${
-                              currentPage === page
-                                ? 'bg-rose-600 text-white border-rose-600'
-                                : 'border-gray-300 hover:bg-gray-50'
-                            }`}
-                          >
-                            {page}
-                          </button>
-                        );
-                      } else if (
-                        page === currentPage - 2 ||
-                        page === currentPage + 2
-                      ) {
-                        return <span key={page} className="px-2">...</span>;
-                      }
-                      return null;
-                    })}
-
-                    <button
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                      className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <ChevronRight className="w-5 h-5" />
-                    </button>
-                  </div>
-                )}
+                <Pagination />
               </>
             )}
           </div>
@@ -680,4 +849,3 @@ const AllProductsPage = () => {
 };
 
 export default AllProductsPage;
-
