@@ -36,7 +36,7 @@ const ProductCard = ({ product }) => {
 
   return (
     <div 
-      className="group relative bg-white overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100"
+      className="group relative bg-white overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 border-2 border-gray-100 hover:border-rose-200"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -96,43 +96,43 @@ const ProductCard = ({ product }) => {
       </div>
 
       {/* Product Info */}
-      <div className="p-4">
+      <div className="p-6">
         {/* Product Name */}
         <h3 
-          className="font-medium text-gray-900 mb-2 line-clamp-2 min-h-[2.75rem] text-sm leading-snug"
+          className="font-semibold text-gray-900 mb-4 line-clamp-2 min-h-[3.5rem] text-lg leading-snug"
         >
           {product.name || 'Product Name'}
         </h3>
 
         {/* Rating and Reviews */}
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center gap-2 mb-4">
           <div className="flex items-center">
             {[...Array(5)].map((_, i) => (
               <Star
                 key={i}
-                className={`w-3 h-3 ${
+                className={`w-5 h-5 ${
                   i < 5 ? 'text-red-500 fill-red-500' : 'text-gray-300'
                 }`}
               />
             ))}
           </div>
-          <span className="text-xs text-gray-600">0 reviews</span>
+          <span className="text-base text-gray-600">0 reviews</span>
         </div>
 
         {/* Price */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3 flex-wrap">
           {product.original_price && product.original_price > product.selling_price && (
-            <span className="text-sm text-gray-400 line-through">
+            <span className="text-lg text-gray-400 line-through">
               ₹ {product.original_price.toLocaleString('en-IN')}
             </span>
           )}
           <div className="flex items-center">
-            <span className="text-base font-semibold text-gray-900">
+            <span className="text-xl font-bold text-gray-900">
               ₹ {product.selling_price?.toLocaleString('en-IN') || '0'}
             </span>
           </div>
           {discountPercentage > 0 && (
-            <span className="text-xs text-gray-600 font-medium">
+            <span className="text-base text-rose-600 font-semibold">
               {discountPercentage}% off
             </span>
           )}

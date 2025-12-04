@@ -44,3 +44,38 @@ export const getProductsByCategory = async (categoryId, page = 1, limit = 20) =>
   }
 };
 
+// Get all products with filters and pagination
+export const getAllProducts = async (filters = {}) => {
+  try {
+    const {
+      page = 1,
+      limit = 20,
+      category_id,
+      min_price,
+      max_price,
+      attribute_id,
+      attribute_value_id,
+      sort_by = 'createdAt',
+      sort_order = 'desc',
+    } = filters;
+
+    const response = await userApi.get('/users/products/all', {
+      params: {
+        page,
+        limit,
+        category_id,
+        min_price,
+        max_price,
+        attribute_id,
+        attribute_value_id,
+        sort_by,
+        sort_order,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+

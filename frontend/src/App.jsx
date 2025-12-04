@@ -83,6 +83,7 @@ import BannerManagement from './pages/admin/BannerManagement';
 // Import all your user pages here
 import HomePage from './pages/user/HomePage';
 import SalePage from './pages/user/SalePage';
+import AllProductsPage from './pages/user/AllProductsPage';
 
 // TODO: When you create new user pages, import them here:
 // import UserOrders from './pages/user/UserOrders';
@@ -211,6 +212,9 @@ function App() {
               Route 1: Home Page - User Homepage with banners and products
             */}
             <Route path={ROUTES.HOME} element={<HomePage />} />
+
+            {/* User sale page - all products with filters */}
+            <Route path="/sale" element={<AllProductsPage />} />
 
             {/* User sale page - products by category */}
             <Route path="/sale/:categoryId" element={<SalePage />} />
