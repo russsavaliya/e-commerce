@@ -56,6 +56,7 @@ exports.create_banner = async (req, res) => {
 exports.get_banner_list = async (req, res) => {
     try {
         const banners = await banner_model.find()
+            .populate('category', 'name')
             .sort({ order: 1, createdAt: -1 });
 
         return res.status(200).json({

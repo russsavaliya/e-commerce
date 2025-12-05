@@ -85,6 +85,7 @@ import HomePage from './pages/user/HomePage';
 import SalePage from './pages/user/SalePage';
 import AllProductsPage from './pages/user/AllProductsPage';
 import ProductDetailPage from './pages/user/ProductDetailPage';
+import CartPage from './pages/user/CartPage';
 
 // TODO: When you create new user pages, import them here:
 // import UserOrders from './pages/user/UserOrders';
@@ -222,6 +223,9 @@ function App() {
 
             {/* Product detail */}
             <Route path="/product/:productId" element={<ProductDetailPage />} />
+
+            {/* Cart page */}
+            <Route path="/cart" element={<CartPage />} />
 
             {/* 
               Route 2: Admin Protected Pages

@@ -5,17 +5,20 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, Search, ShoppingBag, Heart, User } from 'lucide-react';
+import { getCartCount } from '../../services/user/cartService';
 import logoImage from '../../assets/images/logo.png';
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const isHomePage = location.pathname === '/';
   
   // State for scroll-based navbar styling (for homepage)
   const [isScrolled, setIsScrolled] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
 
   // Handle scroll for homepage navbar transparency
   useEffect(() => {
@@ -31,6 +34,27 @@ const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [isHomePage]);
+
+  // Fetch cart count - Commented out for now to prevent frequent API calls
+  // TODO: Implement in future with better optimization (e.g., event-based updates)
+  // useEffect(() => {
+  //   const fetchCartCount = async () => {
+  //     try {
+  //       const response = await getCartCount();
+  //       if (response.status) {
+  //         setCartCount(response.data.count || 0);
+  //       }
+  //     } catch (error) {
+  //       // Silently fail - cart might be empty or session not initialized
+  //       setCartCount(0);
+  //     }
+  //   };
+
+  //   fetchCartCount();
+  //   // Refresh cart count when route changes (e.g., after adding to cart)
+  //   const interval = setInterval(fetchCartCount, 2000); // Poll every 2 seconds
+  //   return () => clearInterval(interval);
+  // }, [location.pathname]);
 
   const menuItems = [
     { name: 'Home', path: '/' },
@@ -126,13 +150,16 @@ const Navbar = () => {
               <Heart className="w-5 h-5" />
             </button>
             <button
+              onClick={() => navigate('/cart')}
               className={`p-2 ${textClasses} ${hoverClasses} transition-colors relative`}
               aria-label="Cart"
             >
               <ShoppingBag className="w-5 h-5" />
-              <span className="absolute top-0 right-0 w-4 h-4 bg-rose-500 text-white text-xs rounded-full flex items-center justify-center">
-                0
-              </span>
+              {cartCount > 0 && (
+                <span className="absolute top-0 right-0 w-5 h-5 bg-rose-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                  {cartCount > 99 ? '99+' : cartCount}
+                </span>
+              )}
             </button>
           </div>
 
@@ -171,11 +198,19 @@ const Navbar = () => {
                 <button className={`p-2 ${textClasses} ${hoverClasses} transition-colors`}>
                   <Heart className="w-5 h-5" />
                 </button>
-                <button className={`p-2 ${textClasses} ${hoverClasses} transition-colors relative`}>
+                <button
+                  onClick={() => {
+                    navigate('/cart');
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`p-2 ${textClasses} ${hoverClasses} transition-colors relative`}
+                >
                   <ShoppingBag className="w-5 h-5" />
-                  <span className="absolute top-0 right-0 w-4 h-4 bg-rose-500 text-white text-xs rounded-full flex items-center justify-center">
-                    0
-                  </span>
+                  {cartCount > 0 && (
+                    <span className="absolute top-0 right-0 w-5 h-5 bg-rose-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                      {cartCount > 99 ? '99+' : cartCount}
+                    </span>
+                  )}
                 </button>
               </div>
             </div>

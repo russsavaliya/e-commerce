@@ -333,18 +333,81 @@ const BannerManagement = () => {
     }
   };
 
+  // Helper: Get position badge color
+  const getPositionBadgeColor = (position) => {
+    const colors = {
+      'homepage_hero': 'bg-purple-100 text-purple-700 border-purple-200',
+      'homepage_category_strip': 'bg-blue-100 text-blue-700 border-blue-200',
+      'homepage_middle': 'bg-green-100 text-green-700 border-green-200',
+      'homepage_bottom': 'bg-orange-100 text-orange-700 border-orange-200',
+      'category_page': 'bg-pink-100 text-pink-700 border-pink-200',
+      'product_page': 'bg-yellow-100 text-yellow-700 border-yellow-200',
+    };
+    return colors[position] || 'bg-gray-100 text-gray-700 border-gray-200';
+  };
+
+  // Helper: Get position display name
+  const getPositionName = (position) => {
+    const names = {
+      'homepage_hero': 'Homepage Hero',
+      'homepage_category_strip': 'Category Strip',
+      'homepage_middle': 'Homepage Middle',
+      'homepage_bottom': 'Homepage Bottom',
+      'category_page': 'Category Page',
+      'product_page': 'Product Page',
+    };
+    return names[position] || position;
+  };
+
+  // Helper: Get section header color
+  const getSectionHeaderColor = (position) => {
+    const colors = {
+      'homepage_hero': 'border-l-purple-500 bg-purple-50',
+      'homepage_category_strip': 'border-l-blue-500 bg-blue-50',
+      'homepage_middle': 'border-l-green-500 bg-green-50',
+      'homepage_bottom': 'border-l-orange-500 bg-orange-50',
+      'category_page': 'border-l-pink-500 bg-pink-50',
+      'product_page': 'border-l-yellow-500 bg-yellow-50',
+    };
+    return colors[position] || 'border-l-gray-500 bg-gray-50';
+  };
+
+  // Helper: Get card border color
+  const getCardBorderColor = (position) => {
+    const colors = {
+      'homepage_hero': 'border-purple-300',
+      'homepage_category_strip': 'border-blue-300',
+      'homepage_middle': 'border-green-300',
+      'homepage_bottom': 'border-orange-300',
+      'category_page': 'border-pink-300',
+      'product_page': 'border-yellow-300',
+    };
+    return colors[position] || 'border-gray-300';
+  };
+
   // Helper: render banners section-wise so admin ko clearly dikhe kaunsa banner kahan use hoga
   const renderBannerSection = (sectionBanners, title, description) => {
     if (!sectionBanners || sectionBanners.length === 0) return null;
 
+    const position = sectionBanners[0]?.position;
+    const headerColor = getSectionHeaderColor(position);
+
     return (
       <div className="mb-8">
-        <div className="flex items-baseline justify-between mb-3">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-            {description && (
-              <p className="text-xs text-gray-500 mt-1">{description}</p>
-            )}
+        <div className={`border-l-4 rounded-r-lg p-4 mb-4 ${headerColor}`}>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <span className="text-2xl">📌</span>
+                {title}
+              </h2>
+              {description && (
+                <p className="text-sm text-gray-600 mt-1">{description}</p>
+              )}
+            </div>
+            <span className="px-3 py-1 bg-white rounded-lg text-sm font-semibold text-gray-700 border-2 border-gray-300">
+              {sectionBanners.length} {sectionBanners.length === 1 ? 'Banner' : 'Banners'}
+            </span>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -355,10 +418,10 @@ const BannerManagement = () => {
               onDragStart={() => handleDragStart(index)}
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, index)}
-              className={`bg-white rounded-lg border-2 border-gray-200 overflow-hidden transition-all ${
+              className={`bg-white rounded-lg border-2 overflow-hidden transition-all shadow-sm ${
                 draggedIndex === index
                   ? 'opacity-50 border-green-500'
-                  : 'hover:border-green-300 hover:shadow-lg'
+                  : `${getCardBorderColor(banner.position)} hover:shadow-lg`
               }`}
             >
               {/* Banner Image */}
@@ -371,12 +434,16 @@ const BannerManagement = () => {
                     e.target.src = 'https://via.placeholder.com/400x200?text=Image+Error';
                   }}
                 />
+                {/* Section Badge - Top Left */}
+                <div className={`absolute top-2 left-2 px-3 py-1 rounded-lg text-xs font-bold border-2 ${getPositionBadgeColor(banner.position)}`}>
+                  {getPositionName(banner.position)}
+                </div>
                 {/* Drag Handle */}
-                <div className="absolute top-2 left-2 p-2 bg-black/50 text-white rounded cursor-move">
+                <div className="absolute top-2 right-2 p-2 bg-black/50 text-white rounded cursor-move">
                   <GripVertical className="w-4 h-4" />
                 </div>
                 {/* Status Badge */}
-                <div className="absolute top-2 right-2">
+                <div className="absolute bottom-2 right-2">
                   <button
                     onClick={() => handleToggleStatus(banner._id)}
                     className={`p-2 rounded-full ${
@@ -397,51 +464,41 @@ const BannerManagement = () => {
 
               {/* Banner Info */}
               <div className="p-4">
-                <h3 className="font-semibold text-gray-900 mb-1">
+                <h3 className="font-semibold text-gray-900 mb-2 text-base">
                   {banner.title || 'Untitled Banner'}
                 </h3>
-                <div className="flex items-center justify-between text-sm text-gray-500 mb-2">
-                  <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
-                    {banner.position === 'homepage_hero'
-                      ? 'Homepage Hero'
-                      : banner.position === 'homepage_category_strip'
-                      ? 'Homepage Category Strip'
-                      : banner.position === 'homepage_middle'
-                      ? 'Homepage Middle'
-                      : banner.position === 'homepage_bottom'
-                      ? 'Homepage Bottom'
-                      : banner.position === 'category_page'
-                      ? 'Category Page'
-                      : banner.position === 'product_page'
-                      ? 'Product Page'
-                      : banner.position}
+                <div className="flex items-center justify-between text-sm mb-2">
+                  <span className="text-xs text-gray-500">
+                    Order: <span className="font-semibold text-gray-700">{banner.order}</span>
                   </span>
                   <span
-                    className={`px-2 py-1 rounded ${
+                    className={`px-2 py-1 rounded text-xs font-medium ${
                       banner.is_active
                         ? 'bg-green-100 text-green-700'
                         : 'bg-gray-100 text-gray-700'
                     }`}
                   >
-                    {banner.is_active ? 'Active' : 'Inactive'}
+                    {banner.is_active ? '✓ Active' : '✗ Inactive'}
                   </span>
                 </div>
-                <div className="text-xs text-gray-500 mb-3">
-                  Order: {banner.order}
-                </div>
+                {banner.category && (
+                  <div className="text-xs text-gray-500 mb-3">
+                    Category: <span className="font-medium text-gray-700">{banner.category?.name || 'N/A'}</span>
+                  </div>
+                )}
 
                 {/* Actions */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 mt-3">
                   <button
                     onClick={() => handleEdit(banner)}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium"
                   >
                     <Edit2 className="w-4 h-4" />
                     Edit
                   </button>
                   <button
                     onClick={() => setDeleteConfirm(banner._id)}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors text-sm font-medium"
                   >
                     <Trash2 className="w-4 h-4" />
                     Delete
@@ -456,15 +513,12 @@ const BannerManagement = () => {
   };
 
   return (
-    <div className="w-full p-6">
+    <div className="w-full">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Banner Management</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Manage homepage banners and their display order
-          </p>
-        </div>
+        <p className="text-sm text-gray-500">
+          Manage homepage banners and their display order
+        </p>
         <button
           onClick={() => {
             resetForm();

@@ -3,7 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/user/Navbar';
 import Footer from '../../components/user/Footer';
 import { getProductDetail } from '../../services/user/productService';
-import { Loader2, ChevronLeft, IndianRupee, Star, Package, X } from 'lucide-react';
+import { addToCart } from '../../services/user/cartService';
+import { Loader2, ChevronLeft, IndianRupee, Star, Package, X, ShoppingBag } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const ProductDetailPage = () => {
   const { productId } = useParams();
@@ -15,6 +17,7 @@ const ProductDetailPage = () => {
   const [activeImage, setActiveImage] = useState('');
   const [selectedVariantId, setSelectedVariantId] = useState(null);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [addingToCart, setAddingToCart] = useState(false);
 
   const normalizeImagePath = (imagePath) => {
     if (!imagePath) return '';
@@ -75,6 +78,26 @@ const ProductDetailPage = () => {
     const variant = product?.variants?.find((v) => v._id === variantId);
     if (variant && variant.variant_image) {
       setActiveImage(variant.variant_image);
+    }
+  };
+
+  const handleAddToCart = async () => {
+    if (!product) return;
+
+    try {
+      setAddingToCart(true);
+      const response = await addToCart(product._id, selectedVariantId, 1);
+      if (response.status) {
+        toast.success('Added to cart!', {
+          icon: '🛍️',
+        });
+        // Optionally navigate to cart or show a notification
+      }
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      toast.error(error.message || 'Failed to add to cart');
+    } finally {
+      setAddingToCart(false);
     }
   };
 
@@ -290,11 +313,28 @@ const ProductDetailPage = () => {
 
             {/* Actions */}
             <div className="flex gap-3">
-              <button className="flex-1 bg-gray-900 text-white py-3 rounded-full text-sm font-semibold hover:bg-black transition">
-                Add to Bag
+              <button
+                onClick={handleAddToCart}
+                disabled={addingToCart}
+                className="flex-1 flex items-center justify-center gap-2 bg-gray-900 text-white py-3 rounded-full text-sm font-semibold hover:bg-black transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {addingToCart ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  <>
+                    <ShoppingBag className="w-4 h-4" />
+                    Add to Bag
+                  </>
+                )}
               </button>
-              <button className="px-5 py-3 rounded-full border border-gray-300 text-sm font-semibold text-gray-800 hover:border-gray-500 transition">
-                Wishlist
+              <button
+                onClick={() => navigate('/cart')}
+                className="px-5 py-3 rounded-full border border-gray-300 text-sm font-semibold text-gray-800 hover:border-gray-500 transition"
+              >
+                View Cart
               </button>
             </div>
           </div>

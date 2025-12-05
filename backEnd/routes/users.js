@@ -4,6 +4,7 @@ const user_banner_controller = require('../controllers/users/banner');
 const user_product_controller = require('../controllers/users/product');
 const user_category_controller = require('../controllers/users/category');
 const user_attribute_controller = require('../controllers/users/attribute');
+const user_cart_controller = require('../controllers/users/cart');
 
 // User routes - No authentication required
 
@@ -22,5 +23,13 @@ router.get('/categories/list', user_category_controller.get_categories_list);
 
 // Attribute routes
 router.get('/attributes/list', user_attribute_controller.get_attributes_list);
+
+// Cart routes
+router.get('/cart', user_cart_controller.get_cart);
+router.post('/cart/add', user_cart_controller.add_to_cart);
+router.put('/cart/update/:cartItemId', user_cart_controller.update_cart_item);
+router.delete('/cart/remove/:cartItemId', user_cart_controller.remove_from_cart);
+router.delete('/cart/clear', user_cart_controller.clear_cart);
+router.get('/cart/count', user_cart_controller.get_cart_count);
 
 module.exports = router;
