@@ -105,3 +105,9 @@ Based on your website's responsive design:
 - Center positioning ensures important content stays visible
 - Images are responsive and adapt to all screen sizes
 
+
+
+
+
+product 
+Target size: 1200 × 1600 px (or at least 1000 × 1333 px) at 3:4.

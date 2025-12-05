@@ -5,12 +5,14 @@
  */
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { IndianRupee, Star, Sparkles, Package, Heart } from 'lucide-react';
 
 // Font is now applied globally via CSS
 
 const ProductCard = ({ product }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const navigate = useNavigate();
 
   // Calculate discount percentage if original price exists
   const discountPercentage =
@@ -36,9 +38,15 @@ const ProductCard = ({ product }) => {
 
   return (
     <div 
+      role="button"
+      tabIndex={0}
       className="group relative bg-white overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 border-2 border-gray-100 hover:border-rose-200"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={() => navigate(`/product/${product._id}`)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') navigate(`/product/${product._id}`);
+      }}
     >
       {/* Product Image */}
       <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">
@@ -72,15 +80,6 @@ const ProductCard = ({ product }) => {
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
             <Package className="w-16 h-16 text-gray-400" />
-          </div>
-        )}
-
-        {/* Sale Badge */}
-        {discountPercentage > 0 && (
-          <div className="absolute top-3 right-3 z-10">
-            <span className="px-3 py-1 bg-orange-500 text-white text-xs font-bold rounded">
-              Sale
-            </span>
           </div>
         )}
 

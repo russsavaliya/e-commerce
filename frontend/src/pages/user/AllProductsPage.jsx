@@ -123,6 +123,7 @@ const AllProductsPage = () => {
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
       const params = new URLSearchParams(searchParams);
       params.set('page', newPage.toString());
       setSearchParams(params);
@@ -215,11 +216,9 @@ const AllProductsPage = () => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const page = parseInt(searchParams.get('page')) || 1;
-        setCurrentPage(page);
 
         const filterParams = {
-          page,
+          page: currentPage,
           limit: ITEMS_PER_PAGE,
           ...filters,
         };
@@ -246,7 +245,7 @@ const AllProductsPage = () => {
     };
 
     fetchProducts();
-  }, [filters, searchParams]);
+  }, [filters, currentPage]);
 
   // ============================================================================
   // SUB-COMPONENTS

@@ -78,4 +78,14 @@ export const getAllProducts = async (filters = {}) => {
   }
 };
 
+// Get single product detail
+export const getProductDetail = async (productId) => {
+  try {
+    const response = await userApi.get(`/users/products/${productId}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
 
