@@ -59,8 +59,10 @@ const ProductDetailPage = () => {
   const displayPrice = selectedVariantId && activeVariant?.variant_price 
     ? activeVariant.variant_price 
     : (product?.selling_price ?? 0);
-  const discountPercent = product?.discount_percentage
-    ?? (product?.original_price && product.original_price > displayPrice
+  // Use discount_percentage from database first, otherwise calculate from prices
+  const discountPercent = product?.discount_percentage && product.discount_percentage > 0
+    ? product.discount_percentage
+    : (product?.original_price && product.original_price > displayPrice
       ? Math.round(((product.original_price - displayPrice) / product.original_price) * 100)
       : 0);
   // Show variant image only if variant is selected, otherwise show main product image
@@ -175,6 +177,14 @@ const ProductDetailPage = () => {
               {product.category?.name && (
                 <p className="text-sm text-gray-500 mt-2 uppercase tracking-wide">{product.category.name}</p>
               )}
+              {activeVariant && activeVariant.variant_name && (
+                <div className="mt-3 flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-600">Selected Option:</span>
+                  <span className="text-base font-semibold text-rose-600 bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-200">
+                    {activeVariant.variant_name}
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-3">
@@ -186,20 +196,20 @@ const ProductDetailPage = () => {
               <span className="text-sm text-gray-600">No reviews yet</span>
             </div>
 
-            <div className="flex items-end gap-3">
-              <div className="flex items-center gap-1">
-                <IndianRupee className="w-5 h-5 text-gray-900" />
-                <span className="text-3xl font-bold text-gray-900">
+            <div className="flex items-baseline gap-3">
+              <div className="flex items-baseline gap-1">
+                <IndianRupee className="w-5 h-5 text-gray-900 self-center" />
+                <span className="text-3xl font-bold text-gray-900 leading-none">
                   {displayPrice?.toLocaleString('en-IN') || '0'}
                 </span>
               </div>
               {product.original_price && product.original_price > displayPrice && (
-                <span className="text-lg text-gray-400 line-through">
+                <span className="text-lg text-gray-400 line-through whitespace-nowrap leading-none">
                   ₹ {product.original_price.toLocaleString('en-IN')}
                 </span>
               )}
               {discountPercent > 0 && (
-                <span className="text-sm font-semibold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-full">
+                <span className="text-sm font-semibold text-rose-600 whitespace-nowrap leading-none">
                   {discountPercent}% off
                 </span>
               )}

@@ -14,13 +14,14 @@ const ProductCard = ({ product }) => {
   const [isHovered, setIsHovered] = useState(false);
   const navigate = useNavigate();
 
-  // Calculate discount percentage if original price exists
-  const discountPercentage =
-    product.original_price && product.original_price > product.selling_price
+  // Use discount_percentage from database first, otherwise calculate from prices
+  const discountPercentage = product.discount_percentage && product.discount_percentage > 0
+    ? product.discount_percentage
+    : (product.original_price && product.original_price > product.selling_price
       ? Math.round(
           ((product.original_price - product.selling_price) / product.original_price) * 100
         )
-      : product.discount_percentage || 0;
+      : 0);
 
   // Get product images
   const productImages = product.images && product.images.length > 0 ? product.images : [];
@@ -95,16 +96,16 @@ const ProductCard = ({ product }) => {
       </div>
 
       {/* Product Info */}
-      <div className="p-6">
+      <div className="p-4">
         {/* Product Name */}
         <h3 
-          className="font-semibold text-gray-900 mb-4 line-clamp-2 min-h-[3.5rem] text-lg leading-snug"
+          className="font-semibold text-gray-900 mb-2 line-clamp-2 min-h-[3.5rem] text-lg leading-snug"
         >
           {product.name || 'Product Name'}
         </h3>
 
         {/* Rating and Reviews */}
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-2">
           <div className="flex items-center">
             {[...Array(5)].map((_, i) => (
               <Star
@@ -119,9 +120,9 @@ const ProductCard = ({ product }) => {
         </div>
 
         {/* Price */}
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
           {product.original_price && product.original_price > product.selling_price && (
-            <span className="text-lg text-gray-400 line-through">
+            <span className="text-lg text-gray-400 line-through whitespace-nowrap">
               ₹ {product.original_price.toLocaleString('en-IN')}
             </span>
           )}
@@ -131,7 +132,7 @@ const ProductCard = ({ product }) => {
             </span>
           </div>
           {discountPercentage > 0 && (
-            <span className="text-base text-rose-600 font-semibold">
+            <span className="text-base text-rose-600 font-semibold whitespace-nowrap">
               {discountPercentage}% off
             </span>
           )}
