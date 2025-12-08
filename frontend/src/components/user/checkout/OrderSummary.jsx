@@ -12,7 +12,7 @@ const OrderSummary = ({ cart, onPlaceOrder, isSubmitting }) => {
   const total = subtotal + shipping;
 
   return (
-    <div className="bg-white border-2 border-gray-200 rounded-lg p-6 shadow-sm sticky top-24">
+    <div className="bg-white border-2 border-gray-200 rounded-lg p-6 shadow-sm sticky top-6">
       <h2 className="text-xl font-bold text-gray-900 mb-6">Order Summary</h2>
 
       <div className="space-y-4 mb-6">

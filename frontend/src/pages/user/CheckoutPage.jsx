@@ -284,7 +284,7 @@ const CheckoutPage = () => {
           <p className="text-gray-600">Review your order and add shipping details</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           {/* Left Column - Shipping Form and Cart Items */}
           <div className="lg:col-span-2 space-y-6">
             {/* Shipping Address Form */}

@@ -772,12 +772,6 @@ const NewArrivalPage = () => {
       )}
 
       <main className="max-w-[1600px] mx-auto px-4 md:px-6 lg:px-8 py-10">
-        <div className="mb-10 text-center">
-          <h1 className="text-xs tracking-[0.35em] text-gray-500 uppercase mb-3">
-            Best Sellers
-          </h1>
-        </div>
-
         <div className="flex gap-6 lg:gap-8">
           <aside className="hidden lg:block w-72 flex-shrink-0">
             <div className="sticky top-24">
@@ -791,6 +785,11 @@ const NewArrivalPage = () => {
           </aside>
 
           <div className="flex-1 min-w-0">
+            <div className="mb-10 text-center">
+              <h1 className="text-sm tracking-[0.35em] text-gray-800 uppercase mb-3">
+                Best Sellers
+              </h1>
+            </div>
             {loading ? (
               <div className="flex items-center justify-center py-16">
                 <Loader2 className="w-8 h-8 animate-spin text-rose-600" />

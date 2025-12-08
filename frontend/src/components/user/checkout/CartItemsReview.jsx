@@ -30,13 +30,13 @@ const CartItemsReview = ({ cart }) => {
           >
             {/* Product Image */}
             <div
-              className="w-20 h-24 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 cursor-pointer"
+              className="w-20 h-24 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 cursor-pointer flex items-center justify-center"
               onClick={() => navigate(`/product/${item.productId}`)}
             >
               <img
                 src={normalizeImagePath(item.image || item.product.images?.[0])}
                 alt={item.product.name}
-                className="w-full h-full object-cover"
+                className="max-w-full max-h-full object-contain"
                 onError={(e) => {
                   e.target.src = 'https://via.placeholder.com/200x300?text=Image';
                 }}
