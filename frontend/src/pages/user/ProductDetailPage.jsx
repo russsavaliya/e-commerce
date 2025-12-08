@@ -4,7 +4,7 @@ import Navbar from '../../components/user/Navbar';
 import Footer from '../../components/user/Footer';
 import { getProductDetail } from '../../services/user/productService';
 import { addToCart } from '../../services/user/cartService';
-import { Loader2, ChevronLeft, IndianRupee, Star, Package, X, ShoppingBag } from 'lucide-react';
+import { Loader2, ChevronLeft, IndianRupee, Package, X, ShoppingBag } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const ProductDetailPage = () => {
@@ -25,6 +25,18 @@ const ProductDetailPage = () => {
       return imagePath;
     }
     return imagePath;
+  };
+
+  // Prevent right-click and image download
+  const handleContextMenu = (e) => {
+    e.preventDefault();
+    return false;
+  };
+
+  // Prevent drag and drop
+  const handleDragStart = (e) => {
+    e.preventDefault();
+    return false;
   };
 
   useEffect(() => {
@@ -91,7 +103,8 @@ const ProductDetailPage = () => {
         toast.success('Added to cart!', {
           icon: '🛍️',
         });
-        // Optionally navigate to cart or show a notification
+        // Navigate to cart page after successful add
+        navigate('/cart');
       }
     } catch (error) {
       console.error('Error adding to cart:', error);
@@ -146,15 +159,19 @@ const ProductDetailPage = () => {
           {/* Images */}
           <div>
             <div 
-              className="relative bg-gray-100 overflow-hidden cursor-pointer flex items-center justify-center"
+              className="relative bg-gray-100 overflow-hidden cursor-pointer flex items-center justify-center select-none"
               style={{ minHeight: '400px', maxHeight: '720px' }}
               onClick={() => displayImage && setIsImageModalOpen(true)}
+              onContextMenu={handleContextMenu}
             >
               {displayImage ? (
                 <img
                   src={normalizeImagePath(displayImage)}
                   alt={product.name}
-                  className="max-h-[720px] w-full h-full object-cover"
+                  className="max-h-[720px] w-full h-full object-cover pointer-events-none select-none"
+                  draggable="false"
+                  onContextMenu={handleContextMenu}
+                  onDragStart={handleDragStart}
                   onError={(e) => {
                     e.target.src = 'https://via.placeholder.com/500x600?text=Image+Not+Available';
                   }}
@@ -175,14 +192,18 @@ const ProductDetailPage = () => {
                       // Clear variant selection when clicking on main product image
                       setSelectedVariantId(null);
                     }}
-                    className={`border overflow-hidden h-20 bg-gray-100 aspect-[3/4] ${
+                    className={`border overflow-hidden h-20 bg-gray-100 aspect-[3/4] select-none ${
                       activeImage === img && !selectedVariantId ? 'border-rose-400' : 'border-gray-200'
                     }`}
+                    onContextMenu={handleContextMenu}
                   >
                     <img
                       src={normalizeImagePath(img)}
                       alt={`thumb-${idx}`}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover pointer-events-none select-none"
+                      draggable="false"
+                      onContextMenu={handleContextMenu}
+                      onDragStart={handleDragStart}
                       onError={(e) => {
                         e.target.src = 'https://via.placeholder.com/200x200?text=Image';
                       }}
@@ -208,15 +229,6 @@ const ProductDetailPage = () => {
                   </span>
                 </div>
               )}
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1 text-amber-500">
-                {[...Array(5)].map((_, idx) => (
-                  <Star key={idx} className="w-5 h-5 fill-amber-400 text-amber-400" />
-                ))}
-              </div>
-              <span className="text-sm text-gray-600">No reviews yet</span>
             </div>
 
             <div className="flex items-baseline gap-3">
@@ -245,28 +257,28 @@ const ProductDetailPage = () => {
             )}
 
             {/* Product-level attributes (read-only display) */}
-            {product.attributesvalues && product.attributesvalues.length > 0 && (
+            {product.attributesvalues && 
+             product.attributesvalues.length > 0 && 
+             product.attributesvalues.some(attr => attr.values && attr.values.length > 0) && (
               <div className="space-y-3 border-t border-gray-200 pt-4">
                 <div className="text-sm font-semibold text-gray-800 mb-4 uppercase tracking-wide">Product Details</div>
-                {product.attributesvalues.map((attr, idx) => (
-                  <div key={attr._id || idx} className="flex items-start gap-3">
-                    <div className="text-sm font-medium text-gray-600 min-w-[100px]">
-                      {attr.name || 'Attribute'}:
-                    </div>
-                    <div className="flex-1 text-sm text-gray-800">
-                      {attr.values && attr.values.length > 0 ? (
-                        attr.values.map((val, vIdx) => (
+                {product.attributesvalues
+                  .filter(attr => attr.values && attr.values.length > 0)
+                  .map((attr, idx) => (
+                    <div key={attr._id || idx} className="flex items-start gap-3">
+                      <div className="text-sm font-medium text-gray-600 min-w-[100px]">
+                        {attr.name || 'Attribute'}:
+                      </div>
+                      <div className="flex-1 text-sm text-gray-800">
+                        {attr.values.map((val, vIdx) => (
                           <span key={val._id || vIdx}>
                             {val.value || 'Value'}
                             {vIdx < attr.values.length - 1 && <span className="text-gray-400 mx-2">•</span>}
                           </span>
-                        ))
-                      ) : (
-                        <span className="text-gray-500">-</span>
-                      )}
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             )}
 
@@ -286,11 +298,14 @@ const ProductDetailPage = () => {
                       }`}
                     >
                       {variant.variant_image ? (
-                        <div className="w-24 h-32 bg-gray-100 overflow-hidden">
+                        <div className="w-24 h-32 bg-gray-100 overflow-hidden select-none">
                           <img
                             src={normalizeImagePath(variant.variant_image)}
                             alt={variant.variant_name}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover pointer-events-none select-none"
+                            draggable="false"
+                            onContextMenu={handleContextMenu}
+                            onDragStart={handleDragStart}
                             onError={(e) => {
                               e.target.src = 'https://via.placeholder.com/100x150?text=Image';
                             }}
@@ -345,10 +360,11 @@ const ProductDetailPage = () => {
       {/* Image Lightbox Modal */}
       {isImageModalOpen && displayImage && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm select-none"
           onClick={() => setIsImageModalOpen(false)}
+          onContextMenu={handleContextMenu}
         >
-          <div className="relative max-w-7xl max-h-[90vh] w-full h-full flex items-center justify-center p-4">
+          <div className="relative max-w-7xl max-h-[90vh] w-full h-full flex items-center justify-center p-4 select-none">
             <button
               onClick={() => setIsImageModalOpen(false)}
               className="absolute top-4 right-4 z-10 p-2 bg-white/90 hover:bg-white rounded-full transition-colors shadow-lg"
@@ -359,7 +375,10 @@ const ProductDetailPage = () => {
             <img
               src={normalizeImagePath(displayImage)}
               alt={product.name}
-              className="max-w-full max-h-full object-contain rounded-lg"
+              className="max-w-full max-h-full object-contain rounded-lg select-none"
+              draggable="false"
+              onContextMenu={handleContextMenu}
+              onDragStart={handleDragStart}
               onClick={(e) => e.stopPropagation()}
               onError={(e) => {
                 e.target.src = 'https://via.placeholder.com/800x1000?text=Image+Not+Available';

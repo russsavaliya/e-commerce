@@ -1,11 +1,10 @@
 /**
- * Sale Page - Products with Filters and Pagination
- * Luxury design with sidebar filters and product grid
- * Supports category filtering via URL params or query params
+ * New Arrival Products Page - With Filters and Pagination
+ * Displays all new products (is_new: true) with filter sidebar
  */
 
 import React, { useEffect, useState } from 'react';
-import { useSearchParams, useParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { 
   Loader2, 
   X, 
@@ -42,13 +41,11 @@ const SORT_OPTIONS = [
   { value: 'name-desc', label: 'Name: Z to A' },
 ];
 
-
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
-const SalePage = () => {
+const NewArrivalPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { categoryId } = useParams(); // Support category from URL params
   
   // ============================================================================
   // STATE MANAGEMENT
@@ -76,12 +73,12 @@ const SalePage = () => {
   const [attributeSearchTerm, setAttributeSearchTerm] = useState('');
   const [attributeValueSearchTerm, setAttributeValueSearchTerm] = useState('');
   
-  // Price Slider State - Single state for range [min, max]
+  // Price Slider State
   const [priceRange, setPriceRange] = useState([PRICE_BOUNDS.min, PRICE_BOUNDS.max]);
   
-  // Active Filters - Support category from URL params or query params
+  // Active Filters
   const [filters, setFilters] = useState({
-    category_id: categoryId || searchParams.get('category') || '',
+    category_id: searchParams.get('category') || '',
     min_price: searchParams.get('min_price') || '',
     max_price: searchParams.get('max_price') || '',
     attribute_id: searchParams.get('attribute_id') || '',
@@ -132,9 +129,6 @@ const SalePage = () => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
-
-  // applyPriceFilter will be defined inside PriceRangeSlider component to access testRange
-  // resetPriceFilter will also be defined inside PriceRangeSlider component
 
   const closeAllDropdowns = () => {
     setCategoryDropdownOpen(false);
@@ -222,6 +216,7 @@ const SalePage = () => {
         const filterParams = {
           page: currentPage,
           limit: ITEMS_PER_PAGE,
+          is_new: true, // Key difference: filter by new products
           ...filters,
         };
 
@@ -250,7 +245,7 @@ const SalePage = () => {
   }, [filters, currentPage]);
 
   // ============================================================================
-  // SUB-COMPONENTS
+  // SUB-COMPONENTS (Same as AllProductsPage)
   // ============================================================================
 
   // Category Dropdown Component
@@ -284,7 +279,6 @@ const SalePage = () => {
 
           {categoryDropdownOpen && (
             <div className="absolute z-50 w-full mt-2 bg-white border-2 border-gray-200 rounded-lg shadow-xl">
-              {/* Search Input */}
               <div className="p-3 border-b border-gray-200 bg-gray-50">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -298,8 +292,6 @@ const SalePage = () => {
                   />
                 </div>
               </div>
-
-              {/* Category List */}
               <div className="max-h-[210px] overflow-y-auto">
                 <button
                   type="button"
@@ -347,29 +339,24 @@ const SalePage = () => {
 
   // Price Range Slider Component
   const PriceRangeSlider = () => {
-    // Initialize testRange from priceRange or default bounds
     const [testRange, setTestRange] = useState(() => {
       const [min, max] = priceRange;
       return [min, max];
     });
 
-    // Sync testRange when priceRange changes externally (from filters)
     useEffect(() => {
       const [min, max] = priceRange;
       setTestRange([min, max]);
     }, [priceRange]);
 
-    // Apply price filter using current testRange values
     const applyPriceFilter = () => {
       const [currentMin, currentMax] = testRange;
-
       updateFilters({ 
         min_price: currentMin !== PRICE_BOUNDS.min ? currentMin : '',
         max_price: currentMax !== PRICE_BOUNDS.max ? currentMax : ''
       });
     };
 
-    // Reset price filter
     const resetPriceFilter = () => {
       setTestRange([PRICE_BOUNDS.min, PRICE_BOUNDS.max]);
       updateFilters({ min_price: '', max_price: '' });
@@ -389,8 +376,6 @@ const SalePage = () => {
             Reset
           </button>
         </div>
-
-        {/* Ant Design Range Slider */}
         <div className="mt-4 mb-4">
           <Slider
             range
@@ -415,8 +400,6 @@ const SalePage = () => {
             }}
           />
         </div>
-
-        {/* Price Inputs and GO Button */}
         <div className="flex items-end gap-3 mt-4">
           <div className="flex-1 flex items-center gap-2">
             <span className="text-[10px] text-gray-500">Rs.</span>
@@ -499,8 +482,6 @@ const SalePage = () => {
           <Tag className="w-4 h-4 text-rose-600" />
           Options
         </label>
-        
-        {/* Attribute Dropdown */}
         <div className="mb-2.5 relative attribute-dropdown-container">
           <button
             type="button"
@@ -520,7 +501,6 @@ const SalePage = () => {
 
           {attributeDropdownOpen && (
             <div className="absolute z-50 w-full mt-2 bg-white border-2 border-gray-200 rounded-lg shadow-xl">
-              {/* Search Input */}
               <div className="p-3 border-b border-gray-200 bg-gray-50">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -534,8 +514,6 @@ const SalePage = () => {
                   />
                 </div>
               </div>
-
-              {/* Attribute List */}
               <div className="max-h-[210px] overflow-y-auto">
                 <button
                   type="button"
@@ -578,7 +556,6 @@ const SalePage = () => {
           )}
         </div>
 
-        {/* Attribute Value Dropdown */}
         {selectedAttribute && (
           <div className="relative attribute-value-dropdown-container">
             <button
@@ -599,7 +576,6 @@ const SalePage = () => {
 
             {attributeValueDropdownOpen && (
               <div className="absolute z-50 w-full mt-2 bg-white border-2 border-gray-200 rounded-lg shadow-xl">
-                {/* Search Input */}
                 <div className="p-3 border-b border-gray-200 bg-gray-50">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -613,8 +589,6 @@ const SalePage = () => {
                     />
                   </div>
                 </div>
-
-                {/* Attribute Value List */}
                 <div className="max-h-[210px] overflow-y-auto">
                   <button
                     type="button"
@@ -665,7 +639,6 @@ const SalePage = () => {
   const FilterSidebar = ({ isMobile = false }) => {
     return (
       <div className={`bg-white ${isMobile ? 'p-6' : 'p-5'} rounded-lg border border-gray-200 shadow-md`}>
-        {/* Header */}
         <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
           <div className="flex items-center gap-2">
             <Filter className="w-5 h-5 text-rose-600" />
@@ -680,8 +653,6 @@ const SalePage = () => {
             Clear All
           </button>
         </div>
-
-        {/* Sort By */}
         <div className="mb-6">
           <label className="flex items-center gap-2 text-xs font-semibold text-gray-800 mb-2.5 uppercase tracking-wide">
             <ArrowUpDown className="w-4 h-4 text-rose-600" />
@@ -705,7 +676,6 @@ const SalePage = () => {
             <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
           </div>
         </div>
-
         <CategoryDropdown />
         <PriceRangeSlider />
         <AttributeFilter />
@@ -726,7 +696,6 @@ const SalePage = () => {
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
-
         {[...Array(totalPages)].map((_, index) => {
           const page = index + 1;
           if (
@@ -752,7 +721,6 @@ const SalePage = () => {
           }
           return null;
         })}
-
         <button
           onClick={() => handlePageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
@@ -772,7 +740,6 @@ const SalePage = () => {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
 
-      {/* Mobile Filter Button */}
       <div className="lg:hidden sticky top-20 z-40 bg-white border-b border-gray-200 shadow-sm px-4 py-3">
         <button
           onClick={() => setMobileFiltersOpen(true)}
@@ -783,7 +750,6 @@ const SalePage = () => {
         </button>
       </div>
 
-      {/* Mobile Filter Overlay */}
       {mobileFiltersOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div 
@@ -806,25 +772,24 @@ const SalePage = () => {
       )}
 
       <main className="max-w-[1600px] mx-auto px-4 md:px-6 lg:px-8 py-10">
-        {/* Header */}
-        <div className="mb-10">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3 tracking-tight">
-            Sale
+        <div className="mb-10 text-center">
+          <h1 className="text-xs tracking-[0.35em] text-gray-500 uppercase mb-3">
+            New Arrival
           </h1>
-          <p className="text-base text-gray-600 font-medium">
-            {totalCount > 0 ? `${totalCount} products found` : 'No products found'}
-          </p>
         </div>
 
         <div className="flex gap-6 lg:gap-8">
-          {/* Desktop Sidebar */}
           <aside className="hidden lg:block w-72 flex-shrink-0">
             <div className="sticky top-24">
+              <div className="mb-4">
+                <p className="text-base text-gray-600 font-medium">
+                  {totalCount > 0 ? `${totalCount} products found` : 'No products found'}
+                </p>
+              </div>
               <FilterSidebar />
             </div>
           </aside>
 
-          {/* Products Grid */}
           <div className="flex-1 min-w-0">
             {loading ? (
               <div className="flex items-center justify-center py-16">
@@ -859,4 +824,5 @@ const SalePage = () => {
   );
 };
 
-export default SalePage;
+export default NewArrivalPage;
+

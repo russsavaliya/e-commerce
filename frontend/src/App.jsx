@@ -83,9 +83,10 @@ import BannerManagement from './pages/admin/BannerManagement';
 // Import all your user pages here
 import HomePage from './pages/user/HomePage';
 import SalePage from './pages/user/SalePage';
-import AllProductsPage from './pages/user/AllProductsPage';
 import ProductDetailPage from './pages/user/ProductDetailPage';
 import CartPage from './pages/user/CartPage';
+import NewArrivalPage from './pages/user/NewArrivalPage';
+import BestSellerPage from './pages/user/BestSellerPage';
 
 // TODO: When you create new user pages, import them here:
 // import UserOrders from './pages/user/UserOrders';
@@ -215,11 +216,15 @@ function App() {
             */}
             <Route path={ROUTES.HOME} element={<HomePage />} />
 
-            {/* User sale page - all products with filters */}
-            <Route path="/sale" element={<AllProductsPage />} />
-
-            {/* User sale page - products by category */}
+            {/* User sale page - all products with filters, supports category from URL */}
+            <Route path="/sale" element={<SalePage />} />
             <Route path="/sale/:categoryId" element={<SalePage />} />
+
+            {/* New Arrival products page */}
+            <Route path="/new-arrival" element={<NewArrivalPage />} />
+
+            {/* Best Seller products page */}
+            <Route path="/bestseller" element={<BestSellerPage />} />
 
             {/* Product detail */}
             <Route path="/product/:productId" element={<ProductDetailPage />} />

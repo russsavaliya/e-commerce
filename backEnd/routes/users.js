@@ -14,6 +14,7 @@ router.get('/banners/list', user_banner_controller.get_active_banners);
 // Product routes
 router.get('/products/bestsellers', user_product_controller.get_bestseller_products);
 router.get('/products/trending', user_product_controller.get_trending_products);
+router.get('/products/new', user_product_controller.get_new_products);
 router.get('/products/by-category', user_product_controller.get_products_by_category);
 router.get('/products/all', user_product_controller.get_all_products);
 router.get('/products/:id', user_product_controller.get_product_detail);

@@ -6,7 +6,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IndianRupee, Star, Sparkles, Package, Heart } from 'lucide-react';
+import { IndianRupee, Package, Heart } from 'lucide-react';
 
 // Font is now applied globally via CSS
 
@@ -96,46 +96,31 @@ const ProductCard = ({ product }) => {
       </div>
 
       {/* Product Info */}
-      <div className="p-4">
-        {/* Product Name */}
+      <div className="p-3 sm:p-4">
+        {/* Product Name with Discount */}
         <h3 
-          className="font-semibold text-gray-900 mb-2 line-clamp-2 min-h-[3.5rem] text-lg leading-snug"
+          className="font-semibold text-gray-900 mb-2 sm:mb-3 line-clamp-2 text-sm sm:text-base md:text-lg leading-tight sm:leading-snug"
         >
-          {product.name || 'Product Name'}
+          <span>{product.name || 'Product Name'}</span>
+          {discountPercentage > 0 && (
+            <span className="ml-2 text-rose-600 font-medium text-xs sm:text-sm md:text-base">
+              ({discountPercentage}% off)
+            </span>
+          )}
         </h3>
 
-        {/* Rating and Reviews */}
-        <div className="flex items-center gap-2 mb-2">
-          <div className="flex items-center">
-            {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                className={`w-5 h-5 ${
-                  i < 5 ? 'text-red-500 fill-red-500' : 'text-gray-300'
-                }`}
-              />
-            ))}
-          </div>
-          <span className="text-base text-gray-600">0 reviews</span>
-        </div>
-
         {/* Price */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
           {product.original_price && product.original_price > product.selling_price && (
-            <span className="text-lg text-gray-400 line-through whitespace-nowrap">
+            <span className="text-xs sm:text-sm md:text-base text-gray-400 line-through whitespace-nowrap">
               ₹ {product.original_price.toLocaleString('en-IN')}
             </span>
           )}
           <div className="flex items-center">
-            <span className="text-xl font-bold text-gray-900">
+            <span className="text-base sm:text-lg md:text-xl font-bold text-gray-900">
               ₹ {product.selling_price?.toLocaleString('en-IN') || '0'}
             </span>
           </div>
-          {discountPercentage > 0 && (
-            <span className="text-base text-rose-600 font-semibold whitespace-nowrap">
-              {discountPercentage}% off
-            </span>
-          )}
         </div>
       </div>
     </div>

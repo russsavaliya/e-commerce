@@ -28,6 +28,16 @@ export const getTrendingProducts = async (limit = 12) => {
   }
 };
 
+// Get new products (no authentication required)
+export const getNewProducts = async (limit = 12) => {
+  try {
+    const response = await userApi.get(`/users/products/new?limit=${limit}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
 // Get products by category (for Sale page)
 export const getProductsByCategory = async (categoryId, page = 1, limit = 20) => {
   try {
@@ -55,6 +65,9 @@ export const getAllProducts = async (filters = {}) => {
       max_price,
       attribute_id,
       attribute_value_id,
+      is_new,
+      is_best_seller,
+      is_trending,
       sort_by = 'createdAt',
       sort_order = 'desc',
     } = filters;
@@ -68,6 +81,9 @@ export const getAllProducts = async (filters = {}) => {
         max_price,
         attribute_id,
         attribute_value_id,
+        is_new,
+        is_best_seller,
+        is_trending,
         sort_by,
         sort_order,
       },
