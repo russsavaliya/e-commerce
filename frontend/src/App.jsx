@@ -85,6 +85,7 @@ import HomePage from './pages/user/HomePage';
 import SalePage from './pages/user/SalePage';
 import ProductDetailPage from './pages/user/ProductDetailPage';
 import CartPage from './pages/user/CartPage';
+import CheckoutPage from './pages/user/CheckoutPage';
 import NewArrivalPage from './pages/user/NewArrivalPage';
 import BestSellerPage from './pages/user/BestSellerPage';
 
@@ -231,6 +232,9 @@ function App() {
 
             {/* Cart page */}
             <Route path="/cart" element={<CartPage />} />
+
+            {/* Checkout page */}
+            <Route path="/checkout" element={<CheckoutPage />} />
 
             {/* 
               Route 2: Admin Protected Pages

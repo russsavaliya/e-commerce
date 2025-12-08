@@ -5,6 +5,7 @@ const user_product_controller = require('../controllers/users/product');
 const user_category_controller = require('../controllers/users/category');
 const user_attribute_controller = require('../controllers/users/attribute');
 const user_cart_controller = require('../controllers/users/cart');
+const user_checkout_controller = require('../controllers/users/checkout');
 
 // User routes - No authentication required
 
@@ -32,5 +33,8 @@ router.put('/cart/update/:cartItemId', user_cart_controller.update_cart_item);
 router.delete('/cart/remove/:cartItemId', user_cart_controller.remove_from_cart);
 router.delete('/cart/clear', user_cart_controller.clear_cart);
 router.get('/cart/count', user_cart_controller.get_cart_count);
+
+// Checkout routes
+router.get('/checkout/pincode/validate', user_checkout_controller.validate_pincode);
 
 module.exports = router;

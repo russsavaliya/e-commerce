@@ -284,7 +284,7 @@ const CartPage = () => {
                 </div>
 
                 <button
-                  onClick={() => toast.info('Checkout functionality coming soon!')}
+                  onClick={() => navigate('/checkout')}
                   className="w-full bg-gray-900 text-white py-4 rounded-full font-semibold hover:bg-black transition-colors mb-4"
                 >
                   Proceed to Checkout
