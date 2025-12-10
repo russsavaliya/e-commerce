@@ -6,7 +6,7 @@
 import React from 'react';
 import { IndianRupee, Loader2 } from 'lucide-react';
 
-const OrderSummary = ({ cart, onPlaceOrder, isSubmitting }) => {
+const OrderSummary = ({ cart, onPlaceOrder, isSubmitting, buttonLabel = 'Place Order' }) => {
   const subtotal = cart?.subtotal || 0;
   const shipping = 0; // Free shipping for now
   const total = subtotal + shipping;
@@ -47,7 +47,7 @@ const OrderSummary = ({ cart, onPlaceOrder, isSubmitting }) => {
         </div>
       </div>
 
-      {/* Place Order Button */}
+      {/* Action Button */}
       <button
         onClick={onPlaceOrder}
         disabled={isSubmitting}
@@ -59,7 +59,7 @@ const OrderSummary = ({ cart, onPlaceOrder, isSubmitting }) => {
             Placing Order...
           </>
         ) : (
-          'Place Order'
+          buttonLabel
         )}
       </button>
 

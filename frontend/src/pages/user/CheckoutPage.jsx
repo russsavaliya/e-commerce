@@ -7,9 +7,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/user/Navbar';
 import Footer from '../../components/user/Footer';
-import { Loader2, IndianRupee, MapPin, User, Phone, Mail, Home, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft, CreditCard, Wallet, IndianRupee } from 'lucide-react';
 import { getCart } from '../../services/user/cartService';
-import { validatePincode } from '../../services/user/checkoutService';
+import { validatePincode, placeOrder } from '../../services/user/checkoutService';
 import toast from 'react-hot-toast';
 import ShippingForm from '../../components/user/checkout/ShippingForm';
 import OrderSummary from '../../components/user/checkout/OrderSummary';
@@ -34,6 +34,8 @@ const CheckoutPage = () => {
   const [pincodeValidating, setPincodeValidating] = useState(false);
   const [pincodeValid, setPincodeValid] = useState(null);
   const [pincodeValidationTimeout, setPincodeValidationTimeout] = useState(null);
+  const [currentStep, setCurrentStep] = useState('shipping'); // 'shipping' | 'payment'
+  const [selectedPayment, setSelectedPayment] = useState('cod');
 
   useEffect(() => {
     fetchCart();
@@ -202,7 +204,20 @@ const CheckoutPage = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleContinueToPayment = () => {
+    if (!validateForm()) {
+      toast.error('Please fill all required fields correctly');
+      return;
+    }
+    setCurrentStep('payment');
+  };
+
   const handlePlaceOrder = async () => {
+    if (currentStep !== 'payment') {
+      handleContinueToPayment();
+      return;
+    }
+
     if (!validateForm()) {
       toast.error('Please fill all required fields correctly');
       return;
@@ -210,21 +225,22 @@ const CheckoutPage = () => {
 
     try {
       setIsSubmitting(true);
-      // TODO: Implement order placement API call
-      // const response = await placeOrder({ shippingData, cart });
-      
-      // For now, just show success message
-      toast.success('Order placed successfully!', {
+      const response = await placeOrder({
+        ...shippingData,
+        payment_method: selectedPayment,
+      });
+
+      toast.success(response.message || 'Order placed successfully!', {
         icon: '🎉',
       });
-      
-      // Navigate to order confirmation page (to be created)
-      // navigate('/order-confirmation');
-      
-      // For now, redirect to home
-      setTimeout(() => {
-        navigate('/');
-      }, 2000);
+
+      // Optionally, show order id
+      if (response.data?.order_id) {
+        toast.success(`Order ID: ${response.data.order_id}`);
+      }
+
+      // Redirect to home for now
+      navigate('/');
     } catch (error) {
       console.error('Error placing order:', error);
       toast.error(error.message || 'Failed to place order');
@@ -285,27 +301,113 @@ const CheckoutPage = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          {/* Left Column - Shipping Form and Cart Items */}
+          {/* Left Column - Steps */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Shipping Address Form */}
-            <ShippingForm
-              shippingData={shippingData}
-              errors={errors}
-              onChange={handleShippingChange}
-              pincodeValid={pincodeValid}
-              pincodeValidating={pincodeValidating}
-            />
+            {/* Step Indicator */}
+            <div className="flex items-center gap-4 text-sm font-semibold">
+              <div className={`flex items-center gap-2 ${currentStep === 'shipping' ? 'text-gray-900' : 'text-gray-400'}`}>
+                <span className={`w-6 h-6 rounded-full flex items-center justify-center ${currentStep === 'shipping' ? 'bg-gray-900 text-white' : 'bg-gray-200 text-gray-700'}`}>1</span>
+                <span>Shipping</span>
+              </div>
+              <div className="h-px flex-1 bg-gray-200" />
+              <div className={`flex items-center gap-2 ${currentStep === 'payment' ? 'text-gray-900' : 'text-gray-400'}`}>
+                <span className={`w-6 h-6 rounded-full flex items-center justify-center ${currentStep === 'payment' ? 'bg-gray-900 text-white' : 'bg-gray-200 text-gray-700'}`}>2</span>
+                <span>Payment</span>
+              </div>
+            </div>
 
-            {/* Cart Items Review */}
-            <CartItemsReview cart={cart} />
+            {currentStep === 'shipping' && (
+              <div className="space-y-4">
+                <ShippingForm
+                  shippingData={shippingData}
+                  errors={errors}
+                  onChange={handleShippingChange}
+                  pincodeValid={pincodeValid}
+                  pincodeValidating={pincodeValidating}
+                />
+                <div className="flex justify-end">
+                  <button
+                    onClick={handleContinueToPayment}
+                    className="px-6 py-3 bg-gray-900 text-white rounded-full font-semibold hover:bg-black transition-colors"
+                  >
+                    Continue to Payment
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {currentStep === 'payment' && (
+              <div className="space-y-6">
+                {/* Payment Method Selection */}
+                <div className="bg-white border border-gray-200 rounded-lg p-5">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Select Payment Method</h3>
+                  <div className="space-y-3">
+                    <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:border-gray-400 transition-colors">
+                      <input
+                        type="radio"
+                        name="payment"
+                        value="cod"
+                        checked={selectedPayment === 'cod'}
+                        onChange={() => setSelectedPayment('cod')}
+                        className="h-4 w-4"
+                      />
+                      <div className="flex items-center gap-2">
+                        <Wallet className="w-5 h-5 text-gray-700" />
+                        <div>
+                          <p className="font-semibold text-gray-900">Cash on Delivery</p>
+                          <p className="text-xs text-gray-500">Pay when you receive the order</p>
+                        </div>
+                      </div>
+                    </label>
+                    <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:border-gray-400 transition-colors">
+                      <input
+                        type="radio"
+                        name="payment"
+                        value="online"
+                        checked={selectedPayment === 'online'}
+                        onChange={() => setSelectedPayment('online')}
+                        className="h-4 w-4"
+                      />
+                      <div className="flex items-center gap-2">
+                        <CreditCard className="w-5 h-5 text-gray-700" />
+                        <div>
+                          <p className="font-semibold text-gray-900">Online Payment (placeholder)</p>
+                          <p className="text-xs text-gray-500">We’ll confirm without charging for now</p>
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Cart Items Review */}
+                <CartItemsReview cart={cart} />
+
+                <div className="flex justify-between">
+                  <button
+                    onClick={() => setCurrentStep('shipping')}
+                    className="px-5 py-3 border border-gray-300 rounded-full font-semibold text-gray-700 hover:border-gray-400 transition-colors"
+                  >
+                    Back to Shipping
+                  </button>
+                  <button
+                    onClick={handlePlaceOrder}
+                    disabled={isSubmitting}
+                    className="px-6 py-3 bg-gray-900 text-white rounded-full font-semibold hover:bg-black transition-colors disabled:opacity-50"
+                  >
+                    {isSubmitting ? 'Placing Order...' : 'Place Order'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right Column - Order Summary */}
           <div className="lg:col-span-1">
             <OrderSummary
               cart={cart}
-              onPlaceOrder={handlePlaceOrder}
+              onPlaceOrder={currentStep === 'payment' ? handlePlaceOrder : handleContinueToPayment}
               isSubmitting={isSubmitting}
+              buttonLabel={currentStep === 'payment' ? 'Place Order' : 'Continue to Payment'}
             />
           </div>
         </div>

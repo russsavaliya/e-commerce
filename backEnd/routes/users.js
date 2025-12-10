@@ -6,6 +6,7 @@ const user_category_controller = require('../controllers/users/category');
 const user_attribute_controller = require('../controllers/users/attribute');
 const user_cart_controller = require('../controllers/users/cart');
 const user_checkout_controller = require('../controllers/users/checkout');
+const user_order_controller = require('../controllers/users/order');
 
 // User routes - No authentication required
 
@@ -36,5 +37,8 @@ router.get('/cart/count', user_cart_controller.get_cart_count);
 
 // Checkout routes
 router.get('/checkout/pincode/validate', user_checkout_controller.validate_pincode);
+
+// Order routes
+router.post('/orders', user_order_controller.place_order);
 
 module.exports = router;
