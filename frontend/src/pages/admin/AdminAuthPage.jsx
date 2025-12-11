@@ -14,7 +14,6 @@ const AdminAuthPage = () => {
   return (
     <Routes>
       <Route path="login" element={<AdminLogin />} />
-      <Route path="signup" element={<AdminLogin />} />
       <Route path="*" element={<Navigate to={ROUTES.ADMIN_LOGIN} replace />} />
     </Routes>
   );

@@ -188,15 +188,6 @@ const AdminLogin = () => {
             </button>
           </form>
 
-          {/* Signup Link */}
-          <div className="mt-6 text-center">
-            <p className="text-white/60 text-base">
-              Don't have an account?{' '}
-              <Link to="/admin/signup" className="text-white font-semibold hover:text-white/80 underline">
-                Sign up
-              </Link>
-            </p>
-          </div>
         </div>
       </div>
     </div>

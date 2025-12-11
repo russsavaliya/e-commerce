@@ -39,6 +39,7 @@ router.get('/cart/count', user_cart_controller.get_cart_count);
 router.get('/checkout/pincode/validate', user_checkout_controller.validate_pincode);
 
 // Order routes
-router.post('/orders', user_order_controller.place_order);
+router.post('/orders/init', user_order_controller.init_order);
+router.patch('/orders/:orderId/payment', user_order_controller.update_payment);
 
 module.exports = router;

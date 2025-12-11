@@ -88,6 +88,8 @@ import CartPage from './pages/user/CartPage';
 import CheckoutPage from './pages/user/CheckoutPage';
 import NewArrivalPage from './pages/user/NewArrivalPage';
 import BestSellerPage from './pages/user/BestSellerPage';
+import AboutPage from './pages/user/AboutPage';
+import ContactPage from './pages/user/ContactPage';
 
 // TODO: When you create new user pages, import them here:
 // import UserOrders from './pages/user/UserOrders';
@@ -226,6 +228,10 @@ function App() {
 
             {/* Best Seller products page */}
             <Route path="/bestseller" element={<BestSellerPage />} />
+
+            {/* About & Contact */}
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/contact" element={<ContactPage />} />
 
             {/* Product detail */}
             <Route path="/product/:productId" element={<ProductDetailPage />} />

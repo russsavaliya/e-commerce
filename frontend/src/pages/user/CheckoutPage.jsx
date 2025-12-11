@@ -7,9 +7,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/user/Navbar';
 import Footer from '../../components/user/Footer';
-import { Loader2, ArrowLeft, CreditCard, Wallet, IndianRupee } from 'lucide-react';
+import { Loader2, ArrowLeft, CreditCard, Wallet } from 'lucide-react';
 import { getCart } from '../../services/user/cartService';
-import { validatePincode, placeOrder } from '../../services/user/checkoutService';
+import { validatePincode, initOrder, updatePayment } from '../../services/user/checkoutService';
 import toast from 'react-hot-toast';
 import ShippingForm from '../../components/user/checkout/ShippingForm';
 import OrderSummary from '../../components/user/checkout/OrderSummary';
@@ -36,6 +36,7 @@ const CheckoutPage = () => {
   const [pincodeValidationTimeout, setPincodeValidationTimeout] = useState(null);
   const [currentStep, setCurrentStep] = useState('shipping'); // 'shipping' | 'payment'
   const [selectedPayment, setSelectedPayment] = useState('cod');
+  const [orderId, setOrderId] = useState(null);
 
   useEffect(() => {
     fetchCart();
@@ -204,43 +205,57 @@ const CheckoutPage = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleContinueToPayment = () => {
+  const handleContinueToPayment = async () => {
     if (!validateForm()) {
       toast.error('Please fill all required fields correctly');
       return;
     }
-    setCurrentStep('payment');
-  };
 
-  const handlePlaceOrder = async () => {
-    if (currentStep !== 'payment') {
-      handleContinueToPayment();
-      return;
-    }
-
-    if (!validateForm()) {
-      toast.error('Please fill all required fields correctly');
+    // If order already created, just move to payment step
+    if (orderId) {
+      setCurrentStep('payment');
       return;
     }
 
     try {
       setIsSubmitting(true);
-      const response = await placeOrder({
-        ...shippingData,
-        payment_method: selectedPayment,
-      });
-
-      toast.success(response.message || 'Order placed successfully!', {
-        icon: '🎉',
-      });
-
-      // Optionally, show order id
-      if (response.data?.order_id) {
-        toast.success(`Order ID: ${response.data.order_id}`);
+      const response = await initOrder(shippingData);
+      if (response.status) {
+        setOrderId(response.data.order_id);
+        toast.success('Address saved. Proceed to payment.');
+        setCurrentStep('payment');
       }
+    } catch (error) {
+      console.error('Error creating order:', error);
+      toast.error(error.message || 'Failed to save address');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-      // Redirect to home for now
-      navigate('/');
+  const handlePlaceOrder = async () => {
+    if (currentStep !== 'payment') {
+      await handleContinueToPayment();
+      return;
+    }
+
+    if (!orderId) {
+      toast.error('Please save address first');
+      setCurrentStep('shipping');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const response = await updatePayment(orderId, selectedPayment);
+
+      if (response.status) {
+        toast.success(`Order ${response.data.order_id} confirmed!`, {
+          icon: '🎉',
+        });
+        setCart(null);
+        navigate(`/order-confirmation/${response.data.order_id}`);
+      }
     } catch (error) {
       console.error('Error placing order:', error);
       toast.error(error.message || 'Failed to place order');
@@ -285,37 +300,39 @@ const CheckoutPage = () => {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       <main className="max-w-7xl mx-auto px-4 lg:px-6 py-10">
-        {/* Back Button */}
-        <button
-          onClick={() => navigate('/cart')}
-          className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-6 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Cart
-        </button>
+        {/* Top bar with back button on right */}
+        <div className="flex items-center justify-end mb-4">
+          <button
+            onClick={() => navigate('/cart')}
+            className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Cart
+          </button>
+        </div>
 
         {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">Checkout</h1>
+        <div className="mb-5">
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-1">Checkout</h1>
           <p className="text-gray-600">Review your order and add shipping details</p>
+        </div>
+
+        {/* Steps row under heading with more spacing */}
+        <div className="flex items-center gap-4 text-sm font-semibold mb-12">
+          <div className={`flex items-center gap-2 ${currentStep === 'shipping' ? 'text-gray-900' : 'text-gray-400'}`}>
+            <span className={`w-6 h-6 rounded-full flex items-center justify-center ${currentStep === 'shipping' ? 'bg-gray-900 text-white' : 'bg-gray-200 text-gray-700'}`}>1</span>
+            <span>Shipping</span>
+          </div>
+          <div className="h-px w-12 bg-gray-200" />
+          <div className={`flex items-center gap-2 ${currentStep === 'payment' ? 'text-gray-900' : 'text-gray-400'}`}>
+            <span className={`w-6 h-6 rounded-full flex items-center justify-center ${currentStep === 'payment' ? 'bg-gray-900 text-white' : 'bg-gray-200 text-gray-700'}`}>2</span>
+            <span>Payment</span>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           {/* Left Column - Steps */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Step Indicator */}
-            <div className="flex items-center gap-4 text-sm font-semibold">
-              <div className={`flex items-center gap-2 ${currentStep === 'shipping' ? 'text-gray-900' : 'text-gray-400'}`}>
-                <span className={`w-6 h-6 rounded-full flex items-center justify-center ${currentStep === 'shipping' ? 'bg-gray-900 text-white' : 'bg-gray-200 text-gray-700'}`}>1</span>
-                <span>Shipping</span>
-              </div>
-              <div className="h-px flex-1 bg-gray-200" />
-              <div className={`flex items-center gap-2 ${currentStep === 'payment' ? 'text-gray-900' : 'text-gray-400'}`}>
-                <span className={`w-6 h-6 rounded-full flex items-center justify-center ${currentStep === 'payment' ? 'bg-gray-900 text-white' : 'bg-gray-200 text-gray-700'}`}>2</span>
-                <span>Payment</span>
-              </div>
-            </div>
-
             {currentStep === 'shipping' && (
               <div className="space-y-4">
                 <ShippingForm
@@ -325,14 +342,6 @@ const CheckoutPage = () => {
                   pincodeValid={pincodeValid}
                   pincodeValidating={pincodeValidating}
                 />
-                <div className="flex justify-end">
-                  <button
-                    onClick={handleContinueToPayment}
-                    className="px-6 py-3 bg-gray-900 text-white rounded-full font-semibold hover:bg-black transition-colors"
-                  >
-                    Continue to Payment
-                  </button>
-                </div>
               </div>
             )}
 
@@ -382,19 +391,12 @@ const CheckoutPage = () => {
                 {/* Cart Items Review */}
                 <CartItemsReview cart={cart} />
 
-                <div className="flex justify-between">
+                <div className="flex justify-start">
                   <button
                     onClick={() => setCurrentStep('shipping')}
                     className="px-5 py-3 border border-gray-300 rounded-full font-semibold text-gray-700 hover:border-gray-400 transition-colors"
                   >
                     Back to Shipping
-                  </button>
-                  <button
-                    onClick={handlePlaceOrder}
-                    disabled={isSubmitting}
-                    className="px-6 py-3 bg-gray-900 text-white rounded-full font-semibold hover:bg-black transition-colors disabled:opacity-50"
-                  >
-                    {isSubmitting ? 'Placing Order...' : 'Place Order'}
                   </button>
                 </div>
               </div>

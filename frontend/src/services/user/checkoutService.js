@@ -26,10 +26,22 @@ export const validatePincode = async (pincode) => {
   }
 };
 
-// Place order
-export const placeOrder = async (shippingData) => {
+// Step 1: Create order with shipping (before payment)
+export const initOrder = async (shippingData) => {
   try {
-    const response = await userApi.post('/users/orders', shippingData);
+    const response = await userApi.post('/users/orders/init', shippingData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// Step 2: Save payment selection / finalize placeholder payment
+export const updatePayment = async (orderId, payment_method) => {
+  try {
+    const response = await userApi.patch(`/users/orders/${orderId}/payment`, {
+      payment_method,
+    });
     return response.data;
   } catch (error) {
     throw error.response?.data || error;
