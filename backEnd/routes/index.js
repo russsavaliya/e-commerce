@@ -10,6 +10,7 @@ const product_controller = require('../controllers/product')
 const role_controller = require('../controllers/role')
 const marketing_spend_controller = require('../controllers/marketing_spend')
 const banner_controller = require('../controllers/banner')
+const admin_order_controller = require('../controllers/admin_order')
 const utils_controller = require('../controllers/utils')
 /* GET home page. */
 router.post('/admin/auth/signup', authorization.authorization, permission.checkPermission('admin_create'), admin_controller.signup);
@@ -57,6 +58,12 @@ router.get('/banners', authorization.authorization, banner_controller.get_banner
 router.put('/banners/:id', authorization.authorization, permission.checkPermission('banner_update'), upload.single('image'), banner_controller.update_banner);
 router.delete('/banners/:id', authorization.authorization, permission.checkPermission('banner_delete'), banner_controller.delete_banner);
 router.patch('/banners/:id/toggle', authorization.authorization, permission.checkPermission('banner_update'), banner_controller.toggle_banner_status);
+
+// order routes (admin)
+router.get('/orders/list', authorization.authorization, admin_order_controller.get_order_list);
+router.get('/orders/:orderId', authorization.authorization, admin_order_controller.get_order_one);
+router.patch('/orders/:orderId/status', authorization.authorization, permission.checkPermission('order_update'), admin_order_controller.update_order_status);
+router.patch('/orders/:orderId/payment-status', authorization.authorization, permission.checkPermission('order_update'), admin_order_controller.update_payment_status);
 
 // utils routes
 router.post('/utils/add-random-data', authorization.authorization, utils_controller.add_random_data);

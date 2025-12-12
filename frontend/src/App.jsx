@@ -71,6 +71,8 @@ import ProductList from './pages/admin/ProductList';
 import ProductEdit from './pages/admin/ProductEdit';
 import MarketingSpendManagement from './pages/admin/MarketingSpendManagement';
 import BannerManagement from './pages/admin/BannerManagement';
+import OrderList from './pages/admin/OrderList';
+import OrderDetail from './pages/admin/OrderDetail';
 
 // TODO: When you create new pages, import them here:
 // import ProductManagement from './pages/admin/ProductManagement';
@@ -161,6 +163,16 @@ const ADMIN_ROUTES = [
     path: 'banners',                          // URL path (will be /admin/banners)
     component: BannerManagement,              // The component to show
     description: 'Banner Management Page'
+  },
+  {
+    path: 'orders/list',                      // URL path (will be /admin/orders/list)
+    component: OrderList,                     // The component to show
+    description: 'Order List Page'
+  },
+  {
+    path: 'orders/:orderId',                  // URL path (will be /admin/orders/:orderId)
+    component: OrderDetail,                   // The component to show
+    description: 'Order Detail Page'
   },
   // ============================================
   // ADD NEW ADMIN PAGES HERE - IT'S THAT EASY!

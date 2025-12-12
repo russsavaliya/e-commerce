@@ -23,6 +23,7 @@ import {
   Users,
   IndianRupee,
   Image,
+  ShoppingBag,
 } from 'lucide-react';
 import { ROUTES } from '../../utils/constants';
 
@@ -30,6 +31,7 @@ const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [productsOpen, setProductsOpen] = useState(false);
+  const [ordersOpen, setOrdersOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -42,6 +44,9 @@ const AdminLayout = () => {
     }
     if (location.pathname.startsWith(ROUTES.ADMIN_PRODUCTS)) {
       setProductsOpen(true);
+    }
+    if (location.pathname.startsWith(ROUTES.ADMIN_ORDERS)) {
+      setOrdersOpen(true);
     }
   }, [location.pathname]);
 
@@ -57,6 +62,7 @@ const AdminLayout = () => {
   const isActive = (path) => location.pathname === path;
   const isSettingsActive = location.pathname.startsWith(ROUTES.ADMIN_SETTINGS);
   const isProductsActive = location.pathname.startsWith(ROUTES.ADMIN_PRODUCTS);
+  const isOrdersActive = location.pathname.startsWith(ROUTES.ADMIN_ORDERS);
 
   const menuItems = [
     {
@@ -90,6 +96,18 @@ const AdminLayout = () => {
       name: 'Banner Management',
       icon: Image,
       path: ROUTES.ADMIN_BANNERS,
+    },
+    {
+      name: 'Orders',
+      icon: ShoppingBag,
+      path: ROUTES.ADMIN_ORDERS,
+      submenu: [
+        {
+          name: 'Order List',
+          icon: List,
+          path: ROUTES.ADMIN_ORDERS_LIST,
+        },
+      ],
     },
     {
       name: 'Settings',
@@ -170,15 +188,27 @@ const AdminLayout = () => {
                 ? isSettingsActive
                 : item.name === 'Products'
                   ? isProductsActive
-                  : isActive(item.path);
+                  : item.name === 'Orders'
+                    ? isOrdersActive
+                    : isActive(item.path);
               // Only mark as active if this specific item is active, not if any submenu is active
               const active = isItemActive;
 
               if (item.submenu) {
-                const isOpen = item.name === 'Settings' ? settingsOpen : productsOpen;
+                const isOpen = item.name === 'Settings' 
+                  ? settingsOpen 
+                  : item.name === 'Products'
+                    ? productsOpen
+                    : item.name === 'Orders'
+                      ? ordersOpen
+                      : false;
                 const toggleOpen = item.name === 'Settings'
                   ? () => setSettingsOpen(!settingsOpen)
-                  : () => setProductsOpen(!productsOpen);
+                  : item.name === 'Products'
+                    ? () => setProductsOpen(!productsOpen)
+                    : item.name === 'Orders'
+                      ? () => setOrdersOpen(!ordersOpen)
+                      : () => {};
 
                 return (
                   <div key={item.name}>
@@ -313,7 +343,11 @@ const AdminLayout = () => {
                       ? 'Marketing Spend Management'
                       : location.pathname === ROUTES.ADMIN_BANNERS
                         ? 'Banner Management'
-                        : location.pathname.startsWith('/admin/products/edit/')
+                        : location.pathname === ROUTES.ADMIN_ORDERS_LIST
+                          ? 'Order List'
+                          : location.pathname.startsWith('/admin/orders/') && location.pathname !== ROUTES.ADMIN_ORDERS_LIST
+                            ? 'Order Detail'
+                            : location.pathname.startsWith('/admin/products/edit/')
                         ? 'Update Product'
                         : location.pathname === ROUTES.ADMIN_CATEGORIES
                           ? 'Category Management'

@@ -9,7 +9,7 @@ const buildCartItems = async (cart = []) => {
   let subtotal = 0;
 
   for (const item of cart) {
-    const product = await product_model.findById(item.productId).select('name selling_price original_price discount_percentage variants images');
+    const product = await product_model.findById(item.productId).select('name selling_price original_price discount_percentage variants images category');
     if (!product) {
       throw new Error('One of the products in your cart is no longer available.');
     }
@@ -17,6 +17,7 @@ const buildCartItems = async (cart = []) => {
     let price = product.selling_price;
     let variantName = item.variantName || null;
     let image = product.images?.[0] || null;
+    const categoryId = product.category || null;
 
     if (item.variantId) {
       const variant = product.variants?.find(v => v._id.toString() === item.variantId);
@@ -35,6 +36,7 @@ const buildCartItems = async (cart = []) => {
 
     items.push({
       product_id: item.productId,
+      category_id: categoryId,
       variant_id: item.variantId || null,
       product_name: product.name,
       variant_name: variantName,
@@ -154,7 +156,8 @@ exports.update_payment = async (req, res) => {
         $set: {
           payment_method,
           payment_status: 'pending',
-          order_status: 'accepted', // status change after payment selection
+          // Keep order_status as 'pending' - admin will update it step by step
+          order_status: 'pending',
         },
       },
       { new: true }

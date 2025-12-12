@@ -14,6 +14,11 @@ const orderSchema = new schema({
         ref: 'product',
         required: true,
       },
+      category_id: {
+        type: mongoose.Types.ObjectId,
+        ref: 'category',
+        required: false,
+      },
       variant_id: {
         type: mongoose.Types.ObjectId,
         ref: 'product',

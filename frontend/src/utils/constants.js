@@ -81,6 +81,9 @@ export const ROUTES = {
   ADMIN_PRODUCTS_EDIT: '/admin/products/edit/:id',
   ADMIN_MARKETING_SPEND: '/admin/marketing-spend',
   ADMIN_BANNERS: '/admin/banners',
+  ADMIN_ORDERS: '/admin/orders',
+  ADMIN_ORDERS_LIST: '/admin/orders/list',
+  ADMIN_ORDERS_DETAIL: '/admin/orders/:orderId',
   HOME: '/',
 };
 
