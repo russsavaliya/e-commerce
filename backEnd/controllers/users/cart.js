@@ -1,11 +1,5 @@
 const product_model = require('../../model/product');
 
-/**
- * Cart Controller for User
- * Uses Express Session to store cart data (no login required)
- */
-
-// Get cart items
 exports.get_cart = async (req, res) => {
   try {
     const cart = req.session.cart || [];

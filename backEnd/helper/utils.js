@@ -2,10 +2,6 @@ const category_model = require("../model/category");
 const Attributes = require("../model/attributes");
 const product_model = require("../model/product");
 
-/**
- * Add Random Data Function
- * Creates random attributes, categories, and products with variants
- */
 const add_random_data = async () => {
     try {
         const results = {

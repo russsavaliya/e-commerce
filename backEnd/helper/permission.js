@@ -1,14 +1,3 @@
-/**
- * Permission Helper
- * Utility functions for checking admin permissions
- */
-
-/**
- * Check if admin has required permission
- * @param {Object} admin - Admin object from req.admin (with populated role)
- * @param {String} requiredPermission - Permission string to check (e.g., 'product_add', 'category_delete')
- * @returns {Boolean} - true if admin has permission, false otherwise
- */
 exports.hasPermission = (admin, requiredPermission) => {
     try {
         // If admin is super admin, allow all permissions
@@ -32,13 +21,6 @@ exports.hasPermission = (admin, requiredPermission) => {
         return false;
     }
 };
-
-/**
- * Middleware function to check permission
- * Use this in routes to protect endpoints
- * @param {String} requiredPermission - Permission string required for this route
- * @returns {Function} - Express middleware function
- */
 exports.checkPermission = (requiredPermission) => {
     return (req, res, next) => {
         try {
@@ -69,13 +51,6 @@ exports.checkPermission = (requiredPermission) => {
     };
 };
 
-/**
- * Check multiple permissions (OR logic)
- * Returns true if admin has ANY of the required permissions
- * @param {Object} admin - Admin object from req.admin
- * @param {Array<String>} requiredPermissions - Array of permission strings
- * @returns {Boolean} - true if admin has at least one permission
- */
 exports.hasAnyPermission = (admin, requiredPermissions) => {
     if (!Array.isArray(requiredPermissions) || requiredPermissions.length === 0) {
         return false;
@@ -84,13 +59,6 @@ exports.hasAnyPermission = (admin, requiredPermissions) => {
     return requiredPermissions.some(permission => exports.hasPermission(admin, permission));
 };
 
-/**
- * Check multiple permissions (AND logic)
- * Returns true if admin has ALL of the required permissions
- * @param {Object} admin - Admin object from req.admin
- * @param {Array<String>} requiredPermissions - Array of permission strings
- * @returns {Boolean} - true if admin has all permissions
- */
 exports.hasAllPermissions = (admin, requiredPermissions) => {
     if (!Array.isArray(requiredPermissions) || requiredPermissions.length === 0) {
         return false;
