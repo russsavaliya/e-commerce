@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  Loader2, 
-  ChevronLeft, 
+import {
+  Loader2,
+  ChevronLeft,
   ChevronDown,
-  ShoppingBag, 
-  Package, 
-  MapPin, 
+  ShoppingBag,
+  Package,
+  MapPin,
   CreditCard,
   Calendar,
   User,
@@ -16,7 +16,7 @@ import {
   IndianRupee
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { getOrderById, updateOrderStatus } from '../../services/admin/orderService';
+import { getOrderById, updateOrderStatus, updatePaymentStatus } from '../../services/admin/orderService';
 import { API_BASE_URL } from '../../utils/constants';
 
 const getStatusColor = (status) => {
@@ -73,6 +73,7 @@ const OrderDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [updatingPaymentStatus, setUpdatingPaymentStatus] = useState(false);
 
   useEffect(() => {
     const fetchOrderDetail = async () => {
@@ -80,7 +81,7 @@ const OrderDetail = () => {
         setLoading(true);
         setError('');
         const response = await getOrderById(orderId);
-        
+
         if (response.status && response.data) {
           setOrder(response.data);
         } else {
@@ -106,7 +107,7 @@ const OrderDetail = () => {
     try {
       setUpdatingStatus(true);
       const response = await updateOrderStatus(orderId, newStatus);
-      
+
       if (response.status) {
         setOrder(prev => ({ ...prev, order_status: newStatus }));
         toast.success(`Order status updated to ${newStatus}`);
@@ -117,6 +118,29 @@ const OrderDetail = () => {
     } finally {
       setUpdatingStatus(false);
     }
+  };
+
+  const handlePaymentStatusChange = async (newPaymentStatus) => {
+    if (!order || updatingPaymentStatus) return;
+
+    try {
+      setUpdatingPaymentStatus(true);
+      const response = await updatePaymentStatus(orderId, newPaymentStatus);
+
+      if (response.status) {
+        setOrder(prev => ({ ...prev, payment_status: newPaymentStatus }));
+        toast.success(`Payment status updated to ${newPaymentStatus}`);
+      }
+    } catch (err) {
+      console.error('Error updating payment status:', err);
+      toast.error(err.message || 'Failed to update payment status');
+    } finally {
+      setUpdatingPaymentStatus(false);
+    }
+  };
+
+  const getPaymentStatusOptions = () => {
+    return ['pending', 'paid', 'failed', 'refunded'];
   };
 
   const getAllStatusOptions = () => {
@@ -156,16 +180,16 @@ const OrderDetail = () => {
         onClick={() => navigate('/admin/orders/list')}
         className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
       >
-        <ChevronLeft className="w-4 h-4" /> Back to Orders
+        <ChevronLeft className="w-4 h-4" /> Back to Orders List
       </button>
 
       {/* Order Header Card */}
       <div className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
-        <div className="bg-gradient-to-r from-green-50 to-green-100 px-6 py-5 border-b border-green-200">
+        <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-5 border-b border-gray-200">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex items-center gap-4 flex-1">
-              <div className="p-3 bg-green-200 rounded-lg">
-                <ShoppingBag className="w-6 h-6 text-green-700" />
+              <div className="p-3 bg-gray-200 rounded-lg">
+                <ShoppingBag className="w-6 h-6 text-gray-700" />
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-3 flex-wrap">
@@ -183,6 +207,31 @@ const OrderDetail = () => {
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-3">
+              {/* Manage Payment Status Dropdown - pill style */}
+              <div className="bg-white rounded-full border border-gray-300 shadow-sm hover:shadow-md transition-all relative">
+                <select
+                  defaultValue=""
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      handlePaymentStatusChange(e.target.value);
+                      e.target.value = '';
+                    }
+                  }}
+                  disabled={updatingPaymentStatus}
+                  className="appearance-none pl-4 pr-9 py-2 text-sm font-semibold text-gray-900 bg-transparent focus:outline-none focus:ring-2 focus:ring-green-500 rounded-full cursor-pointer w-full"
+                >
+                  <option value="" disabled>
+                    Manage Payment
+                  </option>
+                  {getPaymentStatusOptions().map((status) => (
+                    <option key={status} value={status}>
+                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="w-4 h-4 text-gray-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+
               {/* Manage Status Dropdown - pill style */}
               <div className="bg-white rounded-full border border-gray-300 shadow-sm hover:shadow-md transition-all relative">
                 <select
@@ -206,16 +255,6 @@ const OrderDetail = () => {
                   ))}
                 </select>
                 <ChevronDown className="w-4 h-4 text-gray-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
-
-              {/* Payment Status Box */}
-              <div className="bg-white px-4 py-3 rounded-lg border-2 border-gray-200 shadow-md">
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-gray-500 uppercase tracking-wide font-semibold">Payment:</span>
-                  <span className={`inline-flex px-3 py-1.5 text-xs font-bold rounded-full border ${getPaymentStatusColor(order.payment_status)}`}>
-                    {order.payment_status || 'N/A'}
-                  </span>
-                </div>
               </div>
             </div>
           </div>
