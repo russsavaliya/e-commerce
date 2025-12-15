@@ -31,6 +31,8 @@ import { addRandomData } from '../../services/admin/utilsService';
 import { getDashboardSummary } from '../../services/admin/dashboardService';
 import toast from 'react-hot-toast';
 
+const PRIMARY_GREEN = 'rgb(78, 166, 116)';
+
 const Dashboard = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -88,25 +90,20 @@ const Dashboard = () => {
 
   const revenueData = summary?.trends?.monthlyOrders?.length
     ? summary.trends.monthlyOrders.map((m) => ({
-        month: `${m.month}`,
-        revenue: m.revenue,
-        orders: m.orders,
-      }))
+      month: `${m.month}`,
+      revenue: m.revenue,
+      orders: m.orders,
+    }))
     : [];
 
-  const categoryDistribution = summary?.trends?.categoryBreakdown?.length
-    ? summary.trends.categoryBreakdown.map((c) => ({
-        name: c.name || 'Category',
-        count: c.count || 0,
-      }))
-    : Array.isArray(categories)
-      ? categories.map((c) => ({
-          name: c.name || 'Category',
-          count: c.productCount || 0,
-        }))
-      : [];
+  const categoryDistribution = Array.isArray(categories)
+    ? categories.map((c) => ({
+      name: c.name || 'Category',
+      count: c.productCount || 0,
+    }))
+    : [];
 
-  const totalCategories = categories.length;
+  const totalCategories = summary?.metrics?.total_categories || 0;
   const totalProducts = summary?.metrics?.total_products || 0;
   const totalOrders = summary?.metrics?.total_orders || 0;
   const totalRevenue = summary?.metrics?.total_revenue || 0;
@@ -118,17 +115,13 @@ const Dashboard = () => {
       title: 'Total Categories',
       value: loading ? '...' : totalCategories,
       icon: FolderTree,
-      color: 'bg-green-500',
-      bgColor: 'bg-green-50',
-      textColor: 'text-green-600',
+      textColor: 'green',
     },
     {
       title: 'Total Products',
       value: loading ? '...' : totalProducts,
       icon: Package,
-      color: 'bg-green-500',
-      bgColor: 'bg-green-50',
-      textColor: 'text-green-600',
+      textColor: 'green',
     },
     {
       title: 'Total Orders',
@@ -180,7 +173,8 @@ const Dashboard = () => {
           <button
             onClick={handleAddRandomData}
             disabled={addingData}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-colors font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ backgroundColor: PRIMARY_GREEN }}
           >
             {addingData ? (
               <>
@@ -201,19 +195,39 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-6">
         {metricCards.map((card, index) => {
           const Icon = card.icon;
+          const isGreenCard = card.textColor === 'green';
           return (
             <div
               key={index}
               className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow"
             >
               <div className="flex items-center justify-between mb-4">
-                <div className={`${card.bgColor} p-3 rounded-lg`}>
-                  <Icon className={`w-6 h-6 ${card.textColor}`} />
+                <div
+                  className="p-3 rounded-lg"
+                  style={
+                    isGreenCard
+                      ? { backgroundColor: 'rgba(78, 166, 116, 0.12)' }
+                      : undefined
+                  }
+                >
+                  <Icon
+                    className="w-6 h-6"
+                    style={
+                      isGreenCard ? { color: PRIMARY_GREEN } : undefined
+                    }
+                  />
                 </div>
                 <Activity className="w-5 h-5 text-gray-400" />
               </div>
               <h3 className="text-base text-gray-600 mb-1">{card.title}</h3>
-              <p className={`text-2xl font-bold ${card.textColor}`}>{card.value}</p>
+              <p
+                className="text-2xl font-bold"
+                style={
+                  isGreenCard ? { color: PRIMARY_GREEN } : undefined
+                }
+              >
+                {card.value}
+              </p>
             </div>
           );
         })}
@@ -240,14 +254,14 @@ const Dashboard = () => {
               <Line
                 type="monotone"
                 dataKey="revenue"
-                stroke="#22c55e"
+                stroke={PRIMARY_GREEN}
                 strokeWidth={2}
                 name="Revenue (₹)"
               />
               <Line
                 type="monotone"
                 dataKey="orders"
-                stroke="#16a34a"
+                stroke={PRIMARY_GREEN}
                 strokeWidth={2}
                 name="Orders"
               />
@@ -271,7 +285,12 @@ const Dashboard = () => {
                 }}
               />
               <Legend />
-              <Bar dataKey="count" fill="#22c55e" radius={[8, 8, 0, 0]} name="Products" />
+              <Bar
+                dataKey="count"
+                fill={PRIMARY_GREEN}
+                radius={[8, 8, 0, 0]}
+                name="Products"
+              />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -292,7 +311,10 @@ const Dashboard = () => {
               className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
             >
               <div className="flex items-center gap-4">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <div
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: PRIMARY_GREEN }}
+                ></div>
                 <div>
                   <p className="text-base font-medium text-gray-900">{activity.action}</p>
                   <p className="text-sm text-gray-600">{activity.item}</p>

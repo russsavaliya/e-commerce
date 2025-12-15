@@ -17,7 +17,6 @@ exports.get_dashboard_summary = async (req, res) => {
       revenueAgg,
       pending_orders,
       monthlyAgg,
-      categoryAgg,
     ] = await Promise.all([
       product_model.countDocuments(),
       category_model.countDocuments(),
@@ -40,33 +39,6 @@ exports.get_dashboard_summary = async (req, res) => {
         },
         { $sort: { '_id.year': -1, '_id.month': -1 } },
         { $limit: 6 },
-      ]),
-      product_model.aggregate([
-        {
-          $group: {
-            _id: '$category',
-            count: { $sum: 1 },
-          },
-        },
-        {
-          $lookup: {
-            from: 'categories',
-            localField: '_id',
-            foreignField: '_id',
-            as: 'category',
-          },
-        },
-        { $unwind: { path: '$category', preserveNullAndEmptyArrays: true } },
-        {
-          $project: {
-            _id: 0,
-            category_id: '$_id',
-            name: { $ifNull: ['$category.name', 'Uncategorized'] },
-            count: 1,
-          },
-        },
-        { $sort: { count: -1, name: 1 } },
-        { $limit: 8 },
       ]),
     ]);
 
@@ -102,7 +74,6 @@ exports.get_dashboard_summary = async (req, res) => {
         },
         trends: {
           monthlyOrders,
-          categoryBreakdown: categoryAgg || [],
         },
       },
     });

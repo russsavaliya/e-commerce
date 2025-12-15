@@ -7,6 +7,7 @@ const user_attribute_controller = require('../controllers/users/attribute');
 const user_cart_controller = require('../controllers/users/cart');
 const user_checkout_controller = require('../controllers/users/checkout');
 const user_order_controller = require('../controllers/users/order');
+const user_support_controller = require('../controllers/users/support');
 
 // User routes - No authentication required
 
@@ -41,5 +42,8 @@ router.get('/checkout/pincode/validate', user_checkout_controller.validate_pinco
 // Order routes
 router.post('/orders/init', user_order_controller.init_order);
 router.patch('/orders/:orderId/payment', user_order_controller.update_payment);
+
+// Support / contact routes
+router.post('/support/contact', user_support_controller.send_support_email);
 
 module.exports = router;
