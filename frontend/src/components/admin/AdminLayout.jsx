@@ -32,6 +32,7 @@ const AdminLayout = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [productsOpen, setProductsOpen] = useState(false);
   const [ordersOpen, setOrdersOpen] = useState(false);
+  const [customersOpen, setCustomersOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -48,6 +49,9 @@ const AdminLayout = () => {
     if (location.pathname.startsWith(ROUTES.ADMIN_ORDERS)) {
       setOrdersOpen(true);
     }
+    if (location.pathname.startsWith(ROUTES.ADMIN_CUSTOMERS)) {
+      setCustomersOpen(true);
+    }
   }, [location.pathname]);
 
   const handleLogout = async () => {
@@ -63,6 +67,7 @@ const AdminLayout = () => {
   const isSettingsActive = location.pathname.startsWith(ROUTES.ADMIN_SETTINGS);
   const isProductsActive = location.pathname.startsWith(ROUTES.ADMIN_PRODUCTS);
   const isOrdersActive = location.pathname.startsWith(ROUTES.ADMIN_ORDERS);
+  const isCustomersActive = location.pathname.startsWith(ROUTES.ADMIN_CUSTOMERS);
 
   const menuItems = [
     {
@@ -106,6 +111,18 @@ const AdminLayout = () => {
           name: 'Order List',
           icon: List,
           path: ROUTES.ADMIN_ORDERS_LIST,
+        },
+      ],
+    },
+    {
+      name: 'Customers',
+      icon: Users,
+      path: ROUTES.ADMIN_CUSTOMERS,
+      submenu: [
+        {
+          name: 'Customer List',
+          icon: List,
+          path: ROUTES.ADMIN_CUSTOMERS_LIST,
         },
       ],
     },
@@ -190,7 +207,9 @@ const AdminLayout = () => {
                   ? isProductsActive
                   : item.name === 'Orders'
                     ? isOrdersActive
-                    : isActive(item.path);
+                    : item.name === 'Customers'
+                      ? isCustomersActive
+                      : isActive(item.path);
               // Only mark as active if this specific item is active, not if any submenu is active
               const active = isItemActive;
 
@@ -201,14 +220,18 @@ const AdminLayout = () => {
                     ? productsOpen
                     : item.name === 'Orders'
                       ? ordersOpen
-                      : false;
+                      : item.name === 'Customers'
+                        ? customersOpen
+                        : false;
                 const toggleOpen = item.name === 'Settings'
                   ? () => setSettingsOpen(!settingsOpen)
                   : item.name === 'Products'
                     ? () => setProductsOpen(!productsOpen)
                     : item.name === 'Orders'
                       ? () => setOrdersOpen(!ordersOpen)
-                      : () => {};
+                      : item.name === 'Customers'
+                        ? () => setCustomersOpen(!customersOpen)
+                        : () => {};
 
                 return (
                   <div key={item.name}>

@@ -28,25 +28,34 @@ import {
 } from 'recharts';
 import { getAllCategories } from '../../services/admin/categoryService';
 import { addRandomData } from '../../services/admin/utilsService';
+import { getDashboardSummary } from '../../services/admin/dashboardService';
 import toast from 'react-hot-toast';
 
 const Dashboard = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState(null);
   const [addingData, setAddingData] = useState(false);
 
   useEffect(() => {
-    fetchCategories();
+    fetchInitial();
   }, []);
 
-  const fetchCategories = async () => {
+  const fetchInitial = async () => {
     try {
       setLoading(true);
-      const data = await getAllCategories();
-      setCategories(Array.isArray(data) ? data : []);
+      const [categoryData, summaryData] = await Promise.all([
+        getAllCategories(),
+        getDashboardSummary(),
+      ]);
+      setCategories(Array.isArray(categoryData) ? categoryData : []);
+      if (summaryData?.status) {
+        setSummary(summaryData.data);
+      }
     } catch (error) {
       console.error('Error fetching categories:', error);
       setCategories([]);
+      toast.error(error.message || 'Failed to fetch dashboard data');
     } finally {
       setLoading(false);
     }
@@ -65,8 +74,8 @@ const Dashboard = () => {
         toast.success(
           `Successfully added: ${response.data.attributesCreated} attributes, ${response.data.categoriesCreated} categories, ${response.data.productsCreated} products!`
         );
-        // Refresh categories
-        await fetchCategories();
+        // Refresh data
+        await fetchInitial();
       } else {
         toast.error(response.message || 'Failed to add random data');
       }
@@ -77,28 +86,32 @@ const Dashboard = () => {
     }
   };
 
-  // Sample data for charts (replace with real data from API)
-  const revenueData = [
-    { month: 'Jan', revenue: 45000, orders: 120 },
-    { month: 'Feb', revenue: 52000, orders: 145 },
-    { month: 'Mar', revenue: 48000, orders: 138 },
-    { month: 'Apr', revenue: 61000, orders: 165 },
-    { month: 'May', revenue: 55000, orders: 152 },
-    { month: 'Jun', revenue: 67000, orders: 180 },
-  ];
+  const revenueData = summary?.trends?.monthlyOrders?.length
+    ? summary.trends.monthlyOrders.map((m) => ({
+        month: `${m.month}`,
+        revenue: m.revenue,
+        orders: m.orders,
+      }))
+    : [];
 
-  const categoryDistribution = [
-    { name: 'Electronics', count: 45 },
-    { name: 'Clothing', count: 32 },
-    { name: 'Food', count: 28 },
-    { name: 'Books', count: 15 },
-    { name: 'Other', count: 10 },
-  ];
+  const categoryDistribution = summary?.trends?.categoryBreakdown?.length
+    ? summary.trends.categoryBreakdown.map((c) => ({
+        name: c.name || 'Category',
+        count: c.count || 0,
+      }))
+    : Array.isArray(categories)
+      ? categories.map((c) => ({
+          name: c.name || 'Category',
+          count: c.productCount || 0,
+        }))
+      : [];
 
   const totalCategories = categories.length;
-  const totalProducts = 0; // Replace with actual API call
-  const totalOrders = 0; // Replace with actual API call
-  const totalRevenue = 0; // Replace with actual API call
+  const totalProducts = summary?.metrics?.total_products || 0;
+  const totalOrders = summary?.metrics?.total_orders || 0;
+  const totalRevenue = summary?.metrics?.total_revenue || 0;
+  const totalCustomers = summary?.metrics?.total_customers || 0;
+  const pendingOrders = summary?.metrics?.pending_orders || 0;
 
   const metricCards = [
     {
@@ -111,7 +124,7 @@ const Dashboard = () => {
     },
     {
       title: 'Total Products',
-      value: totalProducts,
+      value: loading ? '...' : totalProducts,
       icon: Package,
       color: 'bg-green-500',
       bgColor: 'bg-green-50',
@@ -119,7 +132,7 @@ const Dashboard = () => {
     },
     {
       title: 'Total Orders',
-      value: totalOrders,
+      value: loading ? '...' : totalOrders,
       icon: ShoppingCart,
       color: 'bg-purple-500',
       bgColor: 'bg-purple-50',
@@ -127,11 +140,27 @@ const Dashboard = () => {
     },
     {
       title: 'Total Revenue',
-      value: `₹${totalRevenue.toLocaleString()}`,
+      value: loading ? '...' : `₹${totalRevenue.toLocaleString()}`,
       icon: TrendingUp,
       color: 'bg-orange-500',
       bgColor: 'bg-orange-50',
       textColor: 'text-orange-600',
+    },
+    {
+      title: 'Total Customers',
+      value: loading ? '...' : totalCustomers,
+      icon: Users,
+      color: 'bg-blue-500',
+      bgColor: 'bg-blue-50',
+      textColor: 'text-blue-600',
+    },
+    {
+      title: 'Pending Orders',
+      value: loading ? '...' : pendingOrders,
+      icon: Activity,
+      color: 'bg-yellow-500',
+      bgColor: 'bg-yellow-50',
+      textColor: 'text-yellow-600',
     },
   ];
 
@@ -169,7 +198,7 @@ const Dashboard = () => {
       </div>
 
       {/* Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-6">
         {metricCards.map((card, index) => {
           const Icon = card.icon;
           return (

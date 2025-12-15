@@ -11,6 +11,8 @@ const role_controller = require('../controllers/role')
 const marketing_spend_controller = require('../controllers/marketing_spend')
 const banner_controller = require('../controllers/banner')
 const admin_order_controller = require('../controllers/admin_order')
+const admin_customer_controller = require('../controllers/admin_customer')
+const admin_dashboard_controller = require('../controllers/dashboard')
 const utils_controller = require('../controllers/utils')
 /* GET home page. */
 router.post('/admin/auth/signup', authorization.authorization, permission.checkPermission('admin_create'), admin_controller.signup);
@@ -64,6 +66,12 @@ router.get('/orders/list', authorization.authorization, admin_order_controller.g
 router.get('/orders/:orderId', authorization.authorization, admin_order_controller.get_order_one);
 router.patch('/orders/:orderId/status', authorization.authorization, permission.checkPermission('order_update'), admin_order_controller.update_order_status);
 router.patch('/orders/:orderId/payment-status', authorization.authorization, permission.checkPermission('order_update'), admin_order_controller.update_payment_status);
+
+// customer routes (admin)
+router.get('/customers/list', authorization.authorization, admin_customer_controller.get_customer_list);
+
+// dashboard routes (admin)
+router.get('/dashboard/summary', authorization.authorization, admin_dashboard_controller.get_dashboard_summary);
 
 // utils routes
 router.post('/utils/add-random-data', authorization.authorization, utils_controller.add_random_data);
