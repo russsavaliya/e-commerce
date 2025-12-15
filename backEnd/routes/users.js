@@ -8,6 +8,7 @@ const user_cart_controller = require('../controllers/users/cart');
 const user_checkout_controller = require('../controllers/users/checkout');
 const user_order_controller = require('../controllers/users/order');
 const user_support_controller = require('../controllers/users/support');
+const user_review_controller = require('../controllers/users/review');
 
 // User routes - No authentication required
 
@@ -45,5 +46,9 @@ router.patch('/orders/:orderId/payment', user_order_controller.update_payment);
 
 // Support / contact routes
 router.post('/support/contact', user_support_controller.send_support_email);
+
+// Product reviews
+router.get('/reviews', user_review_controller.get_reviews);
+router.post('/reviews', user_review_controller.add_review);
 
 module.exports = router;
