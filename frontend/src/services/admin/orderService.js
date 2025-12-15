@@ -80,10 +80,48 @@ export const updatePaymentStatus = async (orderId, payment_status) => {
   }
 };
 
+export const downloadOrderPdf = async (orderId) => {
+  try {
+    const response = await api.get('/orders/export-one', {
+      params: { orderId },
+      responseType: 'blob',
+    });
+    return response;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || 'Failed to download order PDF'
+    );
+  }
+};
+
+export const downloadOrders = async (format = 'csv', filters = {}) => {
+  try {
+    const params = {
+      format,
+      search: filters.search || '',
+      order_status: filters.order_status || '',
+      payment_status: filters.payment_status || '',
+    };
+
+    const response = await api.get('/orders/export', {
+      params,
+      responseType: 'blob',
+    });
+
+    return response;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || 'Failed to download orders'
+    );
+  }
+};
+
 export default {
   getAllOrders,
   getOrderById,
   updateOrderStatus,
   updatePaymentStatus,
+  downloadOrders,
+  downloadOrderPdf,
 };
 

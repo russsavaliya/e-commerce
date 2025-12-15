@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ShoppingBag, Loader2, Search, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
+import { ShoppingBag, Loader2, Search, ChevronLeft, ChevronRight, Filter, Download, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { getAllOrders } from '../../services/admin/orderService';
+import { getAllOrders, downloadOrders } from '../../services/admin/orderService';
 
 const getStatusColor = (status) => {
   const colors = {
@@ -56,6 +56,9 @@ const OrderList = () => {
   // Refs
   const searchTimeoutRef = useRef(null);
   const isMounted = useRef(true);
+  const downloadMenuRef = useRef(null);
+  const [isDownloadOpen, setIsDownloadOpen] = useState(false);
+  const [downloadingFormat, setDownloadingFormat] = useState(null); // 'csv' | 'pdf' | null
 
   // Main data fetching effect
   useEffect(() => {
@@ -67,6 +70,28 @@ const OrderList = () => {
       }
     };
   }, []);
+
+  // Close download dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        downloadMenuRef.current &&
+        !downloadMenuRef.current.contains(event.target)
+      ) {
+        setIsDownloadOpen(false);
+      }
+    };
+
+    if (isDownloadOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDownloadOpen]);
 
   // Initial fetch on mount
   useEffect(() => {
@@ -185,6 +210,35 @@ const OrderList = () => {
     setPaymentStatusFilter('');
   };
 
+  const handleDownload = async (format) => {
+    try {
+      setIsDownloadOpen(false);
+      setDownloadingFormat(format);
+      const response = await downloadOrders(format, {
+        search: searchTerm,
+        order_status: orderStatusFilter,
+        payment_status: paymentStatusFilter,
+      });
+
+      const blob = new Blob([response.data], {
+        type: format === 'pdf' ? 'application/pdf' : 'text/csv;charset=utf-8;',
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = format === 'pdf' ? 'orders_export.pdf' : 'orders_export.csv';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download orders error:', error);
+      toast.error(error.message || 'Failed to download orders');
+    } finally {
+      setDownloadingFormat(null);
+    }
+  };
+
   if (loading && orders.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 min-h-[400px]">
@@ -197,19 +251,55 @@ const OrderList = () => {
 
   return (
     <div className="w-full space-y-4 p-4">
-      {/* Search and Filters */}
+      {/* Search, Filters & Download */}
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
         <div className="p-4 space-y-4">
-          {/* Search */}
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search by order ID, customer name, email, or phone..."
-              value={searchTerm}
-              onChange={handleSearchChange}
-              className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-            />
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            {/* Search */}
+            <div className="relative max-w-md w-full">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search by order ID, customer name, email, or phone..."
+                value={searchTerm}
+                onChange={handleSearchChange}
+                className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              />
+            </div>
+
+            {/* Download dropdown */}
+            <div className="flex justify-start md:justify-end">
+              <div className="relative inline-block text-left" ref={downloadMenuRef}>
+                <button
+                  type="button"
+                  onClick={() => !downloadingFormat && setIsDownloadOpen((prev) => !prev)}
+                  disabled={!!downloadingFormat}
+                  className="inline-flex items-center gap-2 px-3 py-2 text-sm font-semibold bg-gray-900 text-white rounded-lg hover:bg-black transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <Download className="w-4 h-4" />
+                  {downloadingFormat ? `Downloading ${downloadingFormat.toUpperCase()}...` : 'Download'}
+                  <ChevronDown className="w-3 h-3" />
+                </button>
+                {isDownloadOpen && !downloadingFormat && (
+                  <div className="absolute right-0 mt-2 w-40 origin-top-right rounded-md bg-white border border-gray-200 shadow-lg focus:outline-none z-10">
+                    <button
+                      type="button"
+                      onClick={() => handleDownload('csv')}
+                      className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    >
+                      Download CSV
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDownload('pdf')}
+                      className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    >
+                      Download PDF
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Filters */}

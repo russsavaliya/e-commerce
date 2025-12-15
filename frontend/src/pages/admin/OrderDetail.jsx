@@ -16,7 +16,7 @@ import {
   IndianRupee
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { getOrderById, updateOrderStatus, updatePaymentStatus } from '../../services/admin/orderService';
+import { getOrderById, updateOrderStatus, updatePaymentStatus, downloadOrderPdf } from '../../services/admin/orderService';
 import { API_BASE_URL } from '../../utils/constants';
 
 const getStatusColor = (status) => {
@@ -74,6 +74,7 @@ const OrderDetail = () => {
   const [error, setError] = useState('');
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [updatingPaymentStatus, setUpdatingPaymentStatus] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   useEffect(() => {
     const fetchOrderDetail = async () => {
@@ -147,6 +148,30 @@ const OrderDetail = () => {
     return ['pending', 'accepted', 'shipped', 'delivered', 'cancelled', 'missing', 'failed'];
   };
 
+  const handleDownloadPdf = async () => {
+    if (!orderId || downloadingPdf) return;
+
+    try {
+      setDownloadingPdf(true);
+      const response = await downloadOrderPdf(orderId);
+
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `order_${orderId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error downloading order PDF:', err);
+      toast.error(err.message || 'Failed to download order PDF');
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 min-h-[400px]">
@@ -175,13 +200,35 @@ const OrderDetail = () => {
 
   return (
     <div className="w-full p-4 lg:p-6 space-y-6">
-      {/* Back Button */}
-      <button
-        onClick={() => navigate('/admin/orders/list')}
-        className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
-      >
-        <ChevronLeft className="w-4 h-4" /> Back to Orders List
-      </button>
+      {/* Top Header Row */}
+      <div className="flex items-center justify-between">
+        <button
+          onClick={() => navigate('/admin/orders/list')}
+          className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          <ChevronLeft className="w-4 h-4" /> Back to Orders List
+        </button>
+
+        {/* Download PDF button (page header right side) */}
+        <button
+          type="button"
+          onClick={handleDownloadPdf}
+          disabled={downloadingPdf}
+          className="inline-flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-full border border-gray-300 bg-white text-gray-800 hover:bg-gray-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {downloadingPdf ? (
+            <>
+              <Loader2 className="w-3 h-3 animate-spin" />
+              Generating PDF...
+            </>
+          ) : (
+            <>
+              <FileText className="w-3 h-3" />
+              Download PDF
+            </>
+          )}
+        </button>
+      </div>
 
       {/* Order Header Card */}
       <div className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
@@ -193,7 +240,7 @@ const OrderDetail = () => {
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-3 flex-wrap">
-                  <h1 className="text-xl lg:text-2xl font-bold text-gray-900">
+                  <h1 className="text-lg lg:text-xl font-bold text-gray-900">
                     Order #{order.order_id}
                   </h1>
                   <span className={`inline-flex px-3 py-1 text-xs font-bold rounded-full border ${getStatusColor(order.order_status)}`}>
@@ -208,7 +255,7 @@ const OrderDetail = () => {
             </div>
             <div className="flex flex-wrap items-center gap-3">
               {/* Manage Payment Status Dropdown - pill style */}
-              <div className="bg-white rounded-full border border-gray-300 shadow-sm hover:shadow-md transition-all relative">
+              <div className="bg-blue-50 rounded-full border border-blue-300 shadow-sm hover:shadow-md transition-all relative">
                 <select
                   defaultValue=""
                   onChange={(e) => {
@@ -218,7 +265,7 @@ const OrderDetail = () => {
                     }
                   }}
                   disabled={updatingPaymentStatus}
-                  className="appearance-none pl-4 pr-9 py-2 text-sm font-semibold text-gray-900 bg-transparent focus:outline-none focus:ring-2 focus:ring-green-500 rounded-full cursor-pointer w-full"
+                  className="appearance-none pl-4 pr-9 py-2 text-sm font-semibold text-blue-900 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-400 rounded-full cursor-pointer w-full"
                 >
                   <option value="" disabled>
                     Manage Payment
@@ -229,11 +276,11 @@ const OrderDetail = () => {
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="w-4 h-4 text-gray-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <ChevronDown className="w-4 h-4 text-blue-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
 
               {/* Manage Status Dropdown - pill style */}
-              <div className="bg-white rounded-full border border-gray-300 shadow-sm hover:shadow-md transition-all relative">
+              <div className="bg-amber-50 rounded-full border border-amber-300 shadow-sm hover:shadow-md transition-all relative">
                 <select
                   defaultValue=""
                   onChange={(e) => {
@@ -243,7 +290,7 @@ const OrderDetail = () => {
                     }
                   }}
                   disabled={updatingStatus}
-                  className="appearance-none pl-4 pr-9 py-2 text-sm font-semibold text-gray-900 bg-transparent focus:outline-none focus:ring-2 focus:ring-green-500 rounded-full cursor-pointer w-full"
+                  className="appearance-none pl-4 pr-9 py-2 text-sm font-semibold text-amber-900 bg-transparent focus:outline-none focus:ring-2 focus:ring-amber-400 rounded-full cursor-pointer w-full"
                 >
                   <option value="" disabled>
                     Manage Status
@@ -254,7 +301,7 @@ const OrderDetail = () => {
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="w-4 h-4 text-gray-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <ChevronDown className="w-4 h-4 text-amber-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             </div>
           </div>

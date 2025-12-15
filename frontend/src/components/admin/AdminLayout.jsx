@@ -155,6 +155,32 @@ const AdminLayout = () => {
     },
   ];
 
+  const getPageTitle = () => {
+    const path = location.pathname;
+
+    if (path === ROUTES.ADMIN_DASHBOARD) return 'Dashboard';
+    if (path === ROUTES.ADMIN_PRODUCTS_LIST) return 'Product List';
+    if (path === ROUTES.ADMIN_PRODUCTS_ADD) return 'Add Product';
+    if (path.startsWith('/admin/products/edit/')) return 'Update Product';
+
+    if (path === ROUTES.ADMIN_MARKETING_SPEND) return 'Marketing Spend Management';
+    if (path === ROUTES.ADMIN_BANNERS) return 'Banner Management';
+
+    if (path === ROUTES.ADMIN_ORDERS_LIST) return 'Order List';
+    if (path.startsWith('/admin/orders/') && path !== ROUTES.ADMIN_ORDERS_LIST) {
+      return 'Order Detail';
+    }
+
+    if (path === ROUTES.ADMIN_CATEGORIES) return 'Category Management';
+    if (path === ROUTES.ADMIN_ATTRIBUTES) return 'Attribute Management';
+    if (path === ROUTES.ADMIN_ROLES) return 'Role Management';
+    if (path === ROUTES.ADMIN_MANAGEMENT) return 'Admin Management';
+    if (path === ROUTES.ADMIN_CUSTOMERS_LIST) return 'Customer List';
+    if (path === ROUTES.ADMIN_PROFILE) return 'Profile';
+
+    return 'Settings';
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Mobile Overlay */}
@@ -356,33 +382,7 @@ const AdminLayout = () => {
               <Menu className="w-6 h-6 text-gray-600" />
             </button>
             <h2 className="text-xl lg:text-2xl font-bold text-gray-900">
-              {location.pathname === ROUTES.ADMIN_DASHBOARD
-                ? 'Dashboard'
-                : location.pathname === ROUTES.ADMIN_PRODUCTS_LIST
-                  ? 'Product List'
-                  : location.pathname === ROUTES.ADMIN_PRODUCTS_ADD
-                    ? 'Add Product'
-                    : location.pathname === ROUTES.ADMIN_MARKETING_SPEND
-                      ? 'Marketing Spend Management'
-                      : location.pathname === ROUTES.ADMIN_BANNERS
-                        ? 'Banner Management'
-                        : location.pathname === ROUTES.ADMIN_ORDERS_LIST
-                          ? 'Order List'
-                          : location.pathname.startsWith('/admin/orders/') && location.pathname !== ROUTES.ADMIN_ORDERS_LIST
-                            ? 'Order Detail'
-                            : location.pathname.startsWith('/admin/products/edit/')
-                        ? 'Update Product'
-                        : location.pathname === ROUTES.ADMIN_CATEGORIES
-                          ? 'Category Management'
-                          : location.pathname === ROUTES.ADMIN_ATTRIBUTES
-                            ? 'Attribute Management'
-                            : location.pathname === ROUTES.ADMIN_ROLES
-                              ? 'Role Management'
-                              : location.pathname === ROUTES.ADMIN_MANAGEMENT
-                                ? 'Admin Management'
-                                : location.pathname === ROUTES.ADMIN_PROFILE
-                                  ? 'Profile'
-                                  : 'Settings'}
+              {getPageTitle()}
             </h2>
             <div className="w-10" /> {/* Spacer for mobile menu button */}
           </div>

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Order Invoice - {{ORDER_ID}}</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+          sans-serif;
+      }
+      body {
+        margin: 0;
+        padding: 16px;
+        background-color: #f3f4f6;
+        color: #111827;
+        font-size: 12px;
+      }
+      .invoice-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: #ffffff;
+        border-radius: 8px;
+        padding: 20px 24px;
+        border: 1px solid #e5e7eb;
+      }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 16px;
+      }
+      .title {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .meta {
+        font-size: 11px;
+        color: #6b7280;
+      }
+      .badge {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 600;
+        border: 1px solid #d1d5db;
+        background: #f9fafb;
+        color: #111827;
+      }
+      .section {
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        padding: 12px 14px;
+        margin-bottom: 12px;
+      }
+      .section-title {
+        font-size: 13px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .two-col {
+        display: flex;
+        gap: 12px;
+      }
+      .two-col > div {
+        flex: 1;
+      }
+      .label {
+        font-size: 11px;
+        color: #6b7280;
+      }
+      .value {
+        font-size: 12px;
+        font-weight: 600;
+        color: #111827;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 6px;
+      }
+      thead {
+        background: #f9fafb;
+      }
+      th,
+      td {
+        padding: 8px 6px;
+        border-bottom: 1px solid #e5e7eb;
+        text-align: left;
+        font-size: 11px;
+      }
+      th {
+        font-size: 11px;
+        font-weight: 600;
+        color: #4b5563;
+      }
+      .prod-name {
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 2px;
+      }
+      .prod-meta {
+        font-size: 10px;
+        color: #6b7280;
+      }
+      .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 2px;
+        font-size: 11px;
+      }
+      .summary-row .label {
+        color: #4b5563;
+      }
+      .summary-row .value {
+        font-weight: 600;
+      }
+      .summary-total {
+        border-top: 1px solid #e5e7eb;
+        margin-top: 6px;
+        padding-top: 6px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .footer-note {
+        margin-top: 10px;
+        font-size: 10px;
+        color: #9ca3af;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="invoice-container">
+      <div class="header">
+        <div>
+          <div class="title">Order Invoice</div>
+          <div class="meta">Order ID: {{ORDER_ID}}</div>
+          <div class="meta">Placed on: {{ORDER_DATE}}</div>
+        </div>
+        <div style="text-align: right;">
+          <div class="badge">Status: {{ORDER_STATUS}}</div>
+          <div style="margin-top: 4px; font-size: 11px;">
+            Payment: <strong>{{PAYMENT_STATUS}}</strong> ({{PAYMENT_METHOD}})
+          </div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="section">
+          <div class="section-title">Shipping Address</div>
+          <div class="label">Name</div>
+          <div class="value">{{CUSTOMER_NAME}}</div>
+          <div class="label" style="margin-top: 4px;">Phone</div>
+          <div class="value">{{CUSTOMER_PHONE}}</div>
+          <div class="label" style="margin-top: 4px;">Email</div>
+          <div class="value">{{CUSTOMER_EMAIL}}</div>
+          <div class="label" style="margin-top: 4px;">Address</div>
+          <div class="value">
+            {{CUSTOMER_ADDRESS}}<br />
+            {{CUSTOMER_CITY_STATE_PIN}}
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Order Summary</div>
+          <div class="summary-row">
+            <span class="label">Subtotal</span>
+            <span class="value">{{SUBTOTAL}}</span>
+          </div>
+          <div class="summary-row">
+            <span class="label">Shipping</span>
+            <span class="value">{{SHIPPING}}</span>
+          </div>
+          <div class="summary-row">
+            <span class="label">Tax</span>
+            <span class="value">{{TAX}}</span>
+          </div>
+          <div class="summary-total summary-row">
+            <span>Total</span>
+            <span>{{TOTAL}}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Products</div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 40px;">#</th>
+              <th>Product</th>
+              <th style="width: 60px;">Qty</th>
+              <th style="width: 90px;">Price</th>
+              <th style="width: 100px;">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{PRODUCT_ROWS}}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="footer-note">
+        This is a system generated invoice for your order {{ORDER_ID}}.
+      </div>
+    </div>
+  </body>
+</html>
+
+
