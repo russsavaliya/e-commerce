@@ -51,10 +51,8 @@ userApi.interceptors.response.use(
       localStorage.removeItem(STORAGE_KEYS.USER_TOKEN);
       localStorage.removeItem(STORAGE_KEYS.USER_USER);
       
-      // Redirect to login if not already there
-      if (window.location.pathname !== '/user/login') {
-        window.location.href = '/user/login';
-      }
+      // Note: Navigation should be handled by components using React Router
+      // This prevents full page reloads and maintains SPA behavior
     }
     return Promise.reject(error);
   }

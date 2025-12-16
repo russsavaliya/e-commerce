@@ -24,6 +24,7 @@ import {
   IndianRupee,
   Image,
   ShoppingBag,
+  Star,
 } from 'lucide-react';
 import { ROUTES } from '../../utils/constants';
 
@@ -33,6 +34,7 @@ const AdminLayout = () => {
   const [productsOpen, setProductsOpen] = useState(false);
   const [ordersOpen, setOrdersOpen] = useState(false);
   const [customersOpen, setCustomersOpen] = useState(false);
+  const [reviewsOpen, setReviewsOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -52,6 +54,9 @@ const AdminLayout = () => {
     if (location.pathname.startsWith(ROUTES.ADMIN_CUSTOMERS)) {
       setCustomersOpen(true);
     }
+    if (location.pathname.startsWith(ROUTES.ADMIN_REVIEWS)) {
+      setReviewsOpen(true);
+    }
   }, [location.pathname]);
 
   const handleLogout = async () => {
@@ -68,6 +73,7 @@ const AdminLayout = () => {
   const isProductsActive = location.pathname.startsWith(ROUTES.ADMIN_PRODUCTS);
   const isOrdersActive = location.pathname.startsWith(ROUTES.ADMIN_ORDERS);
   const isCustomersActive = location.pathname.startsWith(ROUTES.ADMIN_CUSTOMERS);
+  const isReviewsActive = location.pathname.startsWith(ROUTES.ADMIN_REVIEWS);
 
   const menuItems = [
     {
@@ -127,6 +133,23 @@ const AdminLayout = () => {
       ],
     },
     {
+      name: 'Reviews',
+      icon: Star,
+      path: ROUTES.ADMIN_REVIEWS,
+      submenu: [
+        {
+          name: 'Review List',
+          icon: List,
+          path: ROUTES.ADMIN_REVIEWS_LIST,
+        },
+        {
+          name: 'Add Review',
+          icon: Plus,
+          path: ROUTES.ADMIN_REVIEWS_ADD,
+        },
+      ],
+    },
+    {
       name: 'Settings',
       icon: Settings,
       path: ROUTES.ADMIN_SETTINGS,
@@ -176,6 +199,8 @@ const AdminLayout = () => {
     if (path === ROUTES.ADMIN_ROLES) return 'Role Management';
     if (path === ROUTES.ADMIN_MANAGEMENT) return 'Admin Management';
     if (path === ROUTES.ADMIN_CUSTOMERS_LIST) return 'Customer List';
+    if (path === ROUTES.ADMIN_REVIEWS_LIST) return 'Review List';
+    if (path === ROUTES.ADMIN_REVIEWS_ADD) return 'Add Review';
     if (path === ROUTES.ADMIN_PROFILE) return 'Profile';
 
     return 'Settings';
@@ -235,7 +260,9 @@ const AdminLayout = () => {
                     ? isOrdersActive
                     : item.name === 'Customers'
                       ? isCustomersActive
-                      : isActive(item.path);
+                      : item.name === 'Reviews'
+                        ? isReviewsActive
+                        : isActive(item.path);
               // Only mark as active if this specific item is active, not if any submenu is active
               const active = isItemActive;
 
@@ -248,7 +275,9 @@ const AdminLayout = () => {
                       ? ordersOpen
                       : item.name === 'Customers'
                         ? customersOpen
-                        : false;
+                        : item.name === 'Reviews'
+                          ? reviewsOpen
+                          : false;
                 const toggleOpen = item.name === 'Settings'
                   ? () => setSettingsOpen(!settingsOpen)
                   : item.name === 'Products'
@@ -257,7 +286,9 @@ const AdminLayout = () => {
                       ? () => setOrdersOpen(!ordersOpen)
                       : item.name === 'Customers'
                         ? () => setCustomersOpen(!customersOpen)
-                        : () => {};
+                        : item.name === 'Reviews'
+                          ? () => setReviewsOpen(!reviewsOpen)
+                          : () => {};
 
                 return (
                   <div key={item.name}>

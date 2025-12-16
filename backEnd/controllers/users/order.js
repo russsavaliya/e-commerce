@@ -188,3 +188,81 @@ exports.update_payment = async (req, res) => {
     });
   }
 };
+
+exports.track_order = async (req, res) => {
+  try {
+    const { orderId, email } = req.query || {};
+
+    if (!orderId || !email) {
+      return res.status(400).json({
+        status: false,
+        message: 'orderId and email are required',
+      });
+    }
+
+    const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
+
+    // Use aggregation to properly include all product fields including image
+    const orderResult = await order_model.aggregate([
+      {
+        $match: {
+          order_id: orderId,
+          'shipping_address.email': email,
+          created_at: { $gte: tenDaysAgo },
+        },
+      },
+      {
+        $project: {
+          order_id: 1,
+          products: {
+            $map: {
+              input: '$products',
+              as: 'product',
+              in: {
+                product_id: '$$product.product_id',
+                category_id: '$$product.category_id',
+                variant_id: '$$product.variant_id',
+                product_name: '$$product.product_name',
+                variant_name: '$$product.variant_name',
+                unit_price: '$$product.unit_price',
+                quantity: '$$product.quantity',
+                total: '$$product.total',
+                image: '$$product.image',
+              },
+            },
+          },
+          total_amount: 1,
+          sub_total: 1,
+          shipping_amount: 1,
+          total_tax: 1,
+          order_status: 1,
+          payment_status: 1,
+          payment_method: 1,
+          shipping_address: 1,
+          created_at: 1,
+        },
+      },
+    ]);
+
+    const order = orderResult && orderResult.length > 0 ? orderResult[0] : null;
+
+    if (!order) {
+      return res.status(404).json({
+        status: false,
+        message: 'Order not found or older than 10 days.',
+      });
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: 'Order fetched successfully',
+      data: order,
+    });
+  } catch (error) {
+    console.error('Error tracking order:', error);
+    return res.status(500).json({
+      status: false,
+      message: error.message || 'Failed to track order',
+    });
+  }
+};

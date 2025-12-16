@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, Search, ShoppingBag, Heart, User } from 'lucide-react';
 import { getCartCount } from '../../services/user/cartService';
 import logoImage from '../../assets/images/logo.png';
@@ -61,7 +61,7 @@ const Navbar = () => {
     { name: 'Sale', path: '/sale' },
     { name: 'Best Seller', path: '/bestseller' },
     { name: 'New Arrival', path: '/new-arrival' },
-    { name: 'Collections', path: '/collections' },
+    // { name: 'Collections', path: '/collections' },
     { name: 'About', path: '/about' },
     { name: 'Contact', path: '/contact' },
   ];
@@ -87,7 +87,7 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <div className="flex items-center">
-            <a href="/" className="flex items-center space-x-3 group">
+            <Link to="/" className="flex items-center space-x-3 group">
               <div className="relative">
                 <img 
                   src={logoImage} 
@@ -121,19 +121,19 @@ const Navbar = () => {
                   LUXURY
                 </span>
               </div>
-            </a>
+            </Link>
           </div>
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
             {menuItems.map((item) => (
-              <a
+              <Link
                 key={item.name}
-                href={item.path}
+                to={item.path}
                 className={`${textClasses} ${hoverClasses} transition-colors font-medium text-base tracking-wide uppercase`}
               >
                 {item.name}
-              </a>
+              </Link>
             ))}
           </div>
 
@@ -184,14 +184,14 @@ const Navbar = () => {
           <div className={`md:hidden py-4 ${isHomePage && !isScrolled ? 'border-t border-white/20' : 'border-t border-gray-100'}`}>
             <div className="flex flex-col space-y-4">
               {menuItems.map((item) => (
-                <a
+                <Link
                   key={item.name}
-                  href={item.path}
+                  to={item.path}
                   onClick={() => setMobileMenuOpen(false)}
                   className={`${textClasses} ${hoverClasses} transition-colors font-medium text-base tracking-wide uppercase py-2`}
                 >
                   {item.name}
-                </a>
+                </Link>
               ))}
               <div className={`flex items-center space-x-4 pt-4 ${isHomePage && !isScrolled ? 'border-t border-white/20' : 'border-t border-gray-100'}`}>
                 <button className={`p-2 ${textClasses} ${hoverClasses} transition-colors`}>

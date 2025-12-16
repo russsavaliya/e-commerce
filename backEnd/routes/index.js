@@ -13,6 +13,7 @@ const banner_controller = require('../controllers/banner')
 const admin_order_controller = require('../controllers/admin_order')
 const admin_customer_controller = require('../controllers/admin_customer')
 const admin_dashboard_controller = require('../controllers/dashboard')
+const admin_review_controller = require('../controllers/admin_review')
 const utils_controller = require('../controllers/utils')
 /* GET home page. */
 router.post('/admin/auth/signup', authorization.authorization, permission.checkPermission('admin_create'), admin_controller.signup);
@@ -74,6 +75,13 @@ router.get('/customers/list', authorization.authorization, admin_customer_contro
 
 // dashboard routes (admin)
 router.get('/dashboard/summary', authorization.authorization, admin_dashboard_controller.get_dashboard_summary);
+
+// review routes (admin)
+router.get('/reviews/list', authorization.authorization, admin_review_controller.get_review_list);
+router.post('/reviews', authorization.authorization, permission.checkPermission('review_add'), admin_review_controller.add_review);
+router.get('/reviews/:reviewId', authorization.authorization, admin_review_controller.get_review_one);
+router.put('/reviews/:reviewId', authorization.authorization, permission.checkPermission('review_update'), admin_review_controller.update_review);
+router.delete('/reviews/:reviewId', authorization.authorization, permission.checkPermission('review_delete'), admin_review_controller.delete_review);
 
 // utils routes
 router.post('/utils/add-random-data', authorization.authorization, utils_controller.add_random_data);

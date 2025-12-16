@@ -86,6 +86,9 @@ export const ROUTES = {
   ADMIN_ORDERS_DETAIL: '/admin/orders/:orderId',
   ADMIN_CUSTOMERS: '/admin/customers',
   ADMIN_CUSTOMERS_LIST: '/admin/customers/list',
+  ADMIN_REVIEWS: '/admin/reviews',
+  ADMIN_REVIEWS_LIST: '/admin/reviews/list',
+  ADMIN_REVIEWS_ADD: '/admin/reviews/add',
   HOME: '/',
 };
 

@@ -74,6 +74,8 @@ import BannerManagement from './pages/admin/BannerManagement';
 import OrderList from './pages/admin/OrderList';
 import OrderDetail from './pages/admin/OrderDetail';
 import CustomerList from './pages/admin/CustomerList';
+import ReviewList from './pages/admin/ReviewList';
+import AddReview from './pages/admin/AddReview';
 
 // TODO: When you create new pages, import them here:
 // import ProductManagement from './pages/admin/ProductManagement';
@@ -93,6 +95,7 @@ import NewArrivalPage from './pages/user/NewArrivalPage';
 import BestSellerPage from './pages/user/BestSellerPage';
 import AboutPage from './pages/user/AboutPage';
 import ContactPage from './pages/user/ContactPage';
+import OrderTrackPage from './pages/user/OrderTrackPage';
 
 // TODO: When you create new user pages, import them here:
 // import UserOrders from './pages/user/UserOrders';
@@ -180,6 +183,16 @@ const ADMIN_ROUTES = [
     component: CustomerList,                  // The component to show
     description: 'Customer List Page'
   },
+  {
+    path: 'reviews/list',                      // URL path (will be /admin/reviews/list)
+    component: ReviewList,                     // The component to show
+    description: 'Review List Page'
+  },
+  {
+    path: 'reviews/add',                       // URL path (will be /admin/reviews/add)
+    component: AddReview,                      // The component to show
+    description: 'Add Review Page'
+  },
   // ============================================
   // ADD NEW ADMIN PAGES HERE - IT'S THAT EASY!
   // ============================================
@@ -250,6 +263,9 @@ function App() {
             {/* About & Contact */}
             <Route path="/about" element={<AboutPage />} />
             <Route path="/contact" element={<ContactPage />} />
+
+            {/* Order tracking */}
+            <Route path="/order/track" element={<OrderTrackPage />} />
 
             {/* Product detail */}
             <Route path="/product/:productId" element={<ProductDetailPage />} />

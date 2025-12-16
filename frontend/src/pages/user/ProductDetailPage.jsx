@@ -18,6 +18,7 @@ const ProductDetailPage = () => {
   const [activeImage, setActiveImage] = useState('');
   const [selectedVariantId, setSelectedVariantId] = useState(null);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [addingToCart, setAddingToCart] = useState(false);
   const [reviews, setReviews] = useState([]);
   const [reviewSummary, setReviewSummary] = useState({
@@ -233,7 +234,8 @@ const ProductDetailPage = () => {
           rating: 5,
           comment: '',
         });
-        // Reload first page of reviews so user can see their review
+        // Close modal and reload first page of reviews so user can see their review
+        setIsReviewModalOpen(false);
         setReviewPage(1);
         fetchReviews(1);
       } else {
@@ -542,99 +544,17 @@ const ProductDetailPage = () => {
 
                   {/* Right: write review button */}
                   <div className="flex md:justify-end">
-                    <a
-                      href="#write-review"
+                    <button
+                      type="button"
+                      onClick={() => setIsReviewModalOpen(true)}
                       className="inline-flex items-center justify-center px-6 py-3 rounded-full bg-rose-400 text-white text-sm font-semibold shadow-sm hover:bg-rose-500 transition"
                     >
                       Write a review
-                    </a>
+                    </button>
                   </div>
                 </div>
               </div>
 
-              {/* Review form */}
-              <form
-                id="write-review"
-                onSubmit={handleSubmitReview}
-                className="bg-gray-50 border border-gray-200 rounded-2xl p-5 space-y-4"
-              >
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Your Name *
-                    </label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={reviewForm.name}
-                      onChange={handleReviewInputChange}
-                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
-                      placeholder="Enter your name"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Email (optional)
-                    </label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={reviewForm.email}
-                      onChange={handleReviewInputChange}
-                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-300"
-                      placeholder="you@example.com"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Rating *
-                    </label>
-                    <select
-                      name="rating"
-                      value={reviewForm.rating}
-                      onChange={handleReviewInputChange}
-                      className="w-36 px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
-                    >
-                      {[5, 4, 3, 2, 1].map((val) => (
-                        <option key={val} value={val}>
-                          {val} / 5
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Your Review
-                  </label>
-                  <textarea
-                    name="comment"
-                    rows={4}
-                    value={reviewForm.comment}
-                    onChange={handleReviewInputChange}
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-300"
-                    placeholder="Share your experience (optional)"
-                  />
-                </div>
-                <div className="flex justify-end">
-                  <button
-                    type="submit"
-                    disabled={submittingReview}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gray-900 text-white text-sm font-semibold hover:bg-black transition disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {submittingReview ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Submitting...
-                      </>
-                    ) : (
-                      'Submit Review'
-                    )}
-                  </button>
-                </div>
-              </form>
 
               {/* Review list */}
               <div className="space-y-3">
@@ -756,6 +676,124 @@ const ProductDetailPage = () => {
                 e.target.src = 'https://via.placeholder.com/800x1000?text=Image+Not+Available';
               }}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Review Form Modal */}
+      {isReviewModalOpen && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+          onClick={() => setIsReviewModalOpen(false)}
+        >
+          <div 
+            className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+              <h2 className="text-xl font-bold text-gray-900">Write a Review</h2>
+              <button
+                onClick={() => setIsReviewModalOpen(false)}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            {/* Modal Body - Review Form */}
+            <form
+              onSubmit={handleSubmitReview}
+              className="p-6 space-y-4"
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Your Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={reviewForm.name}
+                    onChange={handleReviewInputChange}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
+                    placeholder="Enter your name"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Email (optional)
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={reviewForm.email}
+                    onChange={handleReviewInputChange}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
+                    placeholder="you@example.com"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Rating <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="rating"
+                  value={reviewForm.rating}
+                  onChange={handleReviewInputChange}
+                  className="px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
+                  required
+                >
+                  {[5, 4, 3, 2, 1].map((val) => (
+                    <option key={val} value={val}>
+                      {val} / 5
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Your Review
+                </label>
+                <textarea
+                  name="comment"
+                  rows={5}
+                  value={reviewForm.comment}
+                  onChange={handleReviewInputChange}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 resize-none"
+                  placeholder="Share your experience (optional)"
+                />
+              </div>
+              
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsReviewModalOpen(false)}
+                  className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 text-sm font-medium hover:bg-gray-50 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingReview}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-rose-400 text-white text-sm font-semibold hover:bg-rose-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submittingReview ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    'Submit Review'
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

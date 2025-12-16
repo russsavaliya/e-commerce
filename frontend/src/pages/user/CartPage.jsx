@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/user/Navbar';
 import Footer from '../../components/user/Footer';
-import { Loader2, ShoppingBag, Trash2, Plus, Minus, IndianRupee, X } from 'lucide-react';
+import { Loader2, ShoppingBag, Trash2, Plus, Minus, IndianRupee, X, PackageSearch } from 'lucide-react';
 import { getCart, updateCartItem, removeFromCart, clearCart } from '../../services/user/cartService';
 import toast from 'react-hot-toast';
 
@@ -112,22 +112,31 @@ const CartPage = () => {
     <div className="min-h-screen bg-white">
       <Navbar />
       <main className="max-w-7xl mx-auto px-4 lg:px-6 py-10">
-        <div className="mb-8 flex items-start justify-between gap-4">
+        <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Shopping Cart</h1>
             <p className="text-sm text-gray-500 mt-2">
               {isEmpty ? 'Your cart is empty' : `${cart.totalItems} ${cart.totalItems === 1 ? 'item' : 'items'} in your cart`}
             </p>
           </div>
-          {!isEmpty && (
+          <div className="flex items-center gap-3">
             <button
-              onClick={handleClearCart}
-              disabled={clearing}
-              className="text-sm text-red-600 hover:text-red-700 font-medium disabled:opacity-50"
+              onClick={() => navigate('/order/track')}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-white border-2 border-gray-300 text-gray-900 rounded-full font-semibold hover:border-gray-400 transition-colors"
             >
-              {clearing ? 'Clearing...' : 'Clear Cart'}
+              <PackageSearch className="w-4 h-4" />
+              Track Order
             </button>
-          )}
+            {!isEmpty && (
+              <button
+                onClick={handleClearCart}
+                disabled={clearing}
+                className="text-sm text-red-600 hover:text-red-700 font-medium disabled:opacity-50"
+              >
+                {clearing ? 'Clearing...' : 'Clear Cart'}
+              </button>
+            )}
+          </div>
         </div>
 
         {isEmpty ? (
@@ -285,9 +294,17 @@ const CartPage = () => {
 
                 <button
                   onClick={() => navigate('/checkout')}
-                  className="w-full bg-gray-900 text-white py-4 rounded-full font-semibold hover:bg-black transition-colors mb-4"
+                  className="w-full bg-gray-900 text-white py-4 rounded-full font-semibold hover:bg-black transition-colors mb-3"
                 >
                   Proceed to Checkout
+                </button>
+
+                <button
+                  onClick={() => navigate('/order/track')}
+                  className="w-full bg-white border-2 border-gray-300 text-gray-900 py-3 rounded-full font-semibold hover:border-gray-400 transition-colors mb-3 flex items-center justify-center gap-2"
+                >
+                  <PackageSearch className="w-4 h-4" />
+                  Track Order
                 </button>
 
                 <button

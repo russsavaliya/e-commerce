@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import Navbar from '../../components/user/Navbar';
 import Footer from '../../components/user/Footer';
 import { Sparkles, ShieldCheck, Truck, Award } from 'lucide-react';
@@ -92,18 +93,12 @@ const AboutPage = () => {
             <p className="text-white/80 text-sm">Tell us your occasion and palette—our team will suggest sarees that fit your look.</p>
           </div>
           <div className="flex gap-3">
-            <a
-              href="mailto:support@sareeluxury.com"
+            <Link
+              to="/contact"
               className="px-5 py-3 bg-white text-gray-900 rounded-full font-semibold hover:bg-gray-100 transition-colors"
             >
               Email Us
-            </a>
-            <a
-              href="tel:+919876543210"
-              className="px-5 py-3 border border-white text-white rounded-full font-semibold hover:bg-white hover:text-gray-900 transition-colors"
-            >
-              Call Us
-            </a>
+            </Link>
           </div>
         </section>
       </main>

@@ -43,6 +43,7 @@ router.get('/checkout/pincode/validate', user_checkout_controller.validate_pinco
 // Order routes
 router.post('/orders/init', user_order_controller.init_order);
 router.patch('/orders/:orderId/payment', user_order_controller.update_payment);
+router.get('/orders/track', user_order_controller.track_order);
 
 // Support / contact routes
 router.post('/support/contact', user_support_controller.send_support_email);
