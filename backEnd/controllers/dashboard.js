@@ -1,5 +1,4 @@
 const product_model = require('../model/product');
-const category_model = require('../model/category');
 const order_model = require('../model/order');
 const customer_model = require('../model/customer');
 
@@ -11,7 +10,6 @@ exports.get_dashboard_summary = async (req, res) => {
   try {
     const [
       total_products,
-      total_categories,
       total_orders,
       total_customers,
       revenueAgg,
@@ -19,7 +17,6 @@ exports.get_dashboard_summary = async (req, res) => {
       monthlyAgg,
     ] = await Promise.all([
       product_model.countDocuments(),
-      category_model.countDocuments(),
       order_model.countDocuments(),
       customer_model.countDocuments(),
       order_model.aggregate([
@@ -66,7 +63,6 @@ exports.get_dashboard_summary = async (req, res) => {
       data: {
         metrics: {
           total_products,
-          total_categories,
           total_orders,
           total_customers,
           total_revenue,

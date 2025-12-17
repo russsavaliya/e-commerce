@@ -211,7 +211,7 @@ const AdminLayout = () => {
       {/* Mobile Overlay */}
       {mobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
@@ -220,7 +220,7 @@ const AdminLayout = () => {
       <aside
         className={`
           fixed lg:static inset-y-0 left-0 z-50
-          bg-white border-r border-gray-200
+          bg-white border-r border-gray-200 shadow-sm
           transition-all duration-300 ease-in-out
           ${sidebarOpen ? 'w-64' : 'w-20'}
           ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
@@ -228,20 +228,27 @@ const AdminLayout = () => {
       >
         <div className="flex flex-col h-full">
           {/* Logo/Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between p-5 border-b border-gray-200 bg-gradient-to-r from-white to-gray-50/50">
             {sidebarOpen && (
-              <h1 className="text-2xl font-bold" style={{ color: '#4EA674' }}>Admin Panel</h1>
+              <h1 className="text-xl font-bold tracking-tight" style={{ color: '#4EA674' }}>
+                Admin Panel
+              </h1>
+            )}
+            {!sidebarOpen && (
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center mx-auto">
+                <LayoutDashboard className="w-5 h-5 text-white" />
+              </div>
             )}
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:flex hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              className="lg:flex hidden p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-all duration-200"
               aria-label="Toggle sidebar"
             >
               <Menu className="w-5 h-5 text-gray-600" />
             </button>
             <button
               onClick={() => setMobileMenuOpen(false)}
-              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-all duration-200"
               aria-label="Close menu"
             >
               <X className="w-5 h-5 text-gray-600" />
@@ -249,7 +256,7 @@ const AdminLayout = () => {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto p-4 space-y-2">
+          <nav className="flex-1 overflow-y-auto p-3 space-y-1.5 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
             {menuItems.map((item) => {
               const Icon = item.icon;
               const isItemActive = item.name === 'Settings'
@@ -295,32 +302,34 @@ const AdminLayout = () => {
                     <button
                       onClick={toggleOpen}
                       className={`
-                        w-full flex items-center gap-3 px-4 py-3 rounded-lg
-                        transition-all duration-200 relative
+                        w-full flex items-center gap-3 px-3 py-2.5 rounded-lg
+                        transition-all duration-200 relative group
                         ${active
-                          ? 'text-white font-semibold shadow-md'
-                          : 'text-gray-700 hover:bg-gray-100'
+                          ? 'text-white font-semibold shadow-sm'
+                          : 'text-gray-700 hover:bg-gray-50 active:bg-gray-100'
                         }
                       `}
                       style={active ? { backgroundColor: '#4EA674' } : {}}
                       aria-expanded={isOpen}
                     >
-                      <Icon className="w-5 h-5 flex-shrink-0" />
+                      <Icon className={`w-5 h-5 flex-shrink-0 transition-transform ${isOpen ? 'scale-110' : ''}`} />
                       {sidebarOpen && (
                         <>
-                          <span className="flex-1 text-left text-base">{item.name}</span>
-                          {isOpen ? (
-                            <ChevronDown className="w-4 h-4" />
-                          ) : (
-                            <ChevronRight className="w-4 h-4" />
-                          )}
+                          <span className="flex-1 text-left text-sm font-medium">{item.name}</span>
+                          <div className="transition-transform duration-200">
+                            {isOpen ? (
+                              <ChevronDown className="w-4 h-4" />
+                            ) : (
+                              <ChevronRight className="w-4 h-4" />
+                            )}
+                          </div>
                         </>
                       )}
                     </button>
 
                     {/* Submenu */}
                     {isOpen && sidebarOpen && (
-                      <div className="ml-4 mt-2 space-y-1">
+                      <div className="ml-2 mt-1.5 space-y-1 border-l-2 border-gray-100 pl-2">
                         {item.submenu.map((subItem) => {
                           const SubIcon = subItem.icon;
                           const subActive = isActive(subItem.path);
@@ -333,11 +342,11 @@ const AdminLayout = () => {
                                 setMobileMenuOpen(false);
                               }}
                               className={`
-                                w-full flex items-center gap-3 px-4 py-2.5 rounded-lg
-                                transition-all duration-200 text-base relative
+                                w-full flex items-center gap-2.5 px-3 py-2 rounded-md
+                                transition-all duration-200 text-sm relative
                                 ${subActive
-                                  ? 'text-white font-semibold shadow-md'
-                                  : 'text-gray-600 hover:bg-gray-50'
+                                  ? 'text-white font-medium shadow-sm'
+                                  : 'text-gray-600 hover:bg-gray-50 active:bg-gray-100'
                                 }
                               `}
                               style={subActive ? { backgroundColor: '#4EA674' } : {}}
@@ -361,37 +370,39 @@ const AdminLayout = () => {
                     setMobileMenuOpen(false);
                   }}
                   className={`
-                    w-full flex items-center gap-3 px-4 py-3 rounded-lg
-                    transition-all duration-200 text-base relative
+                    w-full flex items-center gap-3 px-3 py-2.5 rounded-lg
+                    transition-all duration-200 text-sm relative group
                     ${active
-                      ? 'text-white font-semibold shadow-md'
-                      : 'text-gray-700 hover:bg-gray-100'
+                      ? 'text-white font-semibold shadow-sm'
+                      : 'text-gray-700 hover:bg-gray-50 active:bg-gray-100'
                     }
                   `}
                   style={active ? { backgroundColor: '#4EA674' } : {}}
                 >
                   <Icon className="w-5 h-5 flex-shrink-0" />
-                  {sidebarOpen && <span className="flex-1 text-left">{item.name}</span>}
+                  {sidebarOpen && <span className="flex-1 text-left font-medium">{item.name}</span>}
                 </button>
               );
             })}
           </nav>
 
           {/* User Info & Logout */}
-          <div className="p-4 border-t border-gray-200">
+          <div className="p-4 border-t border-gray-200 bg-gray-50/50">
             {sidebarOpen && (
               <button
                 onClick={() => navigate(ROUTES.ADMIN_PROFILE)}
-                className="w-full mb-3 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors text-left"
+                className="w-full mb-3 px-4 py-3 rounded-lg hover:bg-white hover:shadow-sm transition-all duration-200 text-left border border-transparent hover:border-gray-200"
               >
                 <p className="text-sm font-semibold text-gray-900">{user?.name || 'Admin'}</p>
-                <p className="text-xs text-gray-500 truncate">{user?.email || ''}</p>
-                <p className="text-xs text-green-600 mt-1 font-medium">View Profile →</p>
+                <p className="text-xs text-gray-500 truncate mt-0.5">{user?.email || ''}</p>
+                <p className="text-xs text-green-600 mt-1.5 font-medium flex items-center gap-1">
+                  View Profile <span className="text-green-500">→</span>
+                </p>
               </button>
             )}
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors text-base font-medium"
+              className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-red-600 hover:bg-red-50 active:bg-red-100 transition-all duration-200 text-sm font-medium border border-red-100 hover:border-red-200"
             >
               <LogOut className="w-5 h-5 flex-shrink-0" />
               {sidebarOpen && <span>Logout</span>}
@@ -403,25 +414,29 @@ const AdminLayout = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Header */}
-        <header className="bg-white border-b border-gray-200 px-4 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => setMobileMenuOpen(true)}
-              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
-              aria-label="Open menu"
-            >
-              <Menu className="w-6 h-6 text-gray-600" />
-            </button>
-            <h2 className="text-xl lg:text-2xl font-bold text-gray-900">
-              {getPageTitle()}
-            </h2>
-            <div className="w-10" /> {/* Spacer for mobile menu button */}
+        <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-30">
+          <div className="px-4 lg:px-6 py-4">
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => setMobileMenuOpen(true)}
+                className="lg:hidden p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-all duration-200"
+                aria-label="Open menu"
+              >
+                <Menu className="w-6 h-6 text-gray-600" />
+              </button>
+              <h2 className="text-lg lg:text-xl font-bold text-gray-900 tracking-tight">
+                {getPageTitle()}
+              </h2>
+              <div className="w-10 lg:w-0" /> {/* Spacer for mobile menu button */}
+            </div>
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto bg-gray-50 p-4 lg:p-8">
-          <Outlet />
+        <main className="flex-1 overflow-y-auto bg-gray-50 p-4 lg:p-6">
+          <div className="max-w-7xl mx-auto w-full">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

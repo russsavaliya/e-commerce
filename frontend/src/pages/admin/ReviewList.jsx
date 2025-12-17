@@ -119,137 +119,164 @@ const ReviewList = () => {
   };
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="w-full space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <Star className="w-4 h-4" />
-            <span>Reviews</span>
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-white to-gray-50/30">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2.5">
+                <div className="p-2 rounded-lg bg-green-50">
+                  <Star className="w-5 h-5 text-green-600" />
+                </div>
+                Review List
+              </h1>
+              <p className="text-sm text-gray-500 mt-1.5 ml-11">
+                Manage customer reviews and ratings
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate(ROUTES.ADMIN_REVIEWS_ADD)}
+                className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg shadow-sm hover:bg-green-700 active:bg-green-800 transition-all duration-200"
+              >
+                Add Review
+              </button>
+              <button
+                onClick={() => setRefreshKey((k) => k + 1)}
+                className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 active:bg-gray-100 transition-all duration-200"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Refresh
+              </button>
+            </div>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Review List</h1>
-          <p className="text-sm text-gray-600">Manage customer reviews and ratings.</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate(ROUTES.ADMIN_REVIEWS_ADD)}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-green-600 rounded-lg shadow-sm hover:bg-green-700"
-          >
-            Add Review
-          </button>
-          <button
-            onClick={() => setRefreshKey((k) => k + 1)}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Refresh
-          </button>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-        <div className="relative w-full sm:w-1/2">
-          <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={search}
-            onChange={handleSearchChange}
-            placeholder="Search by name, email, or comment"
-            className="w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-          />
-        </div>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="flex flex-col lg:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={search}
+              onChange={handleSearchChange}
+              placeholder="Search by name, email, or comment"
+              className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all duration-200 bg-white hover:border-gray-400"
+            />
+          </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
-          <Filter className="w-4 h-4 text-gray-500" />
-          <select
-            value={productId}
-            onChange={handleProductChange}
-            className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
-          >
-            <option value="">All Products</option>
-            {products.map((product) => (
-              <option key={product._id} value={product._id}>
-                {product.name}
-              </option>
-            ))}
-          </select>
-          <select
-            value={rating}
-            onChange={handleRatingChange}
-            className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
-          >
-            <option value="">All Ratings</option>
-            <option value="5">5 Stars</option>
-            <option value="4">4 Stars</option>
-            <option value="3">3 Stars</option>
-            <option value="2">2 Stars</option>
-            <option value="1">1 Star</option>
-          </select>
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-gray-500" />
+              <label className="text-sm text-gray-700 font-semibold">Filters:</label>
+            </div>
+            <select
+              value={productId}
+              onChange={handleProductChange}
+              className="px-3.5 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all bg-white hover:border-gray-400"
+            >
+              <option value="">All Products</option>
+              {products.map((product) => (
+                <option key={product._id} value={product._id}>
+                  {product.name}
+                </option>
+              ))}
+            </select>
+            <select
+              value={rating}
+              onChange={handleRatingChange}
+              className="px-3.5 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all bg-white hover:border-gray-400"
+            >
+              <option value="">All Ratings</option>
+              <option value="5">5 Stars</option>
+              <option value="4">4 Stars</option>
+              <option value="3">3 Stars</option>
+              <option value="2">2 Stars</option>
+              <option value="1">1 Star</option>
+            </select>
+          </div>
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+          <div className="flex flex-col items-center justify-center py-20">
+            <Loader2 className="w-10 h-10 animate-spin text-green-600 mb-4" />
+            <span className="text-lg font-medium text-gray-700">Loading reviews...</span>
+            <span className="text-sm text-gray-500 mt-2">Please wait while we fetch the data</span>
           </div>
         ) : error ? (
-          <div className="p-8 text-center text-red-600">{error}</div>
+          <div className="p-8 text-center">
+            <div className="text-red-600 font-medium">{error}</div>
+          </div>
         ) : reviews.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">No reviews found</div>
+          <div className="text-center py-20">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+              <Star className="w-8 h-8 text-gray-400" />
+            </div>
+            <p className="text-base font-semibold text-gray-700 mb-1.5">No reviews found</p>
+            <p className="text-sm text-gray-500">
+              {search || productId || rating ? 'Try adjusting your filters' : 'No reviews have been submitted yet'}
+            </p>
+          </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full">
+              <thead className="bg-gradient-to-r from-green-50 to-emerald-50/50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Review
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Product
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Rating
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Date
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white divide-y divide-gray-100">
                 {reviews.map((review) => (
-                  <tr key={review._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{review.name}</div>
+                  <tr key={review._id} className="hover:bg-green-50/30 transition-all duration-200 group">
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-semibold text-gray-900">{review.name}</div>
                       {review.email && (
-                        <div className="text-sm text-gray-500">{review.email}</div>
+                        <div className="text-sm text-gray-500 mt-0.5">{review.email}</div>
                       )}
                       {review.comment && (
-                        <div className="text-sm text-gray-600 mt-1 max-w-md truncate">
+                        <div className="text-sm text-gray-600 mt-2 max-w-md line-clamp-2">
                           {review.comment}
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{review.product_name || 'N/A'}</div>
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-medium text-gray-900">{review.product_name || 'N/A'}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {renderStars(review.rating)}
+                    <td className="px-6 py-4">
+                      <div className="flex items-center">
+                        {renderStars(review.rating)}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 text-sm text-gray-600">
                       {formatDate(review.createdAt)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => handleDelete(review._id)}
                           disabled={deletingId === review._id}
-                          className="text-red-600 hover:text-red-900 disabled:opacity-50"
+                          className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Delete review"
                         >
                           {deletingId === review._id ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
@@ -269,22 +296,22 @@ const ReviewList = () => {
 
       {/* Pagination */}
       {!loading && reviews.length > 0 && totalPages > 1 && (
-        <div className="flex items-center justify-between bg-white rounded-xl shadow-sm border border-gray-100 px-6 py-4">
-          <div className="text-sm text-gray-700">
-            Page {page} of {totalPages}
+        <div className="flex items-center justify-between bg-white rounded-xl border border-gray-200 shadow-sm px-6 py-4">
+          <div className="text-sm text-gray-600">
+            Page <span className="font-semibold text-gray-900">{page}</span> of <span className="font-semibold text-gray-900">{totalPages}</span>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-2 border border-gray-300 rounded-lg hover:bg-white hover:border-gray-400 active:bg-gray-50 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-2 border border-gray-300 rounded-lg hover:bg-white hover:border-gray-400 active:bg-gray-50 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
