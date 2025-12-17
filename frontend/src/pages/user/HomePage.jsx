@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Star, Sparkles, Loader2 } from 'lucide-react';
-import { getActiveBanners } from '../../services/user/bannerService';
+import { getHomepageBanners } from '../../services/user/bannerService';
 import { getBestsellerProducts, getTrendingProducts } from '../../services/user/productService';
 import ProductSection from '../../components/user/ProductSection';
 import Navbar from '../../components/user/Navbar';
@@ -31,34 +31,24 @@ const HomePage = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        // Optimized: Fetch all homepage banners in one API call
         // Keep API payloads small for homepage (limit 4 products for each section)
         const [
-          bannersRes,
-          categoryStripRes,
-          middleBannersRes,
-          bottomBannersRes,
+          homepageBannersRes,
           bestsellersRes,
           trendingRes,
         ] = await Promise.all([
-          getActiveBanners('homepage_hero'), // hero
-          getActiveBanners('homepage_category_strip'), // category strip
-          getActiveBanners('homepage_middle'), // middle banner
-          getActiveBanners('homepage_bottom'), // bottom banner
+          getHomepageBanners(), // All homepage banners in one call
           getBestsellerProducts(4),
           getTrendingProducts(4),
         ]);
 
-        if (bannersRes.status) {
-          setBanners(bannersRes.data || []);
-        }
-        if (categoryStripRes.status) {
-          setCategoryStripBanners(categoryStripRes.data || []);
-        }
-        if (middleBannersRes.status) {
-          setMiddleBanners(middleBannersRes.data || []);
-        }
-        if (bottomBannersRes.status) {
-          setBottomBanners(bottomBannersRes.data || []);
+        // Extract banners by position from the grouped response
+        if (homepageBannersRes.status && homepageBannersRes.data) {
+          setBanners(homepageBannersRes.data.homepage_hero || []);
+          setCategoryStripBanners(homepageBannersRes.data.homepage_category_strip || []);
+          setMiddleBanners(homepageBannersRes.data.homepage_middle || []);
+          setBottomBanners(homepageBannersRes.data.homepage_bottom || []);
         }
         if (bestsellersRes.status) {
           setBestsellerProducts(bestsellersRes.data || []);

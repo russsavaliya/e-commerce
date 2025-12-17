@@ -3,7 +3,7 @@
  * Admin panel for managing homepage banners
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Plus,
   Edit2,
@@ -16,6 +16,9 @@ import {
   EyeOff,
   GripVertical,
   Upload,
+  Search,
+  ChevronDown,
+  FolderTree,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import {
@@ -39,6 +42,9 @@ const BannerManagement = () => {
   const [draggedIndex, setDraggedIndex] = useState(null);
 
   const [categories, setCategories] = useState([]);
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
+  const [categorySearchTerm, setCategorySearchTerm] = useState('');
+  const categoryDropdownRef = useRef(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -92,6 +98,25 @@ const BannerManagement = () => {
     fetchBanners();
     fetchCategories();
   }, []);
+
+  // Close category dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target)) {
+        setCategoryDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Filter categories based on search term
+  const filteredCategories = categories.filter((cat) =>
+    cat.name?.toLowerCase().includes(categorySearchTerm.toLowerCase())
+  );
 
   // Handle form input change
   const handleInputChange = (e) => {
@@ -515,20 +540,28 @@ const BannerManagement = () => {
   return (
     <div className="w-full">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <p className="text-sm text-gray-500">
-          Manage homepage banners and their display order
-        </p>
-        <button
-          onClick={() => {
-            resetForm();
-            setShowForm(true);
-          }}
-          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Add Banner
-        </button>
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              <ImageIcon className="w-7 h-7" style={{ color: '#4EA674' }} />
+              Banner Management
+            </h1>
+            <p className="text-sm text-gray-600 mt-1">
+              Manage homepage banners and their display order
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              resetForm();
+              setShowForm(true);
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            Add Banner
+          </button>
+        </div>
       </div>
 
       {/* Form Modal */}
@@ -602,34 +635,6 @@ const BannerManagement = () => {
                 />
               </div>
 
-              {/* Category (for category strip / category banners) */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Linked Category
-                </label>
-                <select
-                  name="category"
-                  value={formData.category}
-                  onChange={handleInputChange}
-                  disabled={loadingCategories}
-                  size={6} // Show approx 6 categories before scroll
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white max-h-48 overflow-y-auto shadow-sm"
-                >
-                  <option value="">Select category (optional)</option>
-                  {categories.map((cat) => (
-                    <option key={cat._id} value={cat._id}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </select>
-                {formErrors.category && (
-                  <p className="text-xs text-red-600 mt-1">{formErrors.category}</p>
-                )}
-                <p className="text-xs text-gray-500 mt-1">
-                  For homepage category strip banners (Haldi, Marriage, etc.), select the related category.
-                </p>
-              </div>
-
               {/* Position */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -650,6 +655,128 @@ const BannerManagement = () => {
                 </select>
                 <p className="text-xs text-gray-500 mt-1">
                   Select where this banner should be displayed
+                </p>
+              </div>
+
+              {/* Category (for category strip / category banners) */}
+              <div className="category-dropdown-container" ref={categoryDropdownRef}>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Linked Category
+                  {formData.position === 'homepage_category_strip' && (
+                    <span className="text-red-500 ml-1">*</span>
+                  )}
+                </label>
+                {loadingCategories ? (
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Loading categories...</span>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
+                      className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-left flex items-center justify-between gap-3 ${
+                        formErrors.category ? 'border-red-300' : 'border-gray-300'
+                      } ${!formData.category ? 'text-gray-500' : 'text-gray-900'}`}
+                    >
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        {formData.category ? (
+                          <span className="truncate">
+                            {categories.find((cat) => cat._id === formData.category)?.name || 'Selected Category'}
+                          </span>
+                        ) : (
+                          <span>Select category (optional)</span>
+                        )}
+                      </div>
+                      <ChevronDown
+                        className={`w-5 h-5 text-gray-400 flex-shrink-0 transition-transform ${
+                          categoryDropdownOpen ? 'transform rotate-180' : ''
+                        }`}
+                      />
+                    </button>
+                    {categoryDropdownOpen && (
+                      <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-hidden">
+                        {/* Search Input */}
+                        <div className="p-2 border-b border-gray-200">
+                          <div className="relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <input
+                              type="text"
+                              placeholder="Search categories..."
+                              value={categorySearchTerm}
+                              onChange={(e) => setCategorySearchTerm(e.target.value)}
+                              className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </div>
+                        </div>
+                        {/* Category List */}
+                        <div className="max-h-56 overflow-y-auto">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormData((prev) => ({ ...prev, category: '' }));
+                              setCategoryDropdownOpen(false);
+                              setCategorySearchTerm('');
+                              if (formErrors.category) {
+                                setFormErrors((prev) => {
+                                  const newErrors = { ...prev };
+                                  delete newErrors.category;
+                                  return newErrors;
+                                });
+                              }
+                            }}
+                            className={`w-full px-4 py-2.5 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 ${
+                              !formData.category ? 'bg-green-50 text-green-700' : ''
+                            }`}
+                          >
+                            <FolderTree className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                            <span>No Category</span>
+                          </button>
+                          {filteredCategories.length > 0 ? (
+                            filteredCategories.map((cat) => (
+                              <button
+                                key={cat._id}
+                                type="button"
+                                onClick={() => {
+                                  setFormData((prev) => ({ ...prev, category: cat._id }));
+                                  setCategoryDropdownOpen(false);
+                                  setCategorySearchTerm('');
+                                  if (formErrors.category) {
+                                    setFormErrors((prev) => {
+                                      const newErrors = { ...prev };
+                                      delete newErrors.category;
+                                      return newErrors;
+                                    });
+                                  }
+                                }}
+                                className={`w-full px-4 py-2.5 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 ${
+                                  formData.category === cat._id ? 'bg-green-50 text-green-700' : ''
+                                }`}
+                              >
+                                <FolderTree className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                <span className="truncate flex-1">{cat.name}</span>
+                                {formData.category === cat._id && (
+                                  <span className="text-green-600 font-semibold">✓</span>
+                                )}
+                              </button>
+                            ))
+                          ) : (
+                            <div className="px-4 py-8 text-center text-gray-500">
+                              <p className="text-sm">No categories found</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {formErrors.category && (
+                  <p className="mt-1 text-sm text-red-600">{formErrors.category}</p>
+                )}
+                <p className="text-xs text-gray-500 mt-1">
+                  For homepage category strip banners (Haldi, Marriage, etc.), select the related category.
                 </p>
               </div>
 

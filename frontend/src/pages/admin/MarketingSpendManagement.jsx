@@ -378,34 +378,36 @@ const MarketingSpendManagement = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <IndianRupee className="w-7 h-7" style={{ color: '#4EA674' }} />
-            Marketing Spend Management
-          </h1>
-          <p className="text-sm text-gray-600 mt-1">
-            Track marketing expenses for products by month
-          </p>
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              <IndianRupee className="w-7 h-7" style={{ color: '#4EA674' }} />
+              Marketing Spend Management
+            </h1>
+            <p className="text-sm text-gray-600 mt-1">
+              Track marketing expenses for products by month
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              setShowForm(true);
+              setEditingSpend(null);
+              setFormData({
+                product_id: selectedProductId || '',
+                month: '',
+                year: '',
+                description: '',
+                amount: '',
+              });
+              setFormErrors({});
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            Add Marketing Spend
+          </button>
         </div>
-        <button
-          onClick={() => {
-            setShowForm(true);
-            setEditingSpend(null);
-            setFormData({
-              product_id: selectedProductId || '',
-              month: '',
-              year: '',
-              description: '',
-              amount: '',
-            });
-            setFormErrors({});
-          }}
-          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium shadow-sm"
-        >
-          <Plus className="w-4 h-4" />
-          Add Marketing Spend
-        </button>
       </div>
 
       {/* Filters */}

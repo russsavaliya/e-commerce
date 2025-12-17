@@ -19,3 +19,13 @@ export const getActiveBanners = async (position = null) => {
   }
 };
 
+// Get all homepage banners in one API call (optimized)
+export const getHomepageBanners = async () => {
+  try {
+    const response = await userApi.get('/users/banners/list', { params: { homepage: 'true' } });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+

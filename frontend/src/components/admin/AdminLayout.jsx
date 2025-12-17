@@ -178,33 +178,6 @@ const AdminLayout = () => {
     },
   ];
 
-  const getPageTitle = () => {
-    const path = location.pathname;
-
-    if (path === ROUTES.ADMIN_DASHBOARD) return 'Dashboard';
-    if (path === ROUTES.ADMIN_PRODUCTS_LIST) return 'Product List';
-    if (path === ROUTES.ADMIN_PRODUCTS_ADD) return 'Add Product';
-    if (path.startsWith('/admin/products/edit/')) return 'Update Product';
-
-    if (path === ROUTES.ADMIN_MARKETING_SPEND) return 'Marketing Spend Management';
-    if (path === ROUTES.ADMIN_BANNERS) return 'Banner Management';
-
-    if (path === ROUTES.ADMIN_ORDERS_LIST) return 'Order List';
-    if (path.startsWith('/admin/orders/') && path !== ROUTES.ADMIN_ORDERS_LIST) {
-      return 'Order Detail';
-    }
-
-    if (path === ROUTES.ADMIN_CATEGORIES) return 'Category Management';
-    if (path === ROUTES.ADMIN_ATTRIBUTES) return 'Attribute Management';
-    if (path === ROUTES.ADMIN_ROLES) return 'Role Management';
-    if (path === ROUTES.ADMIN_MANAGEMENT) return 'Admin Management';
-    if (path === ROUTES.ADMIN_CUSTOMERS_LIST) return 'Customer List';
-    if (path === ROUTES.ADMIN_REVIEWS_LIST) return 'Review List';
-    if (path === ROUTES.ADMIN_REVIEWS_ADD) return 'Add Review';
-    if (path === ROUTES.ADMIN_PROFILE) return 'Profile';
-
-    return 'Settings';
-  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -413,22 +386,16 @@ const AdminLayout = () => {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Header */}
-        <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-30">
-          <div className="px-4 lg:px-6 py-4">
-            <div className="flex items-center justify-between">
-              <button
-                onClick={() => setMobileMenuOpen(true)}
-                className="lg:hidden p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-all duration-200"
-                aria-label="Open menu"
-              >
-                <Menu className="w-6 h-6 text-gray-600" />
-              </button>
-              <h2 className="text-lg lg:text-xl font-bold text-gray-900 tracking-tight">
-                {getPageTitle()}
-              </h2>
-              <div className="w-10 lg:w-0" /> {/* Spacer for mobile menu button */}
-            </div>
+        {/* Mobile Menu Button - Sticky Header */}
+        <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-30 lg:hidden">
+          <div className="px-4 py-4">
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-all duration-200"
+              aria-label="Open menu"
+            >
+              <Menu className="w-6 h-6 text-gray-600" />
+            </button>
           </div>
         </header>
 
