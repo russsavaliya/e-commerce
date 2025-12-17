@@ -6,7 +6,8 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IndianRupee, Package, Heart } from 'lucide-react';
+import { IndianRupee, Package } from 'lucide-react';
+// import { Heart } from 'lucide-react'; // TODO: Uncomment when wishlist/save functionality is implemented
 
 // Font is now applied globally via CSS
 
@@ -84,12 +85,13 @@ const ProductCard = ({ product }) => {
           </div>
         )}
 
-        {/* Wishlist Icon */}
-        <div className="absolute bottom-3 right-3 z-10">
+        {/* Wishlist Icon - Commented out for future implementation */}
+        {/* TODO: Uncomment when wishlist/save functionality is implemented */}
+        {/* <div className="absolute bottom-3 right-3 z-10">
           <button className="p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:bg-white transition-colors">
             <Heart className="w-4 h-4 text-gray-700" />
           </button>
-        </div>
+        </div> */}
 
         {/* Hover Overlay */}
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />

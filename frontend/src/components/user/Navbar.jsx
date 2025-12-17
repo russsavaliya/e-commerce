@@ -145,12 +145,12 @@ const Navbar = () => {
             >
               <Search className="w-5 h-5" />
             </button>
-            <button
+            {/* <button
               className={`p-2 ${textClasses} ${hoverClasses} transition-colors relative`}
               aria-label="Wishlist"
             >
               <Heart className="w-5 h-5" />
-            </button>
+            </button> */}
             <button
               onClick={() => navigate('/cart')}
               className={`p-2 ${textClasses} ${hoverClasses} transition-colors relative`}

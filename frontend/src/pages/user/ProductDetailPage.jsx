@@ -5,7 +5,7 @@ import Footer from '../../components/user/Footer';
 import { getProductDetail } from '../../services/user/productService';
 import { addToCart } from '../../services/user/cartService';
 import { getReviews, addReview } from '../../services/user/reviewService';
-import { Loader2, ChevronLeft, IndianRupee, Package, X, ShoppingBag } from 'lucide-react';
+import { Loader2, ChevronLeft, IndianRupee, Package, X, ShoppingBag, Star } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const ProductDetailPage = () => {
@@ -738,22 +738,40 @@ const ProductDetailPage = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Rating <span className="text-red-500">*</span>
                 </label>
-                <select
-                  name="rating"
-                  value={reviewForm.rating}
-                  onChange={handleReviewInputChange}
-                  className="px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
-                  required
-                >
-                  {[5, 4, 3, 2, 1].map((val) => (
-                    <option key={val} value={val}>
-                      {val} / 5
-                    </option>
-                  ))}
-                </select>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setReviewForm(prev => ({ ...prev, rating: star }))}
+                        className="transition-transform duration-150 hover:scale-110 active:scale-95"
+                        aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
+                      >
+                        <Star
+                          className={`w-5 h-5 ${
+                            star <= reviewForm.rating
+                              ? 'fill-rose-400 text-rose-400'
+                              : 'text-gray-300'
+                          } transition-colors duration-150`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                  <span className="text-sm font-medium text-gray-600 ml-2">
+                    {reviewForm.rating} / 5
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 mt-1.5">
+                  {reviewForm.rating === 5 && 'Excellent'}
+                  {reviewForm.rating === 4 && 'Very Good'}
+                  {reviewForm.rating === 3 && 'Good'}
+                  {reviewForm.rating === 2 && 'Fair'}
+                  {reviewForm.rating === 1 && 'Poor'}
+                </p>
               </div>
               
               <div>

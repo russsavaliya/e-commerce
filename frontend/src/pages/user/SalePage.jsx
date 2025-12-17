@@ -817,26 +817,26 @@ const SalePage = () => {
       )}
 
       <main className="max-w-[1600px] mx-auto px-4 md:px-6 lg:px-8 py-10">
-        {/* Header */}
-        <div className="mb-10">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3 tracking-tight">
-            Sale
-          </h1>
-          <p className="text-base text-gray-600 font-medium">
-            {totalCount > 0 ? `${totalCount} products found` : 'No products found'}
-          </p>
-        </div>
-
         <div className="flex gap-6 lg:gap-8">
           {/* Desktop Sidebar */}
           <aside className="hidden lg:block w-72 flex-shrink-0">
             <div className="sticky top-24">
+              <div className="mb-4">
+                <p className="text-base text-gray-600 font-medium">
+                  {totalCount > 0 ? `${totalCount} products found` : 'No products found'}
+                </p>
+              </div>
               <FilterSidebar />
             </div>
           </aside>
 
           {/* Products Grid */}
           <div className="flex-1 min-w-0">
+            <div className="mb-10 text-center">
+              <h1 className="text-sm tracking-[0.35em] text-gray-800 uppercase mb-3">
+                Sale
+              </h1>
+            </div>
             {loading ? (
               <div className="flex items-center justify-center py-16">
                 <Loader2 className="w-8 h-8 animate-spin text-rose-600" />
