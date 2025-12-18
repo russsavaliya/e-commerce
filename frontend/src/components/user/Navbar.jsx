@@ -66,25 +66,19 @@ const Navbar = () => {
     { name: 'Contact', path: '/contact' },
   ];
 
-  // Determine navbar styling based on route and scroll
-  // On homepage: black semi-transparent overlay when at top, solid white when scrolled
-  // On other pages: always solid white
-  const navClasses = isHomePage && !isScrolled
-    ? 'bg-black/60 backdrop-blur-xl sticky top-0 z-50 shadow-2xl'
-    : 'bg-white shadow-md sticky top-0 z-50 border-b border-gray-100';
+  // Navbar styling - always light theme matching logo background
+  const navClasses = 'bg-[#faf9f5] shadow-md sticky top-0 z-50 border-b border-gray-100';
 
-  const textClasses = isHomePage && !isScrolled
-    ? 'text-white'
-    : 'text-gray-700';
+  // Base text color inspired by logo purple
+  const textClasses = 'text-[rgb(72,29,111)]';
 
-  const hoverClasses = isHomePage && !isScrolled
-    ? 'hover:text-white hover:opacity-80'
-    : 'hover:text-rose-600';
+  // Hover color exactly rgb(72 29 111) with slight opacity change
+  const hoverClasses = 'hover:text-[rgb(72,29,111)] hover:opacity-80';
 
   return (
     <nav className={navClasses}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-24">
           {/* Logo */}
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-3 group">
@@ -92,7 +86,7 @@ const Navbar = () => {
                 <img 
                   src={logoImage} 
                   alt="Logo" 
-                  className="h-12 w-auto object-contain"
+                  className="h-24 w-auto object-contain"
                   onError={(e) => {
                     // Fallback if logo image doesn't load
                     e.target.style.display = 'none';
@@ -101,25 +95,13 @@ const Navbar = () => {
                   }}
                 />
                 <div 
-                  className="w-12 h-12 bg-gradient-to-br from-rose-500 to-pink-600 rounded-full hidden items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow absolute"
+                  className="w-16 h-16 bg-gradient-to-br from-rose-500 to-pink-600 rounded-full hidden items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow absolute"
                   style={{ display: 'none' }}
                 >
                   <span className="text-white text-xl font-bold">
                     S
                   </span>
                 </div>
-              </div>
-              <div className="flex flex-col">
-                <span 
-                  className={`text-3xl font-bold leading-tight ${isHomePage && !isScrolled ? 'text-white' : 'text-gray-900'}`}
-                >
-                  Saree
-                </span>
-                <span 
-                  className={`text-sm -mt-1 tracking-wider ${isHomePage && !isScrolled ? 'text-white/80' : 'text-gray-600'}`}
-                >
-                  LUXURY
-                </span>
               </div>
             </Link>
           </div>

@@ -10,10 +10,10 @@ const Footer = () => {
           {/* Brand */}
           <div className="text-center md:text-left space-y-2">
             <h3 className="text-lg tracking-[0.25em] uppercase text-gray-800">
-              Shaadi Couture
+              SIYARA
             </h3>
             <p className="text-xs text-gray-500 max-w-xs">
-              Curated sarees and occasionwear for every shaadi moment – from Haldi to Reception.
+              SIYARA is a premium saree store that offers a wide range of sarees for every occasion.
             </p>
           </div>
 

@@ -8,17 +8,17 @@ const highlights = [
   {
     icon: Sparkles,
     title: 'Crafted Elegance',
-    text: 'Curated sarees with premium fabrics, artisanal weaves, and timeless palettes.',
+    text: 'SIYARA is a premium saree store that offers a wide range of sarees for every occasion. We are committed to providing the best quality sarees to our customers.',
   },
   {
     icon: ShieldCheck,
     title: 'Quality First',
-    text: 'Each piece is inspected for weave integrity, finish, and comfort before listing.',
+    text: 'We are committed to providing the best quality sarees to our customers. We are committed to providing the best quality sarees to our customers.',
   },
   {
     icon: Truck,
     title: 'Pan-India Delivery',
-    text: 'Carefully packed with crease-safe folds, shipped securely across India.',
+    text: 'We offer pan-India delivery to our customers. We are committed to providing the best quality sarees to our customers.',
   },
   {
     icon: Award,
@@ -44,16 +44,16 @@ const story = [
 
 const AboutPage = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <Navbar />
 
       <main className="max-w-6xl mx-auto px-4 lg:px-6 py-12 space-y-12">
         {/* Hero */}
         <section className="text-center space-y-3">
           <p className="text-rose-500 font-semibold tracking-wide uppercase">About Us</p>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Luxury Sarees, Curated with Care</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900">SIYARA, Curated with Care</h1>
           <p className="text-gray-600 max-w-3xl mx-auto">
-            We celebrate Indian craftsmanship through sarees that balance heritage weaves with modern aesthetics.
+            SIYARA is a premium saree store that offers a wide range of sarees for every occasion. We are committed to providing the best quality sarees to our customers.
           </p>
         </section>
 

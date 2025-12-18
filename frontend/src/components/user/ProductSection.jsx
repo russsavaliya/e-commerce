@@ -6,14 +6,15 @@
 import React from 'react';
 import ProductCard from './ProductCard';
 
-const ProductSection = ({ 
-  title, 
-  icon: Icon, 
+const ProductSection = ({
+  title,
+  icon: Icon,
   iconColor = 'text-gray-500',
   iconFill = false,
-  products = [], 
+  products = [],
   backgroundClass = 'bg-white',
-  showIfEmpty = false
+  showIfEmpty = false,
+  textColor = 'text-gray-500'
 }) => {
   // Don't render if no products and showIfEmpty is false
   if (products.length === 0 && !showIfEmpty) {
@@ -27,12 +28,12 @@ const ProductSection = ({
         <div className="mb-8 text-center">
           <div className="flex items-center justify-center gap-2 mb-3">
             {Icon && (
-              <Icon 
-                className={`w-5 h-5 ${iconColor} ${iconFill ? 'fill-current' : ''}`} 
+              <Icon
+                className={`w-5 h-5 ${iconColor} ${iconFill ? 'fill-current' : ''}`}
               />
             )}
-            <h2 
-              className="text-xs tracking-[0.35em] text-gray-500 uppercase"
+            <h2
+              className={`text-base tracking-wide font-medium ${textColor} uppercase`}
             >
               {title}
             </h2>

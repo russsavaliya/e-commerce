@@ -50,7 +50,7 @@ const ContactPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <Navbar />
 
       <main className="max-w-4xl mx-auto px-4 lg:px-6 py-12">
@@ -58,12 +58,12 @@ const ContactPage = () => {
         <section className="flex flex-col lg:flex-row gap-10 lg:gap-16 items-stretch">
           {/* Left text */}
           <div className="flex-1 space-y-4">
-            <p className="inline-flex items-center gap-2 text-rose-500 font-semibold tracking-wide uppercase">
+            <p className="inline-flex items-center gap-2 text-[#481d6f] font-semibold tracking-wide uppercase">
               <Mail className="w-4 h-4" />
               Support & Queries
             </p>
             <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
-              Email us your <span className="text-rose-500">questions</span> or support request
+              Email us your <span className="text-[#481d6f]">questions</span> or support request
             </h1>
             <p className="text-gray-600 text-sm md:text-base">
               Facing an issue with your order, sizing, or styling? Drop us a message and our support team

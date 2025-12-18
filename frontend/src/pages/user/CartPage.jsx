@@ -96,7 +96,7 @@ const CartPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-white">
+      <div className="min-h-screen flex flex-col">
         <Navbar />
         <main className="flex-1 flex items-center justify-center py-20">
           <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
@@ -109,20 +109,20 @@ const CartPage = () => {
   const isEmpty = !cart || !cart.items || cart.items.length === 0;
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       <Navbar />
       <main className="max-w-7xl mx-auto px-4 lg:px-6 py-10">
         <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Shopping Cart</h1>
-            <p className="text-sm text-gray-500 mt-2">
+            <h1 className="text-3xl font-bold text-[#481d6f]">Shopping Cart</h1>
+            <p className="text-sm text-[#481d6f] mt-2">
               {isEmpty ? 'Your cart is empty' : `${cart.totalItems} ${cart.totalItems === 1 ? 'item' : 'items'} in your cart`}
             </p>
           </div>
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate('/order/track')}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-white border-2 border-gray-300 text-gray-900 rounded-full font-semibold hover:border-gray-400 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[#faf9f5] border-2 border-[#481d6f] text-[#481d6f] rounded-full font-semibold hover:border-[#481d6f] transition-colors"
             >
               <PackageSearch className="w-4 h-4" />
               Track Order

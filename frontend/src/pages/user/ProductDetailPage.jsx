@@ -280,7 +280,7 @@ const ProductDetailPage = () => {
   const images = product.images || [];
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       <Navbar />
       <main className="max-w-6xl mx-auto px-4 lg:px-6 py-10">
         <button

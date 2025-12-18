@@ -103,7 +103,7 @@ const HomePage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-12 h-12 animate-spin text-green-600 mx-auto mb-4" />
           <p className="text-gray-600">Loading...</p>
@@ -113,15 +113,15 @@ const HomePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       {/* Navbar */}
       <Navbar />
 
       {/* Hero Banner Section - Responsive height maintaining 16:9 aspect ratio */}
       {banners.length > 0 && (
-        <section 
-          className="relative w-full overflow-hidden bg-gray-900 -mt-20" 
-          style={{ 
+        <section
+          className="relative w-full overflow-hidden bg-gray-900 -mt-20"
+          style={{
             height: 'calc((100vw - 0px) * 9 / 16 + 20px)',
             minHeight: '420px',
             maxHeight: '920px'
@@ -132,16 +132,15 @@ const HomePage = () => {
             {banners.map((banner, index) => (
               <div
                 key={banner._id}
-                className={`absolute inset-0 transition-opacity duration-1000 ${
-                  index === currentBannerIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
-                }`}
+                className={`absolute inset-0 transition-opacity duration-1000 ${index === currentBannerIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
+                  }`}
               >
                 {!bannerImageErrors.has(banner._id) ? (
                   <img
                     src={banner.image_url}
                     alt={banner.title || 'Banner'}
                     className="w-full h-full"
-                    style={{ 
+                    style={{
                       objectFit: 'cover',
                       objectPosition: 'center 45%',
                       width: '100%',
@@ -191,11 +190,10 @@ const HomePage = () => {
                 <button
                   key={index}
                   onClick={() => goToBanner(index)}
-                  className={`h-1.5 sm:h-2 rounded-full transition-all duration-300 ${
-                    index === currentBannerIndex
-                      ? 'w-6 sm:w-8 bg-white'
-                      : 'w-1.5 sm:w-2 bg-white/50 hover:bg-white/75'
-                  }`}
+                  className={`h-1.5 sm:h-2 rounded-full transition-all duration-300 ${index === currentBannerIndex
+                    ? 'w-6 sm:w-8 bg-white'
+                    : 'w-1.5 sm:w-2 bg-white/50 hover:bg-white/75'
+                    }`}
                   aria-label={`Go to banner ${index + 1}`}
                 />
               ))}
@@ -205,7 +203,7 @@ const HomePage = () => {
           {/* Banner Title (if available) */}
           {banners[currentBannerIndex]?.title && (
             <div className="absolute bottom-12 sm:bottom-16 md:bottom-20 left-1/2 -translate-x-1/2 z-20 text-center px-4">
-              <h2 
+              <h2
                 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-2 drop-shadow-lg"
               >
                 {banners[currentBannerIndex].title}
@@ -217,12 +215,12 @@ const HomePage = () => {
 
       {/* Homepage Category Strip - Simple Cards like reference design */}
       {categoryStripBanners.length > 0 && (
-        <section className="px-4 md:px-8 py-12 bg-white">
+        <section className="px-4 md:px-8 py-12">
           <div className="max-w-7xl mx-auto">
             {/* Section heading (small, elegant) */}
             <div className="mb-8 text-center">
-              <h2 className="text-xs tracking-[0.35em] text-gray-500 uppercase">
-                Your Shaadi Wardrobe
+              <h2 className="text-xs tracking-[0.35em] text-[rgb(72,29,111)] uppercase">
+                Where Tradition Meets Elegance
               </h2>
             </div>
 
@@ -259,16 +257,17 @@ const HomePage = () => {
       <ProductSection
         title="Bestsellers"
         icon={Star}
-        iconColor="text-yellow-500"
-        iconFill={true}
+        iconColor="text-[rgb(72,29,111)]"
+        iconFill={false}
         products={bestsellerProducts}
-        backgroundClass="bg-gradient-to-b from-white to-gray-50"
+        backgroundClass=""
+        textColor="text-[rgb(72,29,111)]"
       />
 
       {/* Middle Banner Section */}
       {middleBanners.length > 0 && (
         // Slightly smaller vertical padding so gap with Trending section is tighter
-        <section className="w-full pt-10 pb-8 px-4 md:px-8 bg-white">
+        <section className="w-full pt-10 pb-8 px-4 md:px-8">
           <div className="max-w-7xl mx-auto">
             {middleBanners.map((banner, index) => (
               <div
@@ -279,7 +278,7 @@ const HomePage = () => {
                   src={banner.image_url}
                   alt={banner.title || 'Banner'}
                   className="w-full h-auto object-contain"
-                  style={{ 
+                  style={{
                     display: 'block',
                     maxHeight: '600px'
                   }}
@@ -304,15 +303,16 @@ const HomePage = () => {
       <ProductSection
         title="Trending Now"
         icon={Sparkles}
-        iconColor="text-purple-500"
+        iconColor="text-[rgb(72,29,111)]"
         iconFill={false}
         products={trendingProducts}
-        backgroundClass="bg-white"
+        backgroundClass=""
+        textColor="text-[rgb(72,29,111)]"
       />
 
       {/* Bottom Banner Section (homepage_bottom) - full width, large banner */}
       {bottomBanners.length > 0 && (
-        <section className="w-full pt-10 pb-6 px-0 bg-white">
+        <section className="w-full pt-10 pb-6 px-0">
           <div className="w-full">
             {bottomBanners.map((banner, index) => (
               <div

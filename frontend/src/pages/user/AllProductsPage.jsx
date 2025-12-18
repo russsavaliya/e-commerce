@@ -261,8 +261,8 @@ const SalePage = () => {
 
     return (
       <div className="mb-6 relative category-dropdown-container">
-        <label className="flex items-center gap-2 text-xs font-semibold text-gray-800 mb-2.5 uppercase tracking-wide">
-          <Tag className="w-4 h-4 text-rose-600" />
+        <label className="flex items-center gap-2 text-xs font-semibold text-[rgb(72,29,111)] mb-2.5 uppercase tracking-wide">
+          <Tag className="w-4 h-4 text-[rgb(72,29,111)]" />
           Category
         </label>
         <div className="relative">
@@ -378,8 +378,8 @@ const SalePage = () => {
     return (
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2.5">
-          <label className="flex items-center gap-2 text-xs font-semibold text-gray-800 uppercase tracking-wide">
-            <IndianRupee className="w-4 h-4 text-rose-600" />
+          <label className="flex items-center gap-2 text-xs font-semibold text-[rgb(72,29,111)] uppercase tracking-wide">
+            <IndianRupee className="w-4 h-4 text-[rgb(72,29,111)]" />
             Price
           </label>
           <button
@@ -495,8 +495,8 @@ const SalePage = () => {
 
     return (
       <div className="mb-6">
-        <label className="flex items-center gap-2 text-xs font-semibold text-gray-800 mb-2.5 uppercase tracking-wide">
-          <Tag className="w-4 h-4 text-rose-600" />
+        <label className="flex items-center gap-2 text-xs font-semibold text-[rgb(72,29,111)] mb-2.5 uppercase tracking-wide">
+          <Tag className="w-4 h-4 text-[rgb(72,29,111)]" />
           Options
         </label>
         
@@ -664,18 +664,18 @@ const SalePage = () => {
   // Filter Sidebar Component
   const FilterSidebar = ({ isMobile = false }) => {
     return (
-      <div className={`bg-white ${isMobile ? 'p-6' : 'p-5'} rounded-lg border border-gray-200 shadow-md`}>
+      <div className={`bg-[#faf9f5] ${isMobile ? 'p-6' : 'p-5'} rounded-lg border border-gray-200 shadow-md`}>
         {/* Header */}
         <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
           <div className="flex items-center gap-2">
-            <Filter className="w-5 h-5 text-rose-600" />
-            <h3 className="text-lg font-bold text-gray-900 uppercase tracking-wide">
+            <Filter className="w-5 h-5 text-[rgb(72,29,111)]" />
+            <h3 className="text-lg font-bold text-[rgb(72,29,111)] uppercase tracking-wide">
               Filters
             </h3>
           </div>
           <button
             onClick={clearFilters}
-            className="text-xs text-rose-600 hover:text-rose-700 uppercase tracking-wide font-medium hover:underline transition-all"
+            className="text-xs text-[rgb(72,29,111)] hover:underline uppercase tracking-wide font-medium transition-all"
           >
             Clear All
           </button>
@@ -683,8 +683,8 @@ const SalePage = () => {
 
         {/* Sort By */}
         <div className="mb-6">
-          <label className="flex items-center gap-2 text-xs font-semibold text-gray-800 mb-2.5 uppercase tracking-wide">
-            <ArrowUpDown className="w-4 h-4 text-rose-600" />
+          <label className="flex items-center gap-2 text-xs font-semibold text-[rgb(72,29,111)] mb-2.5 uppercase tracking-wide">
+            <ArrowUpDown className="w-4 h-4 text-[rgb(72,29,111)]" />
             Sort By
           </label>
           <div className="relative">
@@ -722,9 +722,9 @@ const SalePage = () => {
         <button
           onClick={() => handlePageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="p-2 border border-gray-300 rounded-lg hover:bg-[#faf9f5] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          <ChevronLeft className="w-5 h-5" />
+          <ChevronLeft className="w-5 h-5 text-[rgb(72,29,111)]" />
         </button>
 
         {[...Array(totalPages)].map((_, index) => {
@@ -740,15 +740,15 @@ const SalePage = () => {
                 onClick={() => handlePageChange(page)}
                 className={`px-4 py-2 border rounded-lg font-medium transition-colors ${
                   currentPage === page
-                    ? 'bg-rose-600 text-white border-rose-600'
-                    : 'border-gray-300 hover:bg-gray-50'
+                    ? 'bg-[rgb(72,29,111)] text-white border-[rgb(72,29,111)]'
+                    : 'border-gray-300 hover:bg-[#faf9f5] text-[rgb(72,29,111)]'
                 }`}
               >
                 {page}
               </button>
             );
           } else if (page === currentPage - 2 || page === currentPage + 2) {
-            return <span key={page} className="px-2">...</span>;
+            return <span key={page} className="px-2 text-[rgb(72,29,111)]">...</span>;
           }
           return null;
         })}
@@ -756,9 +756,9 @@ const SalePage = () => {
         <button
           onClick={() => handlePageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="p-2 border border-gray-300 rounded-lg hover:bg-[#faf9f5] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          <ChevronRight className="w-5 h-5" />
+          <ChevronRight className="w-5 h-5 text-[rgb(72,29,111)]" />
         </button>
       </div>
     );
@@ -769,16 +769,16 @@ const SalePage = () => {
   // ============================================================================
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#faf9f5]">
       <Navbar />
 
       {/* Mobile Filter Button */}
-      <div className="lg:hidden sticky top-20 z-40 bg-white border-b border-gray-200 shadow-sm px-4 py-3">
+      <div className="lg:hidden sticky top-20 z-40 bg-[#faf9f5] border-b border-gray-200 shadow-sm px-4 py-3">
         <button
           onClick={() => setMobileFiltersOpen(true)}
-          className="flex items-center gap-2 text-sm font-semibold text-gray-800 uppercase tracking-wide hover:text-rose-600 transition-colors"
+          className="flex items-center gap-2 text-sm font-semibold text-[rgb(72,29,111)] uppercase tracking-wide hover:opacity-80 transition-colors"
         >
-          <SlidersHorizontal className="w-5 h-5 text-rose-600" />
+          <SlidersHorizontal className="w-5 h-5 text-[rgb(72,29,111)]" />
           Filters
         </button>
       </div>
@@ -790,9 +790,9 @@ const SalePage = () => {
             className="absolute inset-0 bg-black/50" 
             onClick={() => setMobileFiltersOpen(false)} 
           />
-          <div className="absolute right-0 top-0 h-full w-80 bg-white shadow-xl overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between z-10">
-              <h3 className="text-lg font-semibold text-gray-900 uppercase">Filters</h3>
+          <div className="absolute right-0 top-0 h-full w-80 bg-[#faf9f5] shadow-xl overflow-y-auto">
+            <div className="sticky top-0 bg-[#faf9f5] border-b border-gray-200 p-4 flex items-center justify-between z-10">
+              <h3 className="text-lg font-semibold text-[rgb(72,29,111)] uppercase">Filters</h3>
               <button
                 onClick={() => setMobileFiltersOpen(false)}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -805,13 +805,13 @@ const SalePage = () => {
         </div>
       )}
 
-      <main className="max-w-[1600px] mx-auto px-4 md:px-6 lg:px-8 py-10">
+      <main className="max-w-[1600px] mx-auto px-4 md:px-6 lg:px-8 py-10 bg-[#faf9f5]">
         {/* Header */}
         <div className="mb-10">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3 tracking-tight">
+          <h1 className="text-4xl md:text-5xl font-bold text-[#481d6f] mb-3 tracking-tight">
             Sale
           </h1>
-          <p className="text-base text-gray-600 font-medium">
+          <p className="text-base text-[#481d6f] font-medium">
             {totalCount > 0 ? `${totalCount} products found` : 'No products found'}
           </p>
         </div>
@@ -827,15 +827,15 @@ const SalePage = () => {
           {/* Products Grid */}
           <div className="flex-1 min-w-0">
             {loading ? (
-              <div className="flex items-center justify-center py-16">
-                <Loader2 className="w-8 h-8 animate-spin text-rose-600" />
+              <div className="flex items-center justify-center py-16 bg-[#faf9f5]">
+                <Loader2 className="w-8 h-8 animate-spin text-[rgb(72,29,111)]" />
               </div>
             ) : products.length === 0 ? (
-              <div className="py-16 text-center">
-                <p className="text-gray-600 mb-4">No products found matching your filters.</p>
+              <div className="py-16 text-center bg-[#faf9f5]">
+                <p className="text-[rgb(72,29,111)] mb-4">No products found matching your filters.</p>
                 <button
                   onClick={clearFilters}
-                  className="text-rose-600 hover:text-rose-700 font-medium uppercase tracking-wide transition-colors"
+                  className="text-[rgb(72,29,111)] hover:opacity-80 font-medium uppercase tracking-wide transition-colors"
                 >
                   Clear Filters
                 </button>
