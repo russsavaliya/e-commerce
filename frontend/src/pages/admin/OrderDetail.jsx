@@ -344,7 +344,7 @@ const OrderDetail = () => {
                           <h3 className="font-bold text-gray-900 text-base leading-snug mb-1">
                             {product.product_name}
                             {product.variant_name && (
-                              <span className="text-rose-600 font-semibold ml-2 text-sm">({product.variant_name})</span>
+                              <span className="text-[#481d6f]-600 font-semibold ml-2 text-sm">({product.variant_name})</span>
                             )}
                           </h3>
                           {product.category_details?.name && (

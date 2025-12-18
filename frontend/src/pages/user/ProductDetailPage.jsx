@@ -49,7 +49,7 @@ const ProductDetailPage = () => {
           <span
             key={idx}
             className={
-              idx < filled ? 'text-rose-500' : 'text-gray-300'
+              idx < filled ? 'text-[#481d6f]-500' : 'text-gray-300'
             }
           >
             ★
@@ -359,7 +359,7 @@ const ProductDetailPage = () => {
               {activeVariant && activeVariant.variant_name && (
                 <div className="mt-3 flex items-center gap-2">
                   <span className="text-sm font-medium text-gray-600">Selected Option:</span>
-                  <span className="text-base font-semibold text-rose-600 bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-200">
+                  <span className="text-base font-semibold text-[#481d6f]-600 bg-rose-50 px-3 py-1.5 rounded-lg border border-[#481d6f]-200">
                     {activeVariant.variant_name}
                   </span>
                 </div>
@@ -379,7 +379,7 @@ const ProductDetailPage = () => {
                 </span>
               )}
               {discountPercent > 0 && (
-                <span className="text-sm font-semibold text-rose-600 whitespace-nowrap leading-none">
+                <span className="text-sm font-semibold text-[#481d6f]-600 whitespace-nowrap leading-none">
                   {discountPercent}% off
                 </span>
               )}
@@ -526,7 +526,7 @@ const ProductDetailPage = () => {
                         >
                           <span className="w-10 flex items-center justify-end gap-0.5">
                             <span>{star}</span>
-                            <span className="text-rose-400 text-[11px]">★</span>
+                            <span className="text-[#481d6f]-400 text-[11px]">★</span>
                           </span>
                           <div className="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden">
                             <div
@@ -754,7 +754,7 @@ const ProductDetailPage = () => {
                         <Star
                           className={`w-5 h-5 ${
                             star <= reviewForm.rating
-                              ? 'fill-rose-400 text-rose-400'
+                              ? 'fill-rose-400 text-[#481d6f]-400'
                               : 'text-gray-300'
                           } transition-colors duration-150`}
                         />

@@ -42,7 +42,7 @@ const ProductCard = ({ product }) => {
     <div 
       role="button"
       tabIndex={0}
-      className="group relative bg-white overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 border-2 border-gray-100 hover:border-rose-200"
+      className="group relative bg-white overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 border-2 border-gray-100 hover:border-[#481d6f] hover:border-opacity-40"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={() => navigate(`/product/${product._id}`)}
@@ -105,8 +105,8 @@ const ProductCard = ({ product }) => {
         >
           <span>{product.name || 'Product Name'}</span>
           {discountPercentage > 0 && (
-            <span className="ml-2 text-rose-600 font-medium text-xs sm:text-sm md:text-base">
-              ({discountPercentage}% off)
+            <span className="ml-2 text-[#481d6f] font-medium text-xs sm:text-sm md:text-base">
+              (<span className="text-[10px] sm:text-xs md:text-sm font-bold">{discountPercentage}% off</span>)
             </span>
           )}
         </h3>

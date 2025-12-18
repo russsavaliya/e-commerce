@@ -182,7 +182,7 @@ const CartPage = () => {
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 min-w-0">
                           <h3
-                            className="font-semibold text-gray-900 text-lg mb-1 cursor-pointer hover:text-rose-600 transition-colors"
+                            className="font-semibold text-gray-900 text-lg mb-1 cursor-pointer hover:text-[#481d6f]-600 transition-colors"
                             onClick={() => navigate(`/product/${item.productId}`)}
                           >
                             {item.product.name}

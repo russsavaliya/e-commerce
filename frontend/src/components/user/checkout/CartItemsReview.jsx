@@ -46,7 +46,7 @@ const CartItemsReview = ({ cart }) => {
             {/* Product Details */}
             <div className="flex-1 min-w-0">
               <h3
-                className="font-semibold text-gray-900 mb-1 cursor-pointer hover:text-rose-600 transition-colors line-clamp-2"
+                className="font-semibold text-gray-900 mb-1 cursor-pointer hover:text-[#481d6f] transition-colors line-clamp-2"
                 onClick={() => navigate(`/product/${item.productId}`)}
               >
                 {item.product.name}

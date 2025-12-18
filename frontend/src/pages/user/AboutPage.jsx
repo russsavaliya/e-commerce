@@ -50,7 +50,7 @@ const AboutPage = () => {
       <main className="max-w-6xl mx-auto px-4 lg:px-6 py-12 space-y-12">
         {/* Hero */}
         <section className="text-center space-y-3">
-          <p className="text-rose-500 font-semibold tracking-wide uppercase">About Us</p>
+          <p className="text-[#481d6f]-500 font-semibold tracking-wide uppercase">About Us</p>
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900">SIYARA, Curated with Care</h1>
           <p className="text-gray-600 max-w-3xl mx-auto">
             SIYARA is a premium saree store that offers a wide range of sarees for every occasion. We are committed to providing the best quality sarees to our customers.
@@ -61,7 +61,7 @@ const AboutPage = () => {
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {highlights.map((item) => (
             <div key={item.title} className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow">
-              <div className="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mb-3">
+              <div className="w-10 h-10 rounded-full bg-[#481d6f] text-white flex items-center justify-center mb-3">
                 <item.icon className="w-5 h-5" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">{item.title}</h3>

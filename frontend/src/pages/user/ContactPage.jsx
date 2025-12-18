@@ -69,7 +69,7 @@ const ContactPage = () => {
               Facing an issue with your order, sizing, or styling? Drop us a message and our support team
               will get back to you on email, usually within 24 hours.
             </p>
-            <div className="text-xs text-gray-500 border-l-2 border-rose-200 pl-3">
+            <div className="text-xs text-gray-500 border-l-2 border-[#481d6f] pl-3">
               Please use the same email as your order so we can identify your details faster.
             </div>
           </div>
@@ -79,7 +79,7 @@ const ContactPage = () => {
             <div className="flex items-center justify-between mb-5">
               <div>
                 <h2 className="text-lg md:text-xl font-semibold text-gray-900 flex items-center gap-2">
-                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-rose-50 text-rose-500">
+                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#481d6f] text-white">
                     <Mail className="w-4 h-4" />
                   </span>
                   Email Support
@@ -102,7 +102,7 @@ const ContactPage = () => {
                   name="name"
                   value={form.name}
                   onChange={handleChange}
-                  className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm md:text-base focus:ring-2 focus:ring-rose-200 focus:border-rose-400 shadow-sm"
+                  className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm md:text-base focus:ring-2 focus:ring-[#481d6f] focus:border-[#481d6f] shadow-sm"
                   placeholder="Enter your name"
                 />
               </div>
@@ -113,7 +113,7 @@ const ContactPage = () => {
                   name="email"
                   value={form.email}
                   onChange={handleChange}
-                  className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm md:text-base focus:ring-2 focus:ring-rose-200 focus:border-rose-400 shadow-sm"
+                  className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm md:text-base focus:ring-2 focus:ring-[#481d6f] focus:border-[#481d6f] shadow-sm"
                   placeholder="you@example.com"
                 />
               </div>
@@ -124,7 +124,7 @@ const ContactPage = () => {
                   name="message"
                   value={form.message}
                   onChange={handleChange}
-                  className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm md:text-base focus:ring-2 focus:ring-rose-200 focus:border-rose-400 shadow-sm resize-none"
+                  className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm md:text-base focus:ring-2 focus:ring-[#481d6f] focus:border-[#481d6f] shadow-sm resize-none"
                   placeholder="How can we help you?"
                 />
               </div>

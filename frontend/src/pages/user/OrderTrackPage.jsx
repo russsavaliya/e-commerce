@@ -79,7 +79,7 @@ const OrderTrackPage = () => {
       <main className="max-w-4xl mx-auto px-4 lg:px-6 py-10 space-y-8">
         {/* Header */}
         <section className="text-center space-y-2">
-          <p className="text-rose-500 font-semibold tracking-wide uppercase text-xs">
+          <p className="text-[#481d6f]-500 font-semibold tracking-wide uppercase text-xs">
             Track Order
           </p>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">

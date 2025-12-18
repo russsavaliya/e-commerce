@@ -3,7 +3,7 @@
  * Used in SalePage, BestSellerPage, NewArrivalPage
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Search, 
   ChevronDown, 
@@ -48,16 +48,37 @@ const FilterSidebar = ({
   attributeValueSearchTerm,
   setAttributeValueSearchTerm,
 }) => {
-  // Internal price range state
+  // Internal price range state - always keep as numbers
   const [testRange, setTestRange] = useState(() => {
     const [min, max] = externalPriceRange || [PRICE_BOUNDS.min, PRICE_BOUNDS.max];
-    return [min, max];
+    return [Number(min) || PRICE_BOUNDS.min, Number(max) || PRICE_BOUNDS.max];
   });
 
-  // Sync testRange when external priceRange changes
+  // Refs for search inputs
+  const categorySearchRef = useRef(null);
+  const attributeSearchRef = useRef(null);
+  const attributeValueSearchRef = useRef(null);
+  
+  // Ref to track if slider is being dragged (to prevent external sync interference)
+  const isSliderDragging = useRef(false);
+
+  // Sync testRange when external priceRange changes (but not while dragging)
   useEffect(() => {
-    const [min, max] = externalPriceRange || [PRICE_BOUNDS.min, PRICE_BOUNDS.max];
-    setTestRange([min, max]);
+    if (!isSliderDragging.current && externalPriceRange) {
+      const [min, max] = externalPriceRange;
+      const newMin = Number(min) || PRICE_BOUNDS.min;
+      const newMax = Number(max) || PRICE_BOUNDS.max;
+      // Use functional update to compare with current state
+      setTestRange(prev => {
+        const prevMin = Number(prev[0]) || PRICE_BOUNDS.min;
+        const prevMax = Number(prev[1]) || PRICE_BOUNDS.max;
+        // Only update if values actually changed
+        if (prevMin !== newMin || prevMax !== newMax) {
+          return [newMin, newMax];
+        }
+        return prev;
+      });
+    }
   }, [externalPriceRange]);
 
   // Category Dropdown Component
@@ -77,7 +98,9 @@ const FilterSidebar = ({
             type="button"
             onClick={() => {
               setCategoryDropdownOpen(!categoryDropdownOpen);
-              setCategorySearchTerm('');
+              if (!categoryDropdownOpen) {
+                setCategorySearchTerm('');
+              }
             }}
             className="w-full px-3 py-2.5 border border-[rgb(72,29,111)] rounded-lg focus:outline-none text-sm text-left flex items-center justify-between bg-[#faf9f5] shadow-sm hover:border-[rgb(72,29,111)] transition-colors"
           >
@@ -93,14 +116,21 @@ const FilterSidebar = ({
             <div className="absolute z-50 w-full mt-2 bg-[#faf9f5] border border-[rgb(72,29,111)] rounded-lg shadow-xl overflow-hidden">
               <div className="p-3 border-b border-gray-200 bg-gray-50">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                   <input
+                    ref={categorySearchRef}
                     type="text"
                     placeholder="Search categories..."
                     value={categorySearchTerm}
-                    onChange={(e) => setCategorySearchTerm(e.target.value)}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      setCategorySearchTerm(e.target.value);
+                    }}
+                    onKeyDown={(e) => e.stopPropagation()}
                     className="w-full pl-10 pr-3 py-2.5 text-sm border border-[rgb(72,29,111)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(72,29,111)] focus:border-[rgb(72,29,111)] bg-[#faf9f5]"
                     onClick={(e) => e.stopPropagation()}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    autoFocus
                   />
                 </div>
               </div>
@@ -112,10 +142,10 @@ const FilterSidebar = ({
                     setCategoryDropdownOpen(false);
                     setCategorySearchTerm('');
                   }}
-                  className={`w-full px-4 py-2.5 text-left text-sm hover:bg-[rgb(72,29,111)] transition-colors ${
+                  className={`w-full px-4 py-2.5 text-left text-sm hover:bg-[rgb(72,29,111)] hover:text-[#faf9f5] transition-colors ${
                     !filters.category_id 
                       ? 'bg-[rgb(72,29,111)] text-[#faf9f5] font-semibold' 
-                      : 'text-[rgb(72,29,111)] hover:text-[rgb(72,29,111)]'
+                      : 'text-[rgb(72,29,111)]'
                   }`}
                 >
                   All Categories
@@ -129,10 +159,10 @@ const FilterSidebar = ({
                       setCategoryDropdownOpen(false);
                       setCategorySearchTerm('');
                     }}
-                    className={`w-full px-4 py-2.5 text-left text-sm hover:bg-[rgb(72,29,111)] transition-colors ${
+                    className={`w-full px-4 py-2.5 text-left text-sm hover:bg-[rgb(72,29,111)] hover:text-[#faf9f5] transition-colors ${
                       filters.category_id === cat._id
                         ? 'bg-[rgb(72,29,111)] text-[#faf9f5] font-semibold'
-                        : 'text-[rgb(72,29,111)] hover:text-[rgb(72,29,111)]'
+                        : 'text-[rgb(72,29,111)]'
                     }`}
                   >
                     {cat.name}
@@ -164,11 +194,81 @@ const FilterSidebar = ({
       }
     };
 
+    // Local state for input values (to allow empty while typing)
+    const [minInputValue, setMinInputValue] = useState(() => String(testRange[0]));
+    const [maxInputValue, setMaxInputValue] = useState(() => String(testRange[1]));
+
+    // Sync input values when testRange changes externally
+    useEffect(() => {
+      setMinInputValue(String(testRange[0]));
+      setMaxInputValue(String(testRange[1]));
+    }, [testRange]);
+
     const resetPriceFilter = () => {
       setTestRange([PRICE_BOUNDS.min, PRICE_BOUNDS.max]);
+      setMinInputValue(String(PRICE_BOUNDS.min));
+      setMaxInputValue(String(PRICE_BOUNDS.max));
       updateFilters({ min_price: '', max_price: '' });
       if (setExternalPriceRange) {
         setExternalPriceRange([PRICE_BOUNDS.min, PRICE_BOUNDS.max]);
+      }
+    };
+
+    const handleMinChange = (e) => {
+      const value = e.target.value;
+      setMinInputValue(value);
+      // Update testRange only if valid number
+      if (value !== '' && !isNaN(Number(value))) {
+        const numValue = Number(value);
+        if (numValue >= PRICE_BOUNDS.min && numValue <= PRICE_BOUNDS.max && numValue <= testRange[1]) {
+          setTestRange([numValue, testRange[1]]);
+        }
+      }
+    };
+
+    const handleMaxChange = (e) => {
+      const value = e.target.value;
+      setMaxInputValue(value);
+      // Update testRange only if valid number
+      if (value !== '' && !isNaN(Number(value))) {
+        const numValue = Number(value);
+        if (numValue >= PRICE_BOUNDS.min && numValue <= PRICE_BOUNDS.max && numValue >= testRange[0]) {
+          setTestRange([testRange[0], numValue]);
+        }
+      }
+    };
+
+    const handleMinBlur = () => {
+      const numValue = Number(minInputValue);
+      if (isNaN(numValue) || numValue < PRICE_BOUNDS.min) {
+        setMinInputValue(String(PRICE_BOUNDS.min));
+        setTestRange([PRICE_BOUNDS.min, testRange[1]]);
+      } else if (numValue > testRange[1]) {
+        setMinInputValue(String(testRange[1]));
+        setTestRange([testRange[1], testRange[1]]);
+      } else if (numValue > PRICE_BOUNDS.max) {
+        setMinInputValue(String(PRICE_BOUNDS.max));
+        setTestRange([PRICE_BOUNDS.max, testRange[1]]);
+      } else {
+        setMinInputValue(String(numValue));
+        setTestRange([numValue, testRange[1]]);
+      }
+    };
+
+    const handleMaxBlur = () => {
+      const numValue = Number(maxInputValue);
+      if (isNaN(numValue) || numValue > PRICE_BOUNDS.max) {
+        setMaxInputValue(String(PRICE_BOUNDS.max));
+        setTestRange([testRange[0], PRICE_BOUNDS.max]);
+      } else if (numValue < testRange[0]) {
+        setMaxInputValue(String(testRange[0]));
+        setTestRange([testRange[0], testRange[0]]);
+      } else if (numValue < PRICE_BOUNDS.min) {
+        setMaxInputValue(String(PRICE_BOUNDS.min));
+        setTestRange([testRange[0], PRICE_BOUNDS.min]);
+      } else {
+        setMaxInputValue(String(numValue));
+        setTestRange([testRange[0], numValue]);
       }
     };
 
@@ -186,30 +286,52 @@ const FilterSidebar = ({
             Reset
           </button>
         </div>
-        <div className="mt-4 mb-4">
+        <div className="mt-4 mb-4 px-2">
           <Slider
             range
             min={PRICE_BOUNDS.min}
             max={PRICE_BOUNDS.max}
             step={50}
-            value={testRange}
-            onChange={setTestRange}
+            value={[Number(testRange[0]), Number(testRange[1])]}
+            onChange={(value) => {
+              // Mark as dragging and update values
+              isSliderDragging.current = true;
+              const newMin = Number(value[0]);
+              const newMax = Number(value[1]);
+              setTestRange([newMin, newMax]);
+              setMinInputValue(String(newMin));
+              setMaxInputValue(String(newMax));
+            }}
+            onAfterChange={(value) => {
+              // Ensure final values are set
+              if (value && value.length === 2) {
+                const newMin = Number(value[0]);
+                const newMax = Number(value[1]);
+                setTestRange([newMin, newMax]);
+                setMinInputValue(String(newMin));
+                setMaxInputValue(String(newMax));
+              }
+              // Reset dragging flag after slider interaction completes
+              setTimeout(() => {
+                isSliderDragging.current = false;
+              }, 50);
+            }}
             tooltip={{
               formatter: (value) => `₹${value?.toLocaleString('en-IN')}`,
             }}
             styles={{
               track: {
-                background: 'linear-gradient(to right, rgb(72,29,111), rgb(72,29,111))',
+                background: 'rgb(72,29,111)',
+              },
+              tracks: {
+                background: 'rgb(72,29,111)',
               },
               handle: {
                 borderColor: 'rgb(72,29,111)',
+                backgroundColor: 'white',
               },
               rail: {
-                backgroundColor: 'rgb(72,29,111)',
-              },
-              thumb: {
-                backgroundColor: 'rgb(72,29,111)',
-                borderColor: 'rgb(72,29,111)',
+                backgroundColor: '#e5e7eb',
               },
             }}
           />
@@ -218,52 +340,22 @@ const FilterSidebar = ({
           <div className="flex-1 flex items-center gap-2">
             <span className="text-[10px] text-gray-500">Rs.</span>
             <input
-              type="number"
-              min={PRICE_BOUNDS.min}
-              max={PRICE_BOUNDS.max}
-              value={testRange[0]}
-              onChange={(e) => {
-                const value = Number(e.target.value);
-                if (value >= PRICE_BOUNDS.min && value <= PRICE_BOUNDS.max && value <= testRange[1]) {
-                  setTestRange([value, testRange[1]]);
-                }
-              }}
-              onBlur={(e) => {
-                const value = Number(e.target.value);
-                if (value < PRICE_BOUNDS.min) {
-                  setTestRange([PRICE_BOUNDS.min, testRange[1]]);
-                } else if (value > testRange[1]) {
-                  setTestRange([testRange[1], testRange[1]]);
-                } else if (value > PRICE_BOUNDS.max) {
-                  setTestRange([PRICE_BOUNDS.max, testRange[1]]);
-                }
-              }}
+              type="text"
+              inputMode="numeric"
+              value={minInputValue}
+              onChange={handleMinChange}
+              onBlur={handleMinBlur}
               className="text-sm font-semibold text-[rgb(72,29,111)] border-b border-[rgb(72,29,111)] pb-0.5 focus:outline-none focus:border-[rgb(72,29,111)] w-full bg-transparent"
             />
           </div>
           <div className="flex-1 flex items-center gap-2">
             <span className="text-[10px] text-gray-500">Rs.</span>
             <input
-              type="number"
-              min={PRICE_BOUNDS.min}
-              max={PRICE_BOUNDS.max}
-              value={testRange[1]}
-              onChange={(e) => {
-                const value = Number(e.target.value);
-                if (value >= PRICE_BOUNDS.min && value <= PRICE_BOUNDS.max && value >= testRange[0]) {
-                  setTestRange([testRange[0], value]);
-                }
-              }}
-              onBlur={(e) => {
-                const value = Number(e.target.value);
-                if (value < testRange[0]) {
-                  setTestRange([testRange[0], testRange[0]]);
-                } else if (value < PRICE_BOUNDS.min) {
-                  setTestRange([testRange[0], PRICE_BOUNDS.min]);
-                } else if (value > PRICE_BOUNDS.max) {
-                  setTestRange([testRange[0], PRICE_BOUNDS.max]);
-                }
-              }}
+              type="text"
+              inputMode="numeric"
+              value={maxInputValue}
+              onChange={handleMaxChange}
+              onBlur={handleMaxBlur}
               className="text-sm font-semibold text-[rgb(72,29,111)] border-b border-[rgb(72,29,111)] pb-0.5 focus:outline-none focus:border-[rgb(72,29,111)] w-full bg-transparent"
             />
           </div>
@@ -301,7 +393,9 @@ const FilterSidebar = ({
             type="button"
             onClick={() => {
               setAttributeDropdownOpen(!attributeDropdownOpen);
-              setAttributeSearchTerm('');
+              if (!attributeDropdownOpen) {
+                setAttributeSearchTerm('');
+              }
             }}
             className="w-full px-3 py-2.5 border border-[rgb(72,29,111)] rounded-lg focus:outline-none text-sm text-left flex items-center justify-between bg-[#faf9f5] shadow-sm hover:border-[rgb(72,29,111)] transition-colors"
           >
@@ -317,14 +411,21 @@ const FilterSidebar = ({
             <div className="absolute z-50 w-full mt-2 bg-[#faf9f5] border border-[rgb(72,29,111)] rounded-lg shadow-xl overflow-hidden">
               <div className="p-3 border-b border-gray-200 bg-gray-50">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                   <input
+                    ref={attributeSearchRef}
                     type="text"
                     placeholder="Search attributes..."
                     value={attributeSearchTerm}
-                    onChange={(e) => setAttributeSearchTerm(e.target.value)}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      setAttributeSearchTerm(e.target.value);
+                    }}
+                    onKeyDown={(e) => e.stopPropagation()}
                     className="w-full pl-10 pr-3 py-2.5 text-sm border border-[rgb(72,29,111)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(72,29,111)] focus:border-[rgb(72,29,111)] bg-[#faf9f5]"
                     onClick={(e) => e.stopPropagation()}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    autoFocus
                   />
                 </div>
               </div>
@@ -336,10 +437,10 @@ const FilterSidebar = ({
                     setAttributeDropdownOpen(false);
                     setAttributeSearchTerm('');
                   }}
-                  className={`w-full px-4 py-2.5 text-left text-sm hover:bg-[rgb(72,29,111)] transition-colors ${
+                  className={`w-full px-4 py-2.5 text-left text-sm hover:bg-[rgb(72,29,111)] hover:text-[#faf9f5] transition-colors ${
                     !filters.attribute_id 
                       ? 'bg-[rgb(72,29,111)] text-[#faf9f5] font-semibold' 
-                      : 'text-[rgb(72,29,111)] hover:text-[rgb(72,29,111)]'
+                      : 'text-[rgb(72,29,111)]'
                   }`}
                 >
                   Select Attribute
@@ -353,10 +454,10 @@ const FilterSidebar = ({
                       setAttributeDropdownOpen(false);
                       setAttributeSearchTerm('');
                     }}
-                    className={`w-full px-4 py-2.5 text-left text-sm hover:bg-[rgb(72,29,111)] transition-colors ${
+                    className={`w-full px-4 py-2.5 text-left text-sm hover:bg-[rgb(72,29,111)] hover:text-[#faf9f5] transition-colors ${
                       filters.attribute_id === attr._id
                         ? 'bg-[rgb(72,29,111)] text-[#faf9f5] font-semibold'
-                        : 'text-[rgb(72,29,111)] hover:text-[rgb(72,29,111)]'
+                        : 'text-[rgb(72,29,111)]'
                     }`}
                   >
                     {attr.name}
@@ -378,7 +479,9 @@ const FilterSidebar = ({
               type="button"
               onClick={() => {
                 setAttributeValueDropdownOpen(!attributeValueDropdownOpen);
-                setAttributeValueSearchTerm('');
+                if (!attributeValueDropdownOpen) {
+                  setAttributeValueSearchTerm('');
+                }
               }}
               className="w-full px-3 py-2.5 border border-[rgb(72,29,111)] rounded-lg focus:outline-none text-sm text-left flex items-center justify-between bg-[#faf9f5] shadow-sm hover:border-[rgb(72,29,111)] transition-colors"
             >
@@ -394,14 +497,21 @@ const FilterSidebar = ({
               <div className="absolute z-50 w-full mt-2 bg-[#faf9f5] border border-[rgb(72,29,111)] rounded-lg shadow-xl overflow-hidden">
                 <div className="p-3 border-b border-gray-200 bg-gray-50">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                     <input
+                      ref={attributeValueSearchRef}
                       type="text"
                       placeholder="Search values..."
                       value={attributeValueSearchTerm}
-                      onChange={(e) => setAttributeValueSearchTerm(e.target.value)}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        setAttributeValueSearchTerm(e.target.value);
+                      }}
+                      onKeyDown={(e) => e.stopPropagation()}
                       className="w-full pl-10 pr-3 py-2.5 text-sm border border-[rgb(72,29,111)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(72,29,111)] focus:border-[rgb(72,29,111)] bg-[#faf9f5]"
                       onClick={(e) => e.stopPropagation()}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      autoFocus
                     />
                   </div>
                 </div>
@@ -413,10 +523,10 @@ const FilterSidebar = ({
                       setAttributeValueDropdownOpen(false);
                       setAttributeValueSearchTerm('');
                     }}
-                    className={`w-full px-4 py-2.5 text-left text-sm hover:bg-[rgb(72,29,111)] transition-colors ${
+                    className={`w-full px-4 py-2.5 text-left text-sm hover:bg-[rgb(72,29,111)] hover:text-[#faf9f5] transition-colors ${
                       !filters.attribute_value_id 
                         ? 'bg-[rgb(72,29,111)] text-[#faf9f5] font-semibold' 
-                        : 'text-[rgb(72,29,111)] hover:text-[rgb(72,29,111)]'
+                        : 'text-[rgb(72,29,111)]'
                     }`}
                   >
                     All Values ({selectedAttribute.name})
@@ -430,10 +540,10 @@ const FilterSidebar = ({
                         setAttributeValueDropdownOpen(false);
                         setAttributeValueSearchTerm('');
                       }}
-                      className={`w-full px-4 py-2.5 text-left text-sm hover:bg-[rgb(72,29,111)] transition-colors ${
+                      className={`w-full px-4 py-2.5 text-left text-sm hover:bg-[rgb(72,29,111)] hover:text-[#faf9f5] transition-colors ${
                         filters.attribute_value_id === val._id
                           ? 'bg-[rgb(72,29,111)] text-[#faf9f5] font-semibold'
-                          : 'text-[rgb(72,29,111)] hover:text-[rgb(72,29,111)]'
+                          : 'text-[rgb(72,29,111)]'
                       }`}
                     >
                       {val.value}

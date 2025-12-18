@@ -8,9 +8,9 @@ import { MapPin, User, Phone, Mail, Home, Building2, CheckCircle2, XCircle, Load
 
 const ShippingForm = ({ shippingData, errors, onChange, pincodeValid, pincodeValidating }) => {
   return (
-    <div className="bg-white border-2 border-gray-200 rounded-lg p-6 shadow-sm">
+    <div className="bg-[#faf9f5] border-2 border-gray-200 rounded-lg p-6 shadow-sm">
       <div className="flex items-center gap-2 mb-6">
-        <MapPin className="w-5 h-5 text-rose-600" />
+        <MapPin className="w-5 h-5 text-[#481d6f]-600" />
         <h2 className="text-xl font-bold text-gray-900">Shipping Address</h2>
       </div>
 
@@ -18,7 +18,7 @@ const ShippingForm = ({ shippingData, errors, onChange, pincodeValid, pincodeVal
         {/* Full Name */}
         <div className="md:col-span-2">
           <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-            <User className="w-4 h-4 text-rose-600" />
+            <User className="w-4 h-4 text-[#481d6f]-600" />
             Full Name <span className="text-red-500">*</span>
           </label>
           <input
@@ -38,7 +38,7 @@ const ShippingForm = ({ shippingData, errors, onChange, pincodeValid, pincodeVal
         {/* Phone */}
         <div>
           <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-            <Phone className="w-4 h-4 text-rose-600" />
+            <Phone className="w-4 h-4 text-[#481d6f]-600" />
             Phone Number <span className="text-red-500">*</span>
           </label>
           <input
@@ -59,7 +59,7 @@ const ShippingForm = ({ shippingData, errors, onChange, pincodeValid, pincodeVal
         {/* Email */}
         <div>
           <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-            <Mail className="w-4 h-4 text-rose-600" />
+            <Mail className="w-4 h-4 text-[#481d6f]-600" />
             Email Address <span className="text-red-500">*</span>
           </label>
           <input
@@ -79,7 +79,7 @@ const ShippingForm = ({ shippingData, errors, onChange, pincodeValid, pincodeVal
         {/* Address */}
         <div className="md:col-span-2">
           <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-            <Home className="w-4 h-4 text-rose-600" />
+            <Home className="w-4 h-4 text-[#481d6f]-600" />
             Address <span className="text-red-500">*</span>
           </label>
           <textarea
@@ -99,7 +99,7 @@ const ShippingForm = ({ shippingData, errors, onChange, pincodeValid, pincodeVal
         {/* Landmark */}
         <div className="md:col-span-2">
           <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-            <Building2 className="w-4 h-4 text-rose-600" />
+            <Building2 className="w-4 h-4 text-[#481d6f]-600" />
             Landmark (Optional)
           </label>
           <input
