@@ -376,7 +376,7 @@ const NewArrivalPage = () => {
 
           <div className="flex-1 min-w-0">
             <div className="mb-10 text-center">
-              <h1 className="text-sm tracking-[0.35em] text-[#481d6f] uppercase mb-3">
+              <h1 className="text-base font-medium tracking-wide text-[#481d6f] uppercase">
                 Best Sellers
               </h1>
             </div>

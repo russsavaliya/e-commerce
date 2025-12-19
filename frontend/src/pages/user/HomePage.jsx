@@ -255,7 +255,7 @@ const HomePage = () => {
 
       {/* Featured Products Section - Bestsellers */}
       <ProductSection
-        title="Bestsellers"
+        title="Best Sellers"
         icon={Star}
         iconColor="text-[rgb(72,29,111)]"
         iconFill={false}

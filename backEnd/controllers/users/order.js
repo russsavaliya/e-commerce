@@ -113,10 +113,7 @@ exports.init_order = async (req, res) => {
 
     // Create/Update customer and attach order_id
     await customer_controller.upsert_from_shipping(order.shipping_address, order.order_id);
-
-    // Clear cart after order creation to avoid duplicate orders
-    req.session.cart = [];
-
+   
     return res.status(201).json({
       status: true,
       message: 'Order created. Proceed to payment step.',
@@ -169,6 +166,10 @@ exports.update_payment = async (req, res) => {
         message: 'Order not found.',
       });
     }
+
+    // Clear cart only after payment is confirmed/order is placed
+    // This ensures cart remains intact if user abandons checkout
+    req.session.cart = [];
 
     return res.status(200).json({
       status: true,

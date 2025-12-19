@@ -399,7 +399,7 @@ const SalePage = () => {
           {/* Products Grid */}
           <div className="flex-1 min-w-0">
             <div className="mb-10 text-center">
-              <h1 className="text-sm tracking-[0.35em] text-[rgb(72,29,111)] uppercase mb-3">
+              <h1 className="text-base font-medium tracking-wide text-[#481d6f] uppercase">
                 Sale
               </h1>
             </div>
