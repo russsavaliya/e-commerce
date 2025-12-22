@@ -113,7 +113,7 @@ const HomePage = () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen animate-fade-in">
       {/* Navbar */}
       <Navbar />
 
@@ -168,17 +168,17 @@ const HomePage = () => {
             <>
               <button
                 onClick={goToPreviousBanner}
-                className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-3 bg-white/10 backdrop-blur-sm text-white rounded-full hover:bg-white/20 transition-all duration-300 hover:scale-110"
+                className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-3 bg-white/10 backdrop-blur-sm text-white rounded-full hover:bg-white/30 transition-all duration-500 hover:scale-125 hover:shadow-lg active:scale-95"
                 aria-label="Previous banner"
               >
-                <ChevronLeft className="w-4 h-4 sm:w-6 sm:h-6" />
+                <ChevronLeft className="w-4 h-4 sm:w-6 sm:h-6 transition-transform duration-300 hover:-translate-x-1" />
               </button>
               <button
                 onClick={goToNextBanner}
-                className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-3 bg-white/10 backdrop-blur-sm text-white rounded-full hover:bg-white/20 transition-all duration-300 hover:scale-110"
+                className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-3 bg-white/10 backdrop-blur-sm text-white rounded-full hover:bg-white/30 transition-all duration-500 hover:scale-125 hover:shadow-lg active:scale-95"
                 aria-label="Next banner"
               >
-                <ChevronRight className="w-4 h-4 sm:w-6 sm:h-6" />
+                <ChevronRight className="w-4 h-4 sm:w-6 sm:h-6 transition-transform duration-300 hover:translate-x-1" />
               </button>
             </>
           )}
@@ -190,9 +190,9 @@ const HomePage = () => {
                 <button
                   key={index}
                   onClick={() => goToBanner(index)}
-                  className={`h-1.5 sm:h-2 rounded-full transition-all duration-300 ${index === currentBannerIndex
-                    ? 'w-6 sm:w-8 bg-white'
-                    : 'w-1.5 sm:w-2 bg-white/50 hover:bg-white/75'
+                  className={`h-1.5 sm:h-2 rounded-full transition-all duration-500 ${index === currentBannerIndex
+                    ? 'w-6 sm:w-8 bg-white shadow-lg scale-110'
+                    : 'w-1.5 sm:w-2 bg-white/50 hover:bg-white/75 hover:scale-125'
                     }`}
                   aria-label={`Go to banner ${index + 1}`}
                 />
@@ -204,7 +204,8 @@ const HomePage = () => {
           {banners[currentBannerIndex]?.title && (
             <div className="absolute bottom-12 sm:bottom-16 md:bottom-20 left-1/2 -translate-x-1/2 z-20 text-center px-4">
               <h2
-                className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-2 drop-shadow-lg"
+                key={currentBannerIndex}
+                className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-2 drop-shadow-lg animate-slide-up-fade"
               >
                 {banners[currentBannerIndex].title}
               </h2>
@@ -215,18 +216,18 @@ const HomePage = () => {
 
       {/* Homepage Category Strip - Simple Cards like reference design */}
       {categoryStripBanners.length > 0 && (
-        <section className="px-4 md:px-8 py-12">
+        <section className="px-4 md:px-8 py-12 animate-fade-in-up">
           <div className="max-w-7xl mx-auto">
             {/* Section heading (small, elegant) */}
             <div className="mb-8 text-center">
-              <h2 className="text-xs tracking-[0.35em] text-[rgb(72,29,111)] uppercase">
+              <h2 className="text-xs tracking-[0.35em] text-[rgb(72,29,111)] uppercase animate-fade-in">
                 Where Tradition Meets Elegance
               </h2>
             </div>
 
             {/* Simple responsive grid of banner-sized cards */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 justify-items-center">
-              {categoryStripBanners.map((banner) => (
+              {categoryStripBanners.map((banner, index) => (
                 <button
                   key={banner._id}
                   onClick={() => {
@@ -235,17 +236,22 @@ const HomePage = () => {
                       navigate(`/sale/${id}`);
                     }
                   }}
-                  className="w-full max-w-[320px] aspect-[2/3] overflow-hidden rounded-lg shadow-lg bg-white group focus:outline-none"
+                  className="w-full max-w-[320px] aspect-[2/3] overflow-hidden rounded-lg shadow-lg bg-white group focus:outline-none hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
+                  style={{
+                    animationDelay: `${index * 100}ms`,
+                    animation: 'fadeInUp 0.6s ease-out forwards'
+                  }}
                 >
                   <img
                     src={banner.image_url}
                     alt={banner.title || banner.category?.name || 'Banner'}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
                     onError={(e) => {
                       e.target.src =
                         'https://via.placeholder.com/400x533?text=Banner';
                     }}
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/0 group-hover:from-black/20 transition-all duration-500" />
                 </button>
               ))}
             </div>
@@ -267,17 +273,21 @@ const HomePage = () => {
       {/* Middle Banner Section */}
       {middleBanners.length > 0 && (
         // Slightly smaller vertical padding so gap with Trending section is tighter
-        <section className="w-full pt-10 pb-8 px-4 md:px-8">
+        <section className="w-full pt-10 pb-8 px-4 md:px-8 animate-fade-in-up">
           <div className="max-w-7xl mx-auto">
             {middleBanners.map((banner, index) => (
               <div
                 key={banner._id || index}
-                className="relative w-full overflow-hidden rounded-lg"
+                className="relative w-full overflow-hidden rounded-lg group cursor-pointer hover:shadow-2xl transition-all duration-500"
+                style={{
+                  animationDelay: `${index * 150}ms`,
+                  animation: 'fadeInUp 0.8s ease-out forwards'
+                }}
               >
                 <img
                   src={banner.image_url}
                   alt={banner.title || 'Banner'}
-                  className="w-full h-auto object-contain"
+                  className="w-full h-auto object-contain group-hover:scale-105 transition-transform duration-700 ease-out"
                   style={{
                     display: 'block',
                     maxHeight: '600px'
@@ -287,8 +297,8 @@ const HomePage = () => {
                   }}
                 />
                 {banner.title && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                    <h3 className="text-2xl md:text-3xl font-bold text-white text-center px-4">
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-all duration-500">
+                    <h3 className="text-2xl md:text-3xl font-bold text-white text-center px-4 transform group-hover:scale-110 transition-transform duration-500">
                       {banner.title}
                     </h3>
                   </div>
@@ -312,26 +322,30 @@ const HomePage = () => {
 
       {/* Bottom Banner Section (homepage_bottom) - full width, large banner */}
       {bottomBanners.length > 0 && (
-        <section className="w-full pt-10 pb-6 px-0">
+        <section className="w-full pt-10 pb-6 px-0 animate-fade-in-up">
           <div className="w-full">
             {bottomBanners.map((banner, index) => (
               <div
                 key={banner._id || index}
-                className="relative w-full overflow-hidden"
+                className="relative w-full overflow-hidden group cursor-pointer"
+                style={{
+                  animationDelay: `${index * 150}ms`,
+                  animation: 'fadeInUp 0.8s ease-out forwards'
+                }}
               >
                 {/* 16:9 full-width banner */}
                 <div className="relative w-full pb-[40%]">
                   <img
                     src={banner.image_url}
                     alt={banner.title || 'Banner'}
-                    className="absolute inset-0 w-full h-full object-cover"
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                     onError={(e) => {
                       e.target.src = 'https://via.placeholder.com/1600x640?text=Banner';
                     }}
                   />
                   {banner.title && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                      <h3 className="text-2xl md:text-3xl font-bold text-white text-center px-4">
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-all duration-500">
+                      <h3 className="text-2xl md:text-3xl font-bold text-white text-center px-4 transform group-hover:scale-110 transition-transform duration-500">
                         {banner.title}
                       </h3>
                     </div>

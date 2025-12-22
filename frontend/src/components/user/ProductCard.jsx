@@ -42,7 +42,7 @@ const ProductCard = ({ product }) => {
     <div 
       role="button"
       tabIndex={0}
-      className="group relative bg-white overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 border-2 border-gray-100 hover:border-[#481d6f] hover:border-opacity-40"
+      className="group relative bg-white overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 border-2 border-gray-100 hover:border-[rgb(72,29,111)] hover:border-opacity-40 hover:-translate-y-2"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={() => navigate(`/product/${product._id}`)}
