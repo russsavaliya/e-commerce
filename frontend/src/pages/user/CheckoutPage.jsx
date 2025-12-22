@@ -285,7 +285,7 @@ const CheckoutPage = () => {
             <p className="text-lg text-gray-600 mb-4">Your cart is empty</p>
             <button
               onClick={() => navigate('/cart')}
-              className="px-6 py-3 bg-gray-900 text-white rounded-full font-semibold hover:bg-black transition-colors"
+              className="px-6 py-3 bg-[rgb(72,29,111)] text-white rounded-full font-semibold hover:bg-[#390e60] transition-all duration-200"
             >
               Go to Cart
             </button>
@@ -394,7 +394,7 @@ const CheckoutPage = () => {
                 <div className="flex justify-start">
                   <button
                     onClick={() => setCurrentStep('shipping')}
-                    className="px-5 py-3 border border-gray-300 rounded-full font-semibold text-gray-700 hover:border-gray-400 transition-colors"
+                    className="px-5 py-3 border-[1.5px] border-[rgb(72,29,111)] text-[rgb(72,29,111)] rounded-full font-semibold hover:bg-[rgba(72,29,111,0.08)] transition-all duration-200"
                   >
                     Back to Shipping
                   </button>

@@ -51,7 +51,7 @@ const OrderSummary = ({ cart, onPlaceOrder, isSubmitting, buttonLabel = 'Place O
       <button
         onClick={onPlaceOrder}
         disabled={isSubmitting}
-        className="w-full bg-gray-900 text-white py-4 rounded-full font-semibold hover:bg-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        className="w-full bg-[rgb(72,29,111)] text-white py-4 rounded-full font-semibold hover:bg-[#390e60] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
         {isSubmitting ? (
           <>

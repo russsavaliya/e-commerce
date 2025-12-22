@@ -122,7 +122,7 @@ const CartPage = () => {
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate('/order/track')}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[#faf9f5] border-2 border-[#481d6f] text-[#481d6f] rounded-full font-semibold hover:border-[#481d6f] transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 border-[1.5px] border-[rgb(72,29,111)] text-[rgb(72,29,111)] rounded-full font-semibold hover:bg-[rgba(72,29,111,0.08)] transition-all duration-200"
             >
               <PackageSearch className="w-4 h-4" />
               Track Order
@@ -146,7 +146,7 @@ const CartPage = () => {
             <p className="text-gray-500 mb-8">Start shopping to add items to your cart</p>
             <button
               onClick={() => navigate('/sale')}
-              className="px-6 py-3 bg-gray-900 text-white rounded-full font-semibold hover:bg-black transition-colors"
+              className="px-6 py-3 bg-[rgb(72,29,111)] text-white rounded-full font-semibold hover:bg-[#390e60] transition-all duration-200"
             >
               Continue Shopping
             </button>
@@ -294,14 +294,14 @@ const CartPage = () => {
 
                 <button
                   onClick={() => navigate('/checkout')}
-                  className="w-full bg-gray-900 text-white py-4 rounded-full font-semibold hover:bg-black transition-colors mb-3"
+                  className="w-full bg-[rgb(72,29,111)] text-white py-4 rounded-full font-semibold hover:bg-[#390e60] transition-all duration-200 mb-3"
                 >
                   Proceed to Checkout
                 </button>
 
                 <button
                   onClick={() => navigate('/order/track')}
-                  className="w-full bg-white border-2 border-gray-300 text-gray-900 py-3 rounded-full font-semibold hover:border-gray-400 transition-colors mb-3 flex items-center justify-center gap-2"
+                  className="w-full bg-white border-[1.5px] border-[rgb(72,29,111)] text-[rgb(72,29,111)] py-3 rounded-full font-semibold hover:bg-[rgba(72,29,111,0.08)] transition-all duration-200 mb-3 flex items-center justify-center gap-2"
                 >
                   <PackageSearch className="w-4 h-4" />
                   Track Order
@@ -309,7 +309,7 @@ const CartPage = () => {
 
                 <button
                   onClick={() => navigate('/sale')}
-                  className="w-full bg-white border-2 border-gray-300 text-gray-900 py-3 rounded-full font-semibold hover:border-gray-400 transition-colors"
+                  className="w-full bg-white border-[1.5px] border-[rgb(72,29,111)] text-[rgb(72,29,111)] py-3 rounded-full font-semibold hover:bg-[rgba(72,29,111,0.08)] transition-all duration-200"
                 >
                   Continue Shopping
                 </button>

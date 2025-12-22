@@ -49,7 +49,7 @@ const ProductDetailPage = () => {
           <span
             key={idx}
             className={
-              idx < filled ? 'text-[#481d6f]-500' : 'text-gray-300'
+              idx < filled ? 'text-[rgb(72,29,111)]' : 'text-[#E5E7EB]'
             }
           >
             ★
@@ -156,8 +156,8 @@ const ProductDetailPage = () => {
   }, [product, selectedVariantId]);
 
   // Show variant price only if variant is selected, otherwise show main product selling_price
-  const displayPrice = selectedVariantId && activeVariant?.variant_price 
-    ? activeVariant.variant_price 
+  const displayPrice = selectedVariantId && activeVariant?.variant_price
+    ? activeVariant.variant_price
     : (product?.selling_price ?? 0);
   // Use discount_percentage from database first, otherwise calculate from prices
   const discountPercent = product?.discount_percentage && product.discount_percentage > 0
@@ -166,8 +166,8 @@ const ProductDetailPage = () => {
       ? Math.round(((product.original_price - displayPrice) / product.original_price) * 100)
       : 0);
   // Show variant image only if variant is selected, otherwise show main product image
-  const displayImage = selectedVariantId && activeVariant?.variant_image 
-    ? activeVariant.variant_image 
+  const displayImage = selectedVariantId && activeVariant?.variant_image
+    ? activeVariant.variant_image
     : activeImage;
 
   const handleVariantSelect = (variantId) => {
@@ -251,25 +251,25 @@ const ProductDetailPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
+      <div className="min-h-screen flex items-center justify-center bg-[#FAF9F5]">
+        <Loader2 className="w-8 h-8 animate-spin text-[rgb(72,29,111)]" />
       </div>
     );
   }
 
   if (error || !product) {
     return (
-      <div className="min-h-screen flex flex-col bg-white">
+      <div className="min-h-screen flex flex-col bg-[#FAF9F5]">
         <Navbar />
         <main className="flex-1 max-w-6xl mx-auto px-4 py-16">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-6"
+            className="flex items-center gap-2 text-sm text-[#6B7280] hover:text-[rgb(72,29,111)] mb-6 transition-colors"
           >
             <ChevronLeft className="w-4 h-4" /> Back
           </button>
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
-            <p className="text-lg text-gray-700">{error || 'Product not found'}</p>
+          <div className="bg-white border border-[#E5E7EB] rounded-lg p-8 text-center shadow-sm">
+            <p className="text-lg text-[#374151]">{error || 'Product not found'}</p>
           </div>
         </main>
         <Footer />
@@ -280,12 +280,12 @@ const ProductDetailPage = () => {
   const images = product.images || [];
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[#FAF9F5]">
       <Navbar />
       <main className="max-w-6xl mx-auto px-4 lg:px-6 py-10">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-6"
+          className="flex items-center gap-2 text-sm text-[#6B7280] hover:text-[rgb(72,29,111)] mb-6 transition-colors"
         >
           <ChevronLeft className="w-4 h-4" /> Back
         </button>
@@ -293,7 +293,7 @@ const ProductDetailPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
           {/* Images */}
           <div>
-            <div 
+            <div
               className="relative bg-gray-100 overflow-hidden cursor-pointer flex items-center justify-center select-none"
               style={{ minHeight: '400px', maxHeight: '720px' }}
               onClick={() => displayImage && setIsImageModalOpen(true)}
@@ -327,9 +327,8 @@ const ProductDetailPage = () => {
                       // Clear variant selection when clicking on main product image
                       setSelectedVariantId(null);
                     }}
-                    className={`border overflow-hidden h-20 bg-gray-100 aspect-[3/4] select-none ${
-                      activeImage === img && !selectedVariantId ? 'border-rose-400' : 'border-gray-200'
-                    }`}
+                    className={`border overflow-hidden h-20 bg-gray-100 aspect-[3/4] select-none transition-colors ${activeImage === img && !selectedVariantId ? 'border-[rgb(72,29,111)]' : 'border-[#E5E7EB]'
+                      }`}
                     onContextMenu={handleContextMenu}
                   >
                     <img
@@ -352,14 +351,14 @@ const ProductDetailPage = () => {
           {/* Details */}
           <div className="space-y-6">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">{product.name}</h1>
+              <h1 className="text-3xl md:text-4xl font-bold text-[rgb(72,29,111)] leading-tight">{product.name}</h1>
               {product.category?.name && (
-                <p className="text-sm text-gray-500 mt-2 uppercase tracking-wide">{product.category.name}</p>
+                <p className="text-sm text-[#6B7280] mt-2 uppercase tracking-wide">{product.category.name}</p>
               )}
               {activeVariant && activeVariant.variant_name && (
                 <div className="mt-3 flex items-center gap-2">
-                  <span className="text-sm font-medium text-gray-600">Selected Option:</span>
-                  <span className="text-base font-semibold text-[#481d6f]-600 bg-rose-50 px-3 py-1.5 rounded-lg border border-[#481d6f]-200">
+                  <span className="text-sm font-medium text-[#6B7280]">Selected Option:</span>
+                  <span className="text-base font-semibold text-[rgb(72,29,111)] bg-[rgba(72,29,111,0.06)] px-3 py-1.5 rounded-lg border border-[rgb(72,29,111)]">
                     {activeVariant.variant_name}
                   </span>
                 </div>
@@ -368,69 +367,68 @@ const ProductDetailPage = () => {
 
             <div className="flex items-baseline gap-3">
               <div className="flex items-baseline gap-1">
-                <IndianRupee className="w-5 h-5 text-gray-900 self-center" />
-                <span className="text-3xl font-bold text-gray-900 leading-none">
+                <IndianRupee className="w-5 h-5 text-[#1F2937] self-center" />
+                <span className="text-3xl font-bold text-[#1F2937] leading-none">
                   {displayPrice?.toLocaleString('en-IN') || '0'}
                 </span>
               </div>
               {product.original_price && product.original_price > displayPrice && (
-                <span className="text-lg text-gray-400 line-through whitespace-nowrap leading-none">
+                <span className="text-lg text-[#9CA3AF] line-through whitespace-nowrap leading-none">
                   ₹ {product.original_price.toLocaleString('en-IN')}
                 </span>
               )}
               {discountPercent > 0 && (
-                <span className="text-sm font-semibold text-[#481d6f]-600 whitespace-nowrap leading-none">
+                <span className="text-sm font-semibold text-[rgb(72,29,111)] whitespace-nowrap leading-none">
                   {discountPercent}% off
                 </span>
               )}
             </div>
 
             {product.description && (
-              <div className="text-base text-gray-700 leading-relaxed bg-gray-50 border border-gray-100 rounded-xl p-4">
+              <div className="text-base text-[#374151] leading-relaxed bg-white border border-[#E5E7EB] rounded-xl p-4 shadow-sm">
                 {product.description}
               </div>
             )}
 
             {/* Product-level attributes (read-only display) */}
-            {product.attributesvalues && 
-             product.attributesvalues.length > 0 && 
-             product.attributesvalues.some(attr => attr.values && attr.values.length > 0) && (
-              <div className="space-y-3 border-t border-gray-200 pt-4">
-                <div className="text-sm font-semibold text-gray-800 mb-4 uppercase tracking-wide">Product Details</div>
-                {product.attributesvalues
-                  .filter(attr => attr.values && attr.values.length > 0)
-                  .map((attr, idx) => (
-                    <div key={attr._id || idx} className="flex items-start gap-3">
-                      <div className="text-sm font-medium text-gray-600 min-w-[100px]">
-                        {attr.name || 'Attribute'}:
+            {product.attributesvalues &&
+              product.attributesvalues.length > 0 &&
+              product.attributesvalues.some(attr => attr.values && attr.values.length > 0) && (
+                <div className="space-y-3 border-t border-[#E5E7EB] pt-4">
+                  <div className="text-sm font-semibold text-[#374151] mb-4 uppercase tracking-wide">Product Details</div>
+                  {product.attributesvalues
+                    .filter(attr => attr.values && attr.values.length > 0)
+                    .map((attr, idx) => (
+                      <div key={attr._id || idx} className="flex items-start gap-3">
+                        <div className="text-sm font-medium text-[#6B7280] min-w-[100px]">
+                          {attr.name || 'Attribute'}:
+                        </div>
+                        <div className="flex-1 text-sm text-[#374151]">
+                          {attr.values.map((val, vIdx) => (
+                            <span key={val._id || vIdx}>
+                              {val.value || 'Value'}
+                              {vIdx < attr.values.length - 1 && <span className="text-[#9CA3AF] mx-2">•</span>}
+                            </span>
+                          ))}
+                        </div>
                       </div>
-                      <div className="flex-1 text-sm text-gray-800">
-                        {attr.values.map((val, vIdx) => (
-                          <span key={val._id || vIdx}>
-                            {val.value || 'Value'}
-                            {vIdx < attr.values.length - 1 && <span className="text-gray-400 mx-2">•</span>}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            )}
+                    ))}
+                </div>
+              )}
 
             {/* Variants list */}
             {product.variants && product.variants.length > 0 && (
               <div>
-                <div className="text-sm font-semibold text-gray-800 mb-3 uppercase tracking-wide">Options</div>
+                <div className="text-sm font-semibold text-[#374151] mb-3 uppercase tracking-wide">Options</div>
                 <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                   {product.variants.map((variant) => (
                     <button
                       key={variant._id}
                       onClick={() => handleVariantSelect(variant._id)}
-                      className={`flex-shrink-0 border-2 rounded-lg overflow-hidden transition-all ${
-                        selectedVariantId === variant._id
-                          ? 'border-rose-400 shadow-md'
-                          : 'border-gray-200 hover:border-gray-400'
-                      }`}
+                      className={`flex-shrink-0 border-2 rounded-lg overflow-hidden transition-all ${selectedVariantId === variant._id
+                        ? 'border-[rgb(72,29,111)] bg-[rgba(72,29,111,0.06)] shadow-sm'
+                        : 'border-[#E5E7EB] hover:border-[#D1D5DB]'
+                        }`}
                     >
                       {variant.variant_image ? (
                         <div className="w-24 h-32 bg-gray-100 overflow-hidden select-none">
@@ -451,9 +449,12 @@ const ProductDetailPage = () => {
                           <Package className="w-6 h-6 text-gray-400" />
                         </div>
                       )}
-                      <div className="p-2 bg-white w-24">
-                        <div className="text-xs font-semibold text-gray-900 mb-0.5 truncate">{variant.variant_name || 'Variant'}</div>
-                        <div className="text-[10px] text-gray-600">₹ {variant.variant_price?.toLocaleString('en-IN') || displayPrice}</div>
+                      <div className={`p-2 w-24 ${selectedVariantId === variant._id ? 'bg-[rgba(72,29,111,0.06)]' : 'bg-white'}`}>
+                        <div className={`text-xs font-semibold mb-0.5 truncate ${selectedVariantId === variant._id
+                          ? 'text-[rgb(72,29,111)] font-medium'
+                          : 'text-[#374151]'
+                          }`}>{variant.variant_name || 'Variant'}</div>
+                        <div className="text-[10px] text-[#6B7280]">₹ {variant.variant_price?.toLocaleString('en-IN') || displayPrice}</div>
                       </div>
                     </button>
                   ))}
@@ -466,7 +467,7 @@ const ProductDetailPage = () => {
               <button
                 onClick={handleAddToCart}
                 disabled={addingToCart}
-                className="flex-1 flex items-center justify-center gap-2 bg-gray-900 text-white py-3 rounded-full text-sm font-semibold hover:bg-black transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 flex items-center justify-center gap-2 bg-[rgb(72,29,111)] text-white py-3 rounded-full text-sm font-semibold hover:bg-[#390e60] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {addingToCart ? (
                   <>
@@ -482,31 +483,30 @@ const ProductDetailPage = () => {
               </button>
               <button
                 onClick={() => navigate('/cart')}
-                className="px-5 py-3 rounded-full border border-gray-300 text-sm font-semibold text-gray-800 hover:border-gray-500 transition"
+                className="px-5 py-3 rounded-full border-[1.5px] border-[rgb(72,29,111)] text-sm font-semibold text-[rgb(72,29,111)] hover:bg-[rgba(72,29,111,0.08)] transition-all duration-200"
               >
                 View Cart
               </button>
             </div>
 
             {/* Reviews Section */}
-            <div className="mt-10 border-t border-gray-200 pt-8 space-y-6">
+            <div className="mt-10 border-t border-[#E5E7EB] pt-8 space-y-6">
               {/* Summary row */}
-              <div className="bg-white border border-gray-200 rounded-2xl shadow-sm px-6 py-5">
+              <div className="bg-white border border-[#E5E7EB] rounded-2xl shadow-sm px-6 py-5">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
                   {/* Left: average rating */}
                   <div className="flex flex-col items-center md:items-start gap-2">
-                    <h2 className="text-base font-semibold text-gray-900">
+                    <h2 className="text-base font-semibold text-[rgb(72,29,111)]">
                       Customer Reviews
                     </h2>
                     {renderStars(reviewSummary.average, 'lg')}
-                    <p className="text-3xl font-bold text-gray-900">
+                    <p className="text-3xl font-bold text-[#1F2937]">
                       {reviewSummary.average?.toFixed(1) || '0.0'}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-[#6B7280]">
                       {reviewSummary.count > 0
-                        ? `Based on ${reviewSummary.count} review${
-                            reviewSummary.count > 1 ? 's' : ''
-                          }`
+                        ? `Based on ${reviewSummary.count} review${reviewSummary.count > 1 ? 's' : ''
+                        }`
                         : 'No reviews yet'}
                     </p>
                   </div>
@@ -522,19 +522,19 @@ const ProductDetailPage = () => {
                       return (
                         <div
                           key={star}
-                          className="flex items-center gap-3 text-xs text-gray-600"
+                          className="flex items-center gap-3 text-xs text-[#6B7280]"
                         >
                           <span className="w-10 flex items-center justify-end gap-0.5">
                             <span>{star}</span>
-                            <span className="text-[#481d6f]-400 text-[11px]">★</span>
+                            <span className="text-[rgb(72,29,111)] text-[11px]">★</span>
                           </span>
-                          <div className="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden">
+                          <div className="flex-1 h-2 rounded-full bg-[#E5E7EB] overflow-hidden">
                             <div
-                              className="h-full rounded-full bg-rose-400 transition-all"
+                              className="h-full rounded-full bg-[rgb(72,29,111)] transition-all"
                               style={{ width: `${percent}%` }}
                             />
                           </div>
-                          <span className="w-4 text-right text-[11px] text-gray-500">
+                          <span className="w-4 text-right text-[11px] text-[#6B7280]">
                             {count}
                           </span>
                         </div>
@@ -547,7 +547,7 @@ const ProductDetailPage = () => {
                     <button
                       type="button"
                       onClick={() => setIsReviewModalOpen(true)}
-                      className="inline-flex items-center justify-center px-6 py-3 rounded-full bg-rose-400 text-white text-sm font-semibold shadow-sm hover:bg-rose-500 transition"
+                      className="px-5 py-3 rounded-full border-[1.5px] border-[#EC4899] text-sm font-semibold text-[#EC4899] hover:bg-[rgba(236,72,153,0.08)] transition-all duration-200"
                     >
                       Write a review
                     </button>
@@ -559,12 +559,12 @@ const ProductDetailPage = () => {
               {/* Review list */}
               <div className="space-y-3">
                 {reviewLoading ? (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                  <div className="flex items-center gap-2 text-sm text-[#6B7280]">
+                    <Loader2 className="w-4 h-4 animate-spin text-[rgb(72,29,111)]" />
                     Loading reviews...
                   </div>
                 ) : reviews.length === 0 ? (
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-[#6B7280]">
                     No reviews for this product yet.
                   </p>
                 ) : (
@@ -573,32 +573,32 @@ const ProductDetailPage = () => {
                       {reviews.map((rev) => (
                         <div
                           key={rev._id}
-                          className="border border-gray-200 rounded-xl p-4 bg-white"
+                          className="border border-[#E5E7EB] rounded-xl p-4 bg-white shadow-sm"
                         >
                           <div className="flex items-center justify-between mb-1.5">
                             <div>
-                              <p className="text-sm font-semibold text-gray-900">
+                              <p className="text-sm font-semibold text-[#374151]">
                                 {rev.name}
                               </p>
                               <div className="mt-0.5">
                                 {renderStars(rev.rating, 'sm')}
                               </div>
                             </div>
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-[#6B7280]">
                               {rev.createdAt
                                 ? new Date(rev.createdAt).toLocaleDateString(
-                                    'en-IN',
-                                    {
-                                      day: '2-digit',
-                                      month: 'short',
-                                      year: 'numeric',
-                                    }
-                                  )
+                                  'en-IN',
+                                  {
+                                    day: '2-digit',
+                                    month: 'short',
+                                    year: 'numeric',
+                                  }
+                                )
                                 : ''}
                             </p>
                           </div>
                           {rev.comment && (
-                            <p className="text-sm text-gray-700 whitespace-pre-line mt-1.5">
+                            <p className="text-sm text-[#374151] whitespace-pre-line mt-1.5">
                               {rev.comment}
                             </p>
                           )}
@@ -608,7 +608,7 @@ const ProductDetailPage = () => {
 
                     {/* Reviews pagination */}
                     {reviewTotalPages > 1 && (
-                      <div className="flex items-center justify-between pt-2 text-xs text-gray-600">
+                      <div className="flex items-center justify-between pt-2 text-xs text-[#6B7280]">
                         <span>
                           Page {reviewPage} of {reviewTotalPages}
                         </span>
@@ -619,7 +619,7 @@ const ProductDetailPage = () => {
                               setReviewPage((p) => Math.max(1, p - 1))
                             }
                             disabled={reviewPage === 1 || reviewLoading}
-                            className="px-3 py-1.5 border border-gray-300 rounded-full hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-3 py-1.5 border border-[#E5E7EB] rounded-full hover:bg-[#F9FAFB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-[#374151]"
                           >
                             Previous
                           </button>
@@ -633,7 +633,7 @@ const ProductDetailPage = () => {
                             disabled={
                               reviewPage === reviewTotalPages || reviewLoading
                             }
-                            className="px-3 py-1.5 border border-gray-300 rounded-full hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-3 py-1.5 border border-[#E5E7EB] rounded-full hover:bg-[#F9FAFB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-[#374151]"
                           >
                             Next
                           </button>
@@ -651,7 +651,7 @@ const ProductDetailPage = () => {
 
       {/* Image Lightbox Modal */}
       {isImageModalOpen && displayImage && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm select-none"
           onClick={() => setIsImageModalOpen(false)}
           onContextMenu={handleContextMenu}
@@ -682,23 +682,23 @@ const ProductDetailPage = () => {
 
       {/* Review Form Modal */}
       {isReviewModalOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200"
           onClick={() => setIsReviewModalOpen(false)}
         >
-          <div 
+          <div
             className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-300"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
-              <h2 className="text-xl font-bold text-gray-900">Write a Review</h2>
+            <div className="sticky top-0 bg-white border-b border-[#E5E7EB] px-6 py-4 flex items-center justify-between z-10">
+              <h2 className="text-xl font-bold text-[rgb(72,29,111)]">Write a Review</h2>
               <button
                 onClick={() => setIsReviewModalOpen(false)}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                className="p-2 hover:bg-[#F9FAFB] rounded-full transition-colors"
                 aria-label="Close"
               >
-                <X className="w-5 h-5 text-gray-500" />
+                <X className="w-5 h-5 text-[#6B7280]" />
               </button>
             </div>
 
@@ -709,7 +709,7 @@ const ProductDetailPage = () => {
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label className="block text-sm font-medium text-[#374151] mb-1.5">
                     Your Name <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -717,13 +717,13 @@ const ProductDetailPage = () => {
                     name="name"
                     value={reviewForm.name}
                     onChange={handleReviewInputChange}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
+                    className="w-full px-4 py-2.5 border border-[#E5E7EB] rounded-lg text-sm text-[#374151] focus:outline-none focus:ring-2 focus:ring-[rgb(72,29,111)] focus:border-[rgb(72,29,111)]"
                     placeholder="Enter your name"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label className="block text-sm font-medium text-[#374151] mb-1.5">
                     Email (optional)
                   </label>
                   <input
@@ -731,14 +731,14 @@ const ProductDetailPage = () => {
                     name="email"
                     value={reviewForm.email}
                     onChange={handleReviewInputChange}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
+                    className="w-full px-4 py-2.5 border border-[#E5E7EB] rounded-lg text-sm text-[#374151] focus:outline-none focus:ring-2 focus:ring-[rgb(72,29,111)] focus:border-[rgb(72,29,111)]"
                     placeholder="you@example.com"
                   />
                 </div>
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-[#374151] mb-2">
                   Rating <span className="text-red-500">*</span>
                 </label>
                 <div className="flex items-center gap-2">
@@ -752,20 +752,19 @@ const ProductDetailPage = () => {
                         aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
                       >
                         <Star
-                          className={`w-5 h-5 ${
-                            star <= reviewForm.rating
-                              ? 'fill-rose-400 text-[#481d6f]-400'
-                              : 'text-gray-300'
-                          } transition-colors duration-150`}
+                          className={`w-5 h-5 ${star <= reviewForm.rating
+                            ? 'fill-[#F472B6] text-[#F472B6]'
+                            : 'text-[#E5E7EB]'
+                            } transition-colors duration-150`}
                         />
                       </button>
                     ))}
                   </div>
-                  <span className="text-sm font-medium text-gray-600 ml-2">
+                  <span className="text-sm font-medium text-[#6B7280] ml-2">
                     {reviewForm.rating} / 5
                   </span>
                 </div>
-                <p className="text-xs text-gray-500 mt-1.5">
+                <p className="text-xs text-[#6B7280] mt-1.5">
                   {reviewForm.rating === 5 && 'Excellent'}
                   {reviewForm.rating === 4 && 'Very Good'}
                   {reviewForm.rating === 3 && 'Good'}
@@ -773,9 +772,9 @@ const ProductDetailPage = () => {
                   {reviewForm.rating === 1 && 'Poor'}
                 </p>
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label className="block text-sm font-medium text-[#374151] mb-1.5">
                   Your Review
                 </label>
                 <textarea
@@ -783,23 +782,23 @@ const ProductDetailPage = () => {
                   rows={5}
                   value={reviewForm.comment}
                   onChange={handleReviewInputChange}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 resize-none"
+                  className="w-full px-4 py-2.5 border border-[#E5E7EB] rounded-lg text-sm text-[#374151] focus:outline-none focus:ring-2 focus:ring-[rgb(72,29,111)] focus:border-[rgb(72,29,111)] resize-none"
                   placeholder="Share your experience (optional)"
                 />
               </div>
-              
+
               <div className="flex items-center justify-end gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setIsReviewModalOpen(false)}
-                  className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 text-sm font-medium hover:bg-gray-50 transition"
+                  className="px-5 py-2.5 border border-[#E5E7EB] rounded-lg text-[#374151] text-sm font-medium hover:bg-[#F9FAFB] transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submittingReview}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-rose-400 text-white text-sm font-semibold hover:bg-rose-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#F472B6] text-white text-sm font-semibold hover:bg-[#EC4899] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {submittingReview ? (
                     <>

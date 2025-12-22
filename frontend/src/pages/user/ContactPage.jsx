@@ -79,8 +79,8 @@ const ContactPage = () => {
             <div className="flex items-center justify-between mb-5">
               <div>
                 <h2 className="text-lg md:text-xl font-semibold text-gray-900 flex items-center gap-2">
-                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#481d6f] text-white">
-                    <Mail className="w-4 h-4" />
+                  <span className="inline-flex items-center justify-center w-10 h-10 rounded-full text-[rgb(72,29,111)]">
+                    <Mail className="w-6 h-6" />
                   </span>
                   Email Support
                 </h2>
@@ -88,7 +88,6 @@ const ContactPage = () => {
                   Fill in your details and we’ll respond on email.
                 </p>
               </div>
-              <span className="text-xs text-gray-400">* Required</span>
             </div>
 
             <form
@@ -102,7 +101,7 @@ const ContactPage = () => {
                   name="name"
                   value={form.name}
                   onChange={handleChange}
-                  className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm md:text-base focus:ring-2 focus:ring-[#481d6f] focus:border-[#481d6f] shadow-sm"
+                  className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm md:text-base focus:ring-1 focus:ring-[#481d6f] focus:border-[#481d6f] shadow-sm"
                   placeholder="Enter your name"
                 />
               </div>
@@ -113,7 +112,7 @@ const ContactPage = () => {
                   name="email"
                   value={form.email}
                   onChange={handleChange}
-                  className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm md:text-base focus:ring-2 focus:ring-[#481d6f] focus:border-[#481d6f] shadow-sm"
+                  className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm md:text-base focus:ring-1 focus:ring-[#481d6f] focus:border-[#481d6f] shadow-sm"
                   placeholder="you@example.com"
                 />
               </div>
@@ -124,7 +123,7 @@ const ContactPage = () => {
                   name="message"
                   value={form.message}
                   onChange={handleChange}
-                  className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm md:text-base focus:ring-2 focus:ring-[#481d6f] focus:border-[#481d6f] shadow-sm resize-none"
+                  className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm md:text-base focus:ring-1 focus:ring-[#481d6f] focus:border-[#481d6f] shadow-sm resize-none"
                   placeholder="How can we help you?"
                 />
               </div>
@@ -132,7 +131,7 @@ const ContactPage = () => {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="inline-flex items-center gap-2 bg-gray-900 text-white px-6 py-2.5 rounded-full text-sm md:text-base font-semibold hover:bg-black transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+                  className="inline-flex items-center gap-2 bg-[rgb(72,29,111)] text-white px-6 py-2.5 rounded-full text-sm md:text-base font-semibold hover:bg-[#390e60] transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
                 >
                   <Send className="w-4 h-4" />
                   {submitting ? 'Sending...' : 'Send Message'}
@@ -141,8 +140,8 @@ const ContactPage = () => {
             </form>
           </div>
         </section>
-      </main>
 
+      </main>
       <Footer />
     </div>
   );
