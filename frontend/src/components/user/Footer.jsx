@@ -1,36 +1,75 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="mt-6 border-t border-gray-200 bg-white">
-      <div className="max-w-7xl mx-auto px-4 md:px-8 py-10">
-        <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-8">
-          {/* Brand */}
-          <div className="text-center md:text-left space-y-2">
-            <h3 className="text-lg tracking-[0.25em] uppercase text-gray-800">
+    <footer className="mt-12 border-t border-[#E5E7EB] bg-[#FAF9F5]">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 py-12">
+        <div className="flex flex-col md:flex-row items-start justify-between gap-10 mb-10">
+          {/* Brand Section */}
+          <div className="flex-1 max-w-sm">
+            <h3 className="text-xl font-bold tracking-[0.25em] uppercase text-[rgb(72,29,111)] mb-3">
               SIYARA
             </h3>
-            <p className="text-xs text-gray-500 max-w-xs">
+            <p className="text-sm text-[#374151] leading-relaxed">
               SIYARA is a premium saree store that offers a wide range of sarees for every occasion.
             </p>
           </div>
 
-          {/* Links */}
-          <div className="flex flex-wrap justify-center md:justify-end gap-6 text-xs text-gray-500 uppercase tracking-[0.18em]">
-            <button className="hover:text-gray-900 transition-colors">About</button>
-            <button className="hover:text-gray-900 transition-colors">Contact</button>
-            <button className="hover:text-gray-900 transition-colors">Shipping</button>
-            <button className="hover:text-gray-900 transition-colors">Returns</button>
+          {/* Quick Links */}
+          <div className="flex flex-col gap-3">
+            <h4 className="text-sm font-semibold text-[rgb(72,29,111)] uppercase tracking-wide mb-1">
+              Quick Links
+            </h4>
+            <div className="flex flex-col gap-2">
+              <Link 
+                to="/about" 
+                className="text-sm text-[#374151] hover:text-[rgb(72,29,111)] transition-colors"
+              >
+                About
+              </Link>
+              <Link 
+                to="/contact" 
+                className="text-sm text-[#374151] hover:text-[rgb(72,29,111)] transition-colors"
+              >
+                Contact
+              </Link>
+              <Link 
+                to="/order/track" 
+                className="text-sm text-[#374151] hover:text-[rgb(72,29,111)] transition-colors"
+              >
+                Track Order
+              </Link>
+            </div>
+          </div>
+
+          {/* Information */}
+          <div className="flex flex-col gap-3">
+            <h4 className="text-sm font-semibold text-[rgb(72,29,111)] uppercase tracking-wide mb-1">
+              Information
+            </h4>
+            <div className="flex flex-col gap-2">
+              <button className="text-sm text-[#374151] hover:text-[rgb(72,29,111)] transition-colors text-left">
+                Shipping
+              </button>
+              <button className="text-sm text-[#374151] hover:text-[rgb(72,29,111)] transition-colors text-left">
+                Returns
+              </button>
+              <button className="text-sm text-[#374151] hover:text-[rgb(72,29,111)] transition-colors text-left">
+                Privacy Policy
+              </button>
+            </div>
           </div>
         </div>
 
-        <div className="mt-8 flex flex-col md:flex-row items-center justify-between gap-4 border-t border-gray-100 pt-6">
-          <p className="text-[11px] text-gray-400 tracking-[0.2em] uppercase text-center md:text-left">
-            © {year} Shaadi Couture. All rights reserved.
+        {/* Bottom Bar */}
+        <div className="pt-8 border-t border-[#E5E7EB] flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-xs text-[#6B7280] tracking-wide text-center md:text-left">
+            © {year} SHAADI COUTURE. ALL RIGHTS RESERVED.
           </p>
-          <p className="text-[11px] text-gray-400 text-center md:text-right">
+          <p className="text-xs text-[#6B7280] text-center md:text-right italic">
             Made with love for modern Indian weddings.
           </p>
         </div>

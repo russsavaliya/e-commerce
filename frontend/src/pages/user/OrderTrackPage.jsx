@@ -73,10 +73,10 @@ const OrderTrackPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen flex flex-col">
       <Navbar />
 
-      <main className="max-w-4xl mx-auto px-4 lg:px-6 py-10 space-y-8">
+      <main className="flex-1 max-w-4xl mx-auto px-4 lg:px-6 py-10 space-y-8 w-full">
         {/* Header */}
         <section className="text-center space-y-2">
           <p className="text-[#481d6f]-500 font-semibold tracking-wide uppercase text-xs">
@@ -105,7 +105,7 @@ const OrderTrackPage = () => {
                   value={form.orderId}
                   onChange={handleChange}
                   placeholder="e.g. ORD-1698765432100"
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[rgb(72,29,111)]"
                 />
               </div>
               <div>
@@ -118,7 +118,7 @@ const OrderTrackPage = () => {
                   value={form.email}
                   onChange={handleChange}
                   placeholder="Email used during checkout"
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[rgb(72,29,111)]"
                 />
               </div>
             </div>

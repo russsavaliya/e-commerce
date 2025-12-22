@@ -96,6 +96,7 @@ import BestSellerPage from './pages/user/BestSellerPage';
 import AboutPage from './pages/user/AboutPage';
 import ContactPage from './pages/user/ContactPage';
 import OrderTrackPage from './pages/user/OrderTrackPage';
+import ReturnPolicyPage from './pages/user/ReturnPolicyPage';
 
 // TODO: When you create new user pages, import them here:
 // import UserOrders from './pages/user/UserOrders';
@@ -266,6 +267,9 @@ function App() {
 
             {/* Order tracking */}
             <Route path="/order/track" element={<OrderTrackPage />} />
+
+            {/* Return Policy */}
+            <Route path="/return-policy" element={<ReturnPolicyPage />} />
 
             {/* Product detail */}
             <Route path="/product/:productId" element={<ProductDetailPage />} />
