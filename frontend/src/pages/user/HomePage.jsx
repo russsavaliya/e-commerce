@@ -10,6 +10,7 @@ import { getBestsellerProducts, getTrendingProducts } from '../../services/user/
 import ProductSection from '../../components/user/ProductSection';
 import Navbar from '../../components/user/Navbar';
 import Footer from '../../components/user/Footer';
+import HeroSection from '../../components/user/HeroSection';
 import { useNavigate } from 'react-router-dom';
 
 const HomePage = () => {
@@ -116,7 +117,6 @@ const HomePage = () => {
     <div className="min-h-screen animate-fade-in">
       {/* Navbar */}
       <Navbar />
-
       {/* Hero Banner Section - Responsive height maintaining 16:9 aspect ratio */}
       {banners.length > 0 && (
         <section
@@ -269,7 +269,8 @@ const HomePage = () => {
         backgroundClass=""
         textColor="text-[rgb(72,29,111)]"
       />
-
+      {/* Hero Section with Interactive Image Gallery */}
+      {/* <HeroSection /> */}
       {/* Middle Banner Section */}
       {middleBanners.length > 0 && (
         // Slightly smaller vertical padding so gap with Trending section is tighter
