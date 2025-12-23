@@ -26,9 +26,8 @@ const ShippingForm = ({ shippingData, errors, onChange, pincodeValid, pincodeVal
             value={shippingData.fullName}
             onChange={(e) => onChange('fullName', e.target.value)}
             placeholder="Enter your full name"
-            className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#481d6f] focus:border-[#481d6f] transition-colors ${
-              errors.fullName ? 'border-red-300' : 'border-gray-200'
-            }`}
+            className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-[#481d6f] focus:border-[#481d6f] transition-colors ${errors.fullName ? 'border-red-300' : 'border-gray-200'
+              }`}
           />
           {errors.fullName && (
             <p className="mt-1 text-sm text-red-600">{errors.fullName}</p>
@@ -47,9 +46,8 @@ const ShippingForm = ({ shippingData, errors, onChange, pincodeValid, pincodeVal
             onChange={(e) => onChange('phone', e.target.value)}
             placeholder="10-digit mobile number"
             maxLength="10"
-            className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#481d6f] focus:border-[#481d6f] transition-colors ${
-              errors.phone ? 'border-red-300' : 'border-gray-200'
-            }`}
+            className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-[#481d6f] focus:border-[#481d6f] transition-colors ${errors.phone ? 'border-red-300' : 'border-gray-200'
+              }`}
           />
           {errors.phone && (
             <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
@@ -67,9 +65,8 @@ const ShippingForm = ({ shippingData, errors, onChange, pincodeValid, pincodeVal
             value={shippingData.email}
             onChange={(e) => onChange('email', e.target.value)}
             placeholder="your.email@example.com"
-            className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#481d6f] focus:border-[#481d6f] transition-colors ${
-              errors.email ? 'border-red-300' : 'border-gray-200'
-            }`}
+            className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-[#481d6f] focus:border-[#481d6f] transition-colors ${errors.email ? 'border-red-300' : 'border-gray-200'
+              }`}
           />
           {errors.email && (
             <p className="mt-1 text-sm text-red-600">{errors.email}</p>
@@ -87,9 +84,8 @@ const ShippingForm = ({ shippingData, errors, onChange, pincodeValid, pincodeVal
             onChange={(e) => onChange('address', e.target.value)}
             placeholder="House/Flat No., Building Name, Street"
             rows="3"
-            className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#481d6f] focus:border-[#481d6f] transition-colors resize-none ${
-              errors.address ? 'border-red-300' : 'border-gray-200'
-            }`}
+            className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-[#481d6f] focus:border-[#481d6f] transition-colors resize-none ${errors.address ? 'border-red-300' : 'border-gray-200'
+              }`}
           />
           {errors.address && (
             <p className="mt-1 text-sm text-red-600">{errors.address}</p>
@@ -107,7 +103,7 @@ const ShippingForm = ({ shippingData, errors, onChange, pincodeValid, pincodeVal
             value={shippingData.landmark}
             onChange={(e) => onChange('landmark', e.target.value)}
             placeholder="Nearby landmark or building"
-            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#481d6f] focus:border-[#481d6f] transition-colors"
+            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-[#481d6f] focus:border-[#481d6f] transition-colors"
           />
         </div>
 
@@ -121,9 +117,8 @@ const ShippingForm = ({ shippingData, errors, onChange, pincodeValid, pincodeVal
             value={shippingData.city}
             onChange={(e) => onChange('city', e.target.value)}
             placeholder="City"
-            className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#481d6f] focus:border-[#481d6f] transition-colors ${
-              errors.city ? 'border-red-300' : 'border-gray-200'
-            }`}
+            className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-[#481d6f] focus:border-[#481d6f] transition-colors ${errors.city ? 'border-red-300' : 'border-gray-200'
+              }`}
           />
           {errors.city && (
             <p className="mt-1 text-sm text-red-600">{errors.city}</p>
@@ -140,9 +135,8 @@ const ShippingForm = ({ shippingData, errors, onChange, pincodeValid, pincodeVal
             value={shippingData.state}
             onChange={(e) => onChange('state', e.target.value)}
             placeholder="State"
-            className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#481d6f] focus:border-[#481d6f] transition-colors ${
-              errors.state ? 'border-red-300' : 'border-gray-200'
-            }`}
+            className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-[#481d6f] focus:border-[#481d6f] transition-colors ${errors.state ? 'border-red-300' : 'border-gray-200'
+              }`}
           />
           {errors.state && (
             <p className="mt-1 text-sm text-red-600">{errors.state}</p>
@@ -161,15 +155,14 @@ const ShippingForm = ({ shippingData, errors, onChange, pincodeValid, pincodeVal
               onChange={(e) => onChange('pincode', e.target.value.replace(/\D/g, '').slice(0, 6))}
               placeholder="6-digit pincode"
               maxLength="6"
-              className={`w-full px-4 py-3 pr-12 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#481d6f] focus:border-[#481d6f] transition-colors ${
-                errors.pincode 
-                  ? 'border-red-300' 
-                  : pincodeValid === true 
-                    ? 'border-green-300' 
-                    : pincodeValid === false
-                      ? 'border-red-300'
-                      : 'border-gray-200'
-              }`}
+              className={`w-full px-4 py-3 pr-12 border-2 rounded-lg focus:outline-none focus:ring-[#481d6f] focus:border-[#481d6f] transition-colors ${errors.pincode
+                ? 'border-red-300'
+                : pincodeValid === true
+                  ? 'border-green-300'
+                  : pincodeValid === false
+                    ? 'border-red-300'
+                    : 'border-gray-200'
+                }`}
             />
             <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
               {pincodeValidating ? (

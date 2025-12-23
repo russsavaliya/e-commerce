@@ -49,6 +49,10 @@ const orderSchema = new schema({
       },
     },
   ],
+  created_at: {
+    type: Date,
+    default: Date.now,
+  },
   sub_total: {
     type: Number,
     required: true,
@@ -101,7 +105,8 @@ const orderSchema = new schema({
     state: { type: String, required: true },
     pincode: { type: String, required: true },
     landmark: { type: String },
-  },
+  }
+
 }, {
   timestamps: true,
 });
