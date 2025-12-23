@@ -7,6 +7,7 @@ const user_attribute_controller = require('../controllers/users/attribute');
 const user_cart_controller = require('../controllers/users/cart');
 const user_checkout_controller = require('../controllers/users/checkout');
 const user_order_controller = require('../controllers/users/order');
+const user_payment_controller = require('../controllers/users/payment');
 const user_support_controller = require('../controllers/users/support');
 const user_review_controller = require('../controllers/users/review');
 
@@ -44,6 +45,11 @@ router.get('/checkout/pincode/validate', user_checkout_controller.validate_pinco
 router.post('/orders/init', user_order_controller.init_order);
 router.patch('/orders/:orderId/payment', user_order_controller.update_payment);
 router.get('/orders/track', user_order_controller.track_order);
+
+// Payment routes (Razorpay)
+router.post('/payments/razorpay/create/:orderId', user_payment_controller.create_razorpay_order);
+router.post('/payments/razorpay/verify/:orderId', user_payment_controller.verify_payment);
+router.get('/payments/status/:orderId', user_payment_controller.get_payment_status);
 
 // Support / contact routes
 router.post('/support/contact', user_support_controller.send_support_email);

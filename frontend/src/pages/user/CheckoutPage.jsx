@@ -9,7 +9,7 @@ import Navbar from '../../components/user/Navbar';
 import Footer from '../../components/user/Footer';
 import { Loader2, ArrowLeft, CreditCard, Wallet } from 'lucide-react';
 import { getCart } from '../../services/user/cartService';
-import { validatePincode, initOrder, updatePayment } from '../../services/user/checkoutService';
+import { validatePincode, initOrder, updatePayment, createRazorpayOrder, verifyRazorpayPayment } from '../../services/user/checkoutService';
 import toast from 'react-hot-toast';
 import ShippingForm from '../../components/user/checkout/ShippingForm';
 import OrderSummary from '../../components/user/checkout/OrderSummary';
@@ -233,6 +233,105 @@ const CheckoutPage = () => {
     }
   };
 
+  // Load Razorpay script
+  useEffect(() => {
+    if (selectedPayment === 'online' && currentStep === 'payment') {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      document.body.appendChild(script);
+
+      return () => {
+        // Cleanup script on unmount
+        const existingScript = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
+        if (existingScript) {
+          document.body.removeChild(existingScript);
+        }
+      };
+    }
+  }, [selectedPayment, currentStep]);
+
+  const handleRazorpayPayment = async () => {
+    if (!orderId || !cart) {
+      toast.error('Order information missing');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+
+      // Calculate total amount
+      const subtotal = cart.subtotal || 0;
+      const shipping = 0; // Free shipping
+      const totalAmount = subtotal + shipping;
+
+      // Create Razorpay order
+      const razorpayResponse = await createRazorpayOrder(orderId, totalAmount);
+
+      if (!razorpayResponse.status) {
+        throw new Error(razorpayResponse.message || 'Failed to create payment order');
+      }
+
+      const { data } = razorpayResponse;
+
+      // Initialize Razorpay checkout
+      const options = {
+        key: data.key_id,
+        amount: data.amount,
+        currency: data.currency,
+        name: 'SIYARA',
+        description: `Order ${data.orderId}`,
+        order_id: data.order_id,
+        handler: async function (response) {
+          try {
+            // Verify payment on backend
+            const verifyResponse = await verifyRazorpayPayment(data.orderId, {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+
+            if (verifyResponse.status) {
+              toast.success('Payment successful!', { icon: '🎉' });
+              setCart(null);
+              navigate(`/order-success/${data.orderId}`);
+            } else {
+              toast.error(verifyResponse.message || 'Payment verification failed');
+            }
+          } catch (error) {
+            console.error('Payment verification error:', error);
+            toast.error(error.message || 'Payment verification failed');
+          }
+        },
+        prefill: {
+          name: shippingData.fullName,
+          email: shippingData.email,
+          contact: shippingData.phone,
+        },
+        theme: {
+          color: '#481d6f',
+        },
+        modal: {
+          ondismiss: function () {
+            setIsSubmitting(false);
+            toast.error('Payment cancelled');
+          },
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.on('payment.failed', function (response) {
+        toast.error(`Payment failed: ${response.error.description}`);
+        setIsSubmitting(false);
+      });
+      razorpay.open();
+    } catch (error) {
+      console.error('Error initiating Razorpay payment:', error);
+      toast.error(error.message || 'Failed to initiate payment');
+      setIsSubmitting(false);
+    }
+  };
+
   const handlePlaceOrder = async () => {
     if (currentStep !== 'payment') {
       await handleContinueToPayment();
@@ -245,6 +344,13 @@ const CheckoutPage = () => {
       return;
     }
 
+    // Handle online payment with Razorpay
+    if (selectedPayment === 'online') {
+      await handleRazorpayPayment();
+      return;
+    }
+
+    // Handle COD payment
     try {
       setIsSubmitting(true);
       const response = await updatePayment(orderId, selectedPayment);
@@ -254,7 +360,7 @@ const CheckoutPage = () => {
           icon: '🎉',
         });
         setCart(null);
-        navigate(`/order-confirmation/${response.data.order_id}`);
+        navigate(`/order-success/${response.data.order_id}`);
       }
     } catch (error) {
       console.error('Error placing order:', error);

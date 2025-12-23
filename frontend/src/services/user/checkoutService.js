@@ -48,3 +48,34 @@ export const updatePayment = async (orderId, payment_method) => {
   }
 };
 
+// Razorpay Payment APIs
+export const createRazorpayOrder = async (orderId, amount) => {
+  try {
+    const response = await userApi.post(`/users/payments/razorpay/create/${orderId}`, {
+      amount,
+      currency: 'INR',
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const verifyRazorpayPayment = async (orderId, paymentData) => {
+  try {
+    const response = await userApi.post(`/users/payments/razorpay/verify/${orderId}`, paymentData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const getPaymentStatus = async (orderId) => {
+  try {
+    const response = await userApi.get(`/users/payments/status/${orderId}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+

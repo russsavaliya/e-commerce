@@ -96,6 +96,7 @@ import BestSellerPage from './pages/user/BestSellerPage';
 import AboutPage from './pages/user/AboutPage';
 import ContactPage from './pages/user/ContactPage';
 import OrderTrackPage from './pages/user/OrderTrackPage';
+import OrderSuccessPage from './pages/user/OrderSuccessPage';
 import ReturnPolicyPage from './pages/user/ReturnPolicyPage';
 
 // TODO: When you create new user pages, import them here:
@@ -279,6 +280,9 @@ function App() {
 
             {/* Checkout page */}
             <Route path="/checkout" element={<CheckoutPage />} />
+
+            {/* Order Success page */}
+            <Route path="/order-success/:orderId" element={<OrderSuccessPage />} />
 
             {/* 
               Route 2: Admin Protected Pages

@@ -67,7 +67,7 @@ const orderSchema = new schema({
   },
   order_status: {
     type: String,
-    enum: ['pending', 'accepted', 'shipped', 'missing', 'failed', 'cancelled', 'delivered'],
+    enum: ['pending', 'confirmed', 'accepted', 'shipped', 'missing', 'failed', 'cancelled', 'delivered'],
     default: 'pending',
   },
   payment_method: {
@@ -83,6 +83,15 @@ const orderSchema = new schema({
   payment_reference: {
     type: String,
   },
+  razorpay_order_id: {
+    type: String,
+  },
+  razorpay_payment_id: {
+    type: String,
+  },
+  paid_at: {
+    type: Date,
+  },
   shipping_address: {
     fullName: { type: String, required: true },
     phone: { type: String, required: true },
@@ -92,10 +101,6 @@ const orderSchema = new schema({
     state: { type: String, required: true },
     pincode: { type: String, required: true },
     landmark: { type: String },
-  },
-  created_at: {
-    type: Date,
-    default: Date.now,
   },
 }, {
   timestamps: true,
