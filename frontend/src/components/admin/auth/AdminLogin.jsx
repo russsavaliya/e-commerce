@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, AlertCircle, Loader2 } from 'lucide-react';
 import { adminLogin } from '../../../services/admin/authService';
 import adminLoginImage from '../../../assets/images/admin-login.jpg';
+import logo from '../../../assets/images/logo.png'
 const AdminLogin = () => {
   const navigate = useNavigate();
 
@@ -98,7 +99,11 @@ const AdminLogin = () => {
             <span>{error}</span>
           </div>
         )}
-
+        <div className="flex items-center justify-center mb-4">
+          <Link to="/" className="flex items-center justify-center">
+            <img src={logo || ""} alt="Logo"/>
+          </Link>
+        </div>
         {/* Card */}
         <div className="bg-black/40 backdrop-blur-xl rounded-3xl shadow-2xl p-10 border border-white/10">
 
