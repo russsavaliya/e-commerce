@@ -6,9 +6,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, PackageSearch, ShoppingBag, Heart, User, RefreshCw } from 'lucide-react';
+import { Menu, X, PackageSearch, ShoppingBag, Heart, User, RefreshCw, ChevronDown } from 'lucide-react';
 import { getCartCount } from '../../services/user/cartService';
 import logoImage from '../../assets/images/logo.png';
+import CategoryMegaMenu from './CategoryMegaMenu';
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -19,6 +20,33 @@ const Navbar = () => {
   // State for scroll-based navbar styling (for homepage)
   const [isScrolled, setIsScrolled] = useState(false);
   const [cartCount, setCartCount] = useState(0);
+  const [saleMenuOpen, setSaleMenuOpen] = useState(false);
+  const [saleMenuTimeout, setSaleMenuTimeout] = useState(null);
+
+  // Handle sale menu with delay to prevent flickering
+  const handleSaleMenuEnter = () => {
+    if (saleMenuTimeout) {
+      clearTimeout(saleMenuTimeout);
+      setSaleMenuTimeout(null);
+    }
+    setSaleMenuOpen(true);
+  };
+
+  const handleSaleMenuLeave = () => {
+    const timeout = setTimeout(() => {
+      setSaleMenuOpen(false);
+    }, 150); // Small delay to allow moving to menu
+    setSaleMenuTimeout(timeout);
+  };
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saleMenuTimeout) {
+        clearTimeout(saleMenuTimeout);
+      }
+    };
+  }, [saleMenuTimeout]);
 
   // Handle scroll for homepage navbar transparency
   useEffect(() => {
@@ -108,15 +136,45 @@ const Navbar = () => {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
-            {menuItems.map((item) => (
-              <Link
-                key={item.name}
-                to={item.path}
-                className={`${textClasses} ${hoverClasses} transition-colors font-medium text-base tracking-wide uppercase`}
-              >
-                {item.name}
-              </Link>
-            ))}
+            {menuItems.map((item) => {
+              // Special handling for Sale menu with mega-menu
+              if (item.name === 'Sale') {
+                return (
+                  <div
+                    key={item.name}
+                    className="relative"
+                    onMouseEnter={handleSaleMenuEnter}
+                    onMouseLeave={handleSaleMenuLeave}
+                  >
+                    <Link
+                      to={item.path}
+                      className={`${textClasses} ${hoverClasses} transition-colors font-medium text-base tracking-wide uppercase flex items-center gap-1.5`}
+                    >
+                      <span>{item.name}</span>
+                      <ChevronDown
+                        className={`w-3.5 h-3.5 transition-all duration-300 ${
+                          saleMenuOpen ? 'rotate-180 opacity-100' : 'rotate-0 opacity-70'
+                        }`}
+                      />
+                    </Link>
+                    <CategoryMegaMenu
+                      isOpen={saleMenuOpen}
+                      onClose={handleSaleMenuLeave}
+                    />
+                  </div>
+                );
+              }
+              // Regular menu items
+              return (
+                <Link
+                  key={item.name}
+                  to={item.path}
+                  className={`${textClasses} ${hoverClasses} transition-colors font-medium text-base tracking-wide uppercase`}
+                >
+                  {item.name}
+                </Link>
+              );
+            })}
           </div>
 
           {/* Right Icons */}
@@ -140,13 +198,13 @@ const Navbar = () => {
 
             {/* Return Policy Icon with Tooltip */}
             <div className="relative group">
-              <button
+            <button
                 onClick={() => navigate('/return-policy')}
-                className={`p-2 ${textClasses} ${hoverClasses} transition-colors`}
+              className={`p-2 ${textClasses} ${hoverClasses} transition-colors`}
                 aria-label="Return Policy"
-              >
+            >
                 <RefreshCw className="w-5 h-5" />
-              </button>
+            </button>
               <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-1.5 bg-[rgb(72,29,111)] text-white text-xs font-medium rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                 Return Policy
                 <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 -mb-1">
@@ -164,18 +222,18 @@ const Navbar = () => {
 
             {/* Cart Icon with Tooltip */}
             <div className="relative group">
-              <button
-                onClick={() => navigate('/cart')}
-                className={`p-2 ${textClasses} ${hoverClasses} transition-colors relative`}
-                aria-label="Cart"
-              >
-                <ShoppingBag className="w-5 h-5" />
-                {cartCount > 0 && (
-                  <span className="absolute top-0 right-0 w-5 h-5 bg-rose-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-                    {cartCount > 99 ? '99+' : cartCount}
-                  </span>
-                )}
-              </button>
+            <button
+              onClick={() => navigate('/cart')}
+              className={`p-2 ${textClasses} ${hoverClasses} transition-colors relative`}
+              aria-label="Cart"
+            >
+              <ShoppingBag className="w-5 h-5" />
+              {cartCount > 0 && (
+                <span className="absolute top-0 right-0 w-5 h-5 bg-rose-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                  {cartCount > 99 ? '99+' : cartCount}
+                </span>
+              )}
+            </button>
               <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-1.5 bg-[rgb(72,29,111)] text-white text-xs font-medium rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                 Cart
                 <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 -mb-1">
@@ -245,7 +303,7 @@ const Navbar = () => {
                     aria-label="Return Policy"
                   >
                     <RefreshCw className="w-5 h-5" />
-                  </button>
+                </button>
                   <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-1.5 bg-[rgb(72,29,111)] text-white text-xs font-medium rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                     Return Policy
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 -mb-1">
@@ -260,20 +318,20 @@ const Navbar = () => {
 
                 {/* Cart Icon with Tooltip */}
                 <div className="relative group">
-                  <button
-                    onClick={() => {
-                      navigate('/cart');
-                      setMobileMenuOpen(false);
-                    }}
-                    className={`p-2 ${textClasses} ${hoverClasses} transition-colors relative`}
-                  >
-                    <ShoppingBag className="w-5 h-5" />
-                    {cartCount > 0 && (
-                      <span className="absolute top-0 right-0 w-5 h-5 bg-rose-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-                        {cartCount > 99 ? '99+' : cartCount}
-                      </span>
-                    )}
-                  </button>
+                <button
+                  onClick={() => {
+                    navigate('/cart');
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`p-2 ${textClasses} ${hoverClasses} transition-colors relative`}
+                >
+                  <ShoppingBag className="w-5 h-5" />
+                  {cartCount > 0 && (
+                    <span className="absolute top-0 right-0 w-5 h-5 bg-rose-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                      {cartCount > 99 ? '99+' : cartCount}
+                    </span>
+                  )}
+                </button>
                   <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-1.5 bg-[rgb(72,29,111)] text-white text-xs font-medium rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                     Cart
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 -mb-1">

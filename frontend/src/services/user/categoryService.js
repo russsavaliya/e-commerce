@@ -18,3 +18,13 @@ export const getCategoriesList = async () => {
   }
 };
 
+// Get categories grouped by parent (for mega-menu)
+export const getCategoriesGrouped = async () => {
+  try {
+    const response = await userApi.get('/users/categories/grouped');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+

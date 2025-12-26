@@ -26,6 +26,7 @@ router.get('/products/:id', user_product_controller.get_product_detail);
 
 // Category routes
 router.get('/categories/list', user_category_controller.get_categories_list);
+router.get('/categories/grouped', user_category_controller.get_categories_grouped);
 
 // Attribute routes
 router.get('/attributes/list', user_attribute_controller.get_attributes_list);

@@ -291,64 +291,83 @@ const ProductDetailPage = () => {
         </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-          {/* Images */}
-          <div>
-            <div
-              className="relative bg-gray-100 overflow-hidden cursor-pointer flex items-center justify-center select-none"
-              style={{ minHeight: '400px', maxHeight: '720px' }}
-              onClick={() => displayImage && setIsImageModalOpen(true)}
-              onContextMenu={handleContextMenu}
-            >
-              {displayImage ? (
-                <img
-                  src={normalizeImagePath(displayImage)}
-                  alt={product.name}
-                  className="max-h-[720px] w-full h-full object-cover pointer-events-none select-none"
-                  draggable="false"
-                  onContextMenu={handleContextMenu}
-                  onDragStart={handleDragStart}
-                  onError={(e) => {
-                    e.target.src = 'https://via.placeholder.com/500x600?text=Image+Not+Available';
-                  }}
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                  <Package className="w-16 h-16 text-gray-400" />
+          {/* Left Column: Images, Thumbnails, Description */}
+          <div className="space-y-6">
+            {/* Main Image */}
+            <div>
+              <div
+                className="relative bg-gray-100 overflow-hidden cursor-pointer flex items-center justify-center select-none"
+                style={{ minHeight: '400px', maxHeight: '720px' }}
+                onClick={() => displayImage && setIsImageModalOpen(true)}
+                onContextMenu={handleContextMenu}
+              >
+                {displayImage ? (
+                  <img
+                    src={normalizeImagePath(displayImage)}
+                    alt={product.name}
+                    className="max-h-[720px] w-full h-full object-cover pointer-events-none select-none"
+                    draggable="false"
+                    onContextMenu={handleContextMenu}
+                    onDragStart={handleDragStart}
+                    onError={(e) => {
+                      e.target.src = 'https://via.placeholder.com/500x600?text=Image+Not+Available';
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                    <Package className="w-16 h-16 text-gray-400" />
+                  </div>
+                )}
+              </div>
+              {images.length > 1 && (
+                <div className="mt-4 grid grid-cols-4 sm:grid-cols-6 gap-3">
+                  {images.map((img, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        setActiveImage(img);
+                        // Clear variant selection when clicking on main product image
+                        setSelectedVariantId(null);
+                      }}
+                      className={`border overflow-hidden h-20 bg-gray-100 aspect-[3/4] select-none transition-colors ${activeImage === img && !selectedVariantId ? 'border-[rgb(72,29,111)]' : 'border-[#E5E7EB]'
+                        }`}
+                      onContextMenu={handleContextMenu}
+                    >
+                      <img
+                        src={normalizeImagePath(img)}
+                        alt={`thumb-${idx}`}
+                        className="w-full h-full object-cover pointer-events-none select-none"
+                        draggable="false"
+                        onContextMenu={handleContextMenu}
+                        onDragStart={handleDragStart}
+                        onError={(e) => {
+                          e.target.src = 'https://via.placeholder.com/200x200?text=Image';
+                        }}
+                      />
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
-            {images.length > 1 && (
-              <div className="mt-4 grid grid-cols-4 sm:grid-cols-6 gap-3">
-                {images.map((img, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => {
-                      setActiveImage(img);
-                      // Clear variant selection when clicking on main product image
-                      setSelectedVariantId(null);
-                    }}
-                    className={`border overflow-hidden h-20 bg-gray-100 aspect-[3/4] select-none transition-colors ${activeImage === img && !selectedVariantId ? 'border-[rgb(72,29,111)]' : 'border-[#E5E7EB]'
-                      }`}
-                    onContextMenu={handleContextMenu}
-                  >
-                    <img
-                      src={normalizeImagePath(img)}
-                      alt={`thumb-${idx}`}
-                      className="w-full h-full object-cover pointer-events-none select-none"
-                      draggable="false"
-                      onContextMenu={handleContextMenu}
-                      onDragStart={handleDragStart}
-                      onError={(e) => {
-                        e.target.src = 'https://via.placeholder.com/200x200?text=Image';
-                      }}
-                    />
-                  </button>
-                ))}
+
+            {/* Product Description - Moved to Left Column */}
+            {product.description && (
+              <div className="bg-white border border-[#E5E7EB] rounded-xl shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-[#E5E7EB] bg-[#FAF9F5]">
+                  <h3 className="text-sm font-semibold text-[rgb(72,29,111)] uppercase tracking-wide">
+                    Product Description
+                  </h3>
+                </div>
+                <div className="px-6 py-5">
+                  <p className="text-base text-[#374151] leading-relaxed whitespace-pre-line">
+                    {product.description}
+                  </p>
+                </div>
               </div>
             )}
           </div>
 
-          {/* Details */}
+          {/* Right Column: Details, Price, Variants, Actions, Reviews */}
           <div className="space-y-6">
             <div>
               <h1 className="text-3xl md:text-4xl font-bold text-[rgb(72,29,111)] leading-tight">{product.name}</h1>
@@ -383,12 +402,6 @@ const ProductDetailPage = () => {
                 </span>
               )}
             </div>
-
-            {product.description && (
-              <div className="text-base text-[#374151] leading-relaxed bg-white border border-[#E5E7EB] rounded-xl p-4 shadow-sm">
-                {product.description}
-              </div>
-            )}
 
             {/* Product-level attributes (read-only display) */}
             {product.attributesvalues &&
