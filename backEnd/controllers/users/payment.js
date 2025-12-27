@@ -6,10 +6,11 @@
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const order_model = require('../../model/order');
+const { sendOrderSuccessEmail } = require('../../helper/emailHelper');
 
 // Initialize Razorpay instance
 const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,  
+  key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
@@ -140,7 +141,7 @@ exports.verify_payment = async (req, res) => {
     // Verify with Razorpay API
     try {
       const payment = await razorpay.payments.fetch(razorpay_payment_id);
-      
+
       if (payment.status !== 'captured' && payment.status !== 'authorized') {
         return res.status(400).json({
           status: false,
@@ -167,6 +168,15 @@ exports.verify_payment = async (req, res) => {
       // Clear cart from session
       if (req.session) {
         req.session.cart = [];
+      }
+
+      // Send order confirmation emails (customer + admin)
+      // Note: Email sending is non-blocking - errors won't affect order creation
+      try {
+        await sendOrderSuccessEmail(updatedOrder.toObject());
+      } catch (err) {
+        console.error('Failed to send order confirmation emails:', err);
+        // Don't throw - order is already created successfully
       }
 
       return res.status(200).json({
@@ -224,7 +234,7 @@ exports.get_payment_status = async (req, res) => {
     // If payment is paid OR COD order is confirmed, return full order details for success page
     const isPaid = order.payment_status === 'paid';
     const isCODConfirmed = order.payment_method === 'cod' && order.order_status === 'confirmed';
-    
+
     if (isPaid || isCODConfirmed) {
       return res.status(200).json({
         status: true,

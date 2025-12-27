@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Order Confirmed - SIYARA</title>
+    <!--[if mso]>
+    <style type="text/css">
+        body, table, td {font-family: Arial, sans-serif !important;}
+    </style>
+    <![endif]-->
+</head>
+
+<body
+    style="margin: 0; padding: 0; background-color: #FAF9F5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+    <!-- Main Container -->
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"
+        style="background-color: #FAF9F5;">
+        <tr>
+            <td align="center" style="padding: 40px 20px;">
+                <!-- Email Content Container -->
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600"
+                    style="max-width: 600px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+
+                    <!-- Header with Logo -->
+                    <tr>
+                        <td align="center"
+                            style="padding: 40px 30px 30px; background: linear-gradient(135deg, #481d6f 0%, #390e60 100%); border-radius: 12px 12px 0 0;">
+                            <img src="{{LOGO_URL}}" alt="SIYARA Logo"
+                                style="max-width: 120px; height: auto; margin-bottom: 10px;">
+                        </td>
+                    </tr>
+
+                    <!-- Success Message -->
+                    <tr>
+                        <td align="center" style="padding: 40px 30px 20px;">
+                            <div
+                                style="width: 80px; height: 80px; background-color: #10b981; border-radius: 50%; display: inline-block; margin-bottom: 20px;">
+                                <div style="color: #ffffff; font-size: 48px; line-height: 80px; text-align: center;">✓
+                                </div>
+                            </div>
+                            <h2 style="margin: 0 0 10px; color: #481d6f; font-size: 28px; font-weight: 700;">Order
+                                Confirmed!</h2>
+                            <p style="margin: 0; color: #6b7280; font-size: 16px; line-height: 1.6;">Thank you for your
+                                purchase. We're excited to serve you!</p>
+                        </td>
+                    </tr>
+
+                    <!-- Order ID -->
+                    <tr>
+                        <td style="padding: 0 30px 30px;">
+                            <div
+                                style="background-color: #f3f4f6; border-left: 4px solid #481d6f; padding: 15px 20px; border-radius: 6px;">
+                                <p
+                                    style="margin: 0 0 5px; color: #6b7280; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                                    Order ID</p>
+                                <p style="margin: 0; color: #481d6f; font-size: 20px; font-weight: 700;">{{ORDER_ID}}
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Order Details -->
+                    <tr>
+                        <td style="padding: 0 30px 30px;">
+                            <h3
+                                style="margin: 0 0 20px; color: #481d6f; font-size: 20px; font-weight: 700; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">
+                                Order Details</h3>
+
+                            <!-- Products Table -->
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"
+                                style="margin-bottom: 20px;">
+                                <thead>
+                                    <tr style="background-color: #f9fafb;">
+                                        <th
+                                            style="padding: 12px; text-align: left; color: #374151; font-size: 14px; font-weight: 600; border-bottom: 2px solid #e5e7eb;">
+                                            Product</th>
+                                        <th
+                                            style="padding: 12px; text-align: center; color: #374151; font-size: 14px; font-weight: 600; border-bottom: 2px solid #e5e7eb;">
+                                            Quantity</th>
+                                        <th
+                                            style="padding: 12px; text-align: right; color: #374151; font-size: 14px; font-weight: 600; border-bottom: 2px solid #e5e7eb;">
+                                            Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {{PRODUCT_ROWS}}
+                                </tbody>
+                            </table>
+
+                            <!-- Order Summary -->
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"
+                                style="background-color: #f9fafb; border-radius: 8px; padding: 20px;">
+                                <tr>
+                                    <td style="padding: 8px 0;">
+                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0"
+                                            width="100%">
+                                            <tr>
+                                                <td style="color: #6b7280; font-size: 14px;">Subtotal</td>
+                                                <td align="right"
+                                                    style="color: #374151; font-size: 14px; font-weight: 600;">₹
+                                                    {{SUBTOTAL}}</td>
+                                            </tr>
+                                            {{SHIPPING_ROW}}
+                                            {{TAX_ROW}}
+                                            <tr>
+                                                <td colspan="2"
+                                                    style="padding-top: 12px; border-top: 2px solid #e5e7eb;">
+                                                    <table role="presentation" cellspacing="0" cellpadding="0"
+                                                        border="0" width="100%">
+                                                        <tr>
+                                                            <td
+                                                                style="color: #481d6f; font-size: 18px; font-weight: 700;">
+                                                                Total</td>
+                                                            <td align="right"
+                                                                style="color: #481d6f; font-size: 18px; font-weight: 700;">
+                                                                ₹ {{TOTAL}}</td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Payment Info -->
+                    <tr>
+                        <td style="padding: 0 30px 30px;">
+                            <div style="background-color: rgba(72, 29, 111, 0.05); border-radius: 8px; padding: 20px;">
+                                <p
+                                    style="margin: 0 0 10px; color: #6b7280; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                                    Payment Method</p>
+                                <p style="margin: 0 0 15px; color: #481d6f; font-size: 16px; font-weight: 700;">
+                                    {{PAYMENT_METHOD}}</p>
+                                {{PAYMENT_STATUS_ROW}}
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Customer Details -->
+                    <tr>
+                        <td style="padding: 0 30px 30px;">
+                            <h3 style="margin: 0 0 15px; color: #481d6f; font-size: 18px; font-weight: 700;">Shipping
+                                Address</h3>
+                            <div
+                                style="background-color: #f9fafb; border-radius: 8px; padding: 20px; line-height: 1.8;">
+                                <p style="margin: 0 0 8px; color: #374151; font-size: 15px; font-weight: 600;">
+                                    {{CUSTOMER_NAME}}</p>
+                                <p style="margin: 0 0 8px; color: #6b7280; font-size: 14px;">{{CUSTOMER_ADDRESS}}</p>
+                                <p style="margin: 0 0 8px; color: #6b7280; font-size: 14px;">{{CUSTOMER_CITY_STATE_PIN}}
+                                </p>
+                                <p style="margin: 0 0 4px; color: #6b7280; font-size: 14px;">Phone: <span
+                                        style="color: #374151; font-weight: 600;">{{CUSTOMER_PHONE}}</span></p>
+                                <p style="margin: 0; color: #6b7280; font-size: 14px;">Email: <span
+                                        style="color: #374151; font-weight: 600;">{{CUSTOMER_EMAIL}}</span></p>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Thank You Message -->
+                    <tr>
+                        <td style="padding: 0 30px 40px;">
+                            <div
+                                style="text-align: center; padding: 30px; background: linear-gradient(135deg, rgba(72, 29, 111, 0.05) 0%, rgba(57, 14, 96, 0.05) 100%); border-radius: 8px;">
+                                <p style="margin: 0 0 15px; color: #374151; font-size: 16px; line-height: 1.6;">We've
+                                    received your order and will start processing it right away. You'll receive another
+                                    email when your order ships.</p>
+                                <p style="margin: 0; color: #6b7280; font-size: 14px; line-height: 1.6;">If you have any
+                                    questions, feel free to contact our support team.</p>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Support Contact -->
+                    <tr>
+                        <td style="padding: 0 30px 30px; border-top: 1px solid #e5e7eb;">
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                <tr>
+                                    <td align="center" style="padding-top: 30px;">
+                                        <p style="margin: 0 0 10px; color: #6b7280; font-size: 14px;">Need help? Contact
+                                            our support team</p>
+                                        <p style="margin: 0; color: #481d6f; font-size: 14px; font-weight: 600;">
+                                            {{SUPPORT_EMAIL}}</p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td
+                            style="padding: 30px; background-color: #f9fafb; border-radius: 0 0 12px 12px; text-align: center;">
+                            <p style="margin: 0 0 10px; color: #6b7280; font-size: 12px;">© {{CURRENT_YEAR}} SIYARA. All
+                                rights reserved.</p>
+                            <p style="margin: 0; color: #9ca3af; font-size: 11px;">This is an automated email. Please do
+                                not reply to this message.</p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>

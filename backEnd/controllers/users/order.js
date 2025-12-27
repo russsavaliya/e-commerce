@@ -1,6 +1,7 @@
 const product_model = require('../../model/product');
 const order_model = require('../../model/order');
 const customer_controller = require('./customer');
+const { sendOrderSuccessEmail } = require('../../helper/emailHelper');
 
 const allowedPaymentMethods = ['cod', 'online'];
 
@@ -113,7 +114,7 @@ exports.init_order = async (req, res) => {
 
     // Create/Update customer and attach order_id
     await customer_controller.upsert_from_shipping(order.shipping_address, order.order_id);
-   
+
     return res.status(201).json({
       status: true,
       message: 'Order created. Proceed to payment step.',
@@ -134,6 +135,7 @@ exports.init_order = async (req, res) => {
 
 /**
  * Step 2: Payment selection / status update (no real gateway for now).
+ * COD order confirmation.
  */
 exports.update_payment = async (req, res) => {
   try {
@@ -170,6 +172,14 @@ exports.update_payment = async (req, res) => {
     // Clear cart only after payment is confirmed/order is placed
     // This ensures cart remains intact if user abandons checkout
     req.session.cart = [];
+
+    // Send order confirmation emails (customer + admin)
+    try {
+      await sendOrderSuccessEmail(order.toObject());
+    } catch (err) {
+      console.error('Failed to send order confirmation emails:', err);
+      // Don't throw - order is already created successfully
+    }
 
     return res.status(200).json({
       status: true,
