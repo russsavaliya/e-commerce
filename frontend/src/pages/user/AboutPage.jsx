@@ -51,7 +51,7 @@ const AboutPage = () => {
         {/* Hero */}
         <section className="text-center space-y-3">
           {/* <p className="text-[#481d6f]-500 font-semibold tracking-wide uppercase">About Us</p> */}
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900">SIYARA, Curated with Care</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900">SIYARA, Dress Bold Live Bold</h1>
           <p className="text-gray-600 max-w-3xl mx-auto">
             SIYARA is a premium saree store that offers a wide range of sarees for every occasion. We are committed to providing the best quality sarees to our customers.
           </p>

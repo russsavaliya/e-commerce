@@ -154,7 +154,7 @@ exports.update_payment = async (req, res) => {
           payment_method,
           payment_status: 'pending',
           // Keep order_status as 'pending' - admin will update it step by step
-          order_status: 'pending',
+          order_status: 'confirmed',
         },
       },
       { new: true }

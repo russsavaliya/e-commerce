@@ -23,15 +23,22 @@ const OrderSuccessPage = () => {
   const fetchOrderDetails = async () => {
     try {
       setLoading(true);
-      // Get full order details (API returns full details if payment is paid)
+      // Get full order details (API returns full details if payment is paid OR COD order is confirmed)
       const response = await getPaymentStatus(orderId);
       
-      if (response.status && response.data.payment_status === 'paid') {
+      // Check if order is paid (online payment) OR confirmed COD order
+      const isPaid = response.status && response.data.payment_status === 'paid';
+      const isCODConfirmed = response.status && 
+        response.data.payment_method === 'cod' && 
+        response.data.order_status === 'confirmed' &&
+        response.data.sub_total !== undefined; // Full details are present
+      
+      if (isPaid || isCODConfirmed) {
         // API now returns full order details including amounts and shipping address
         setOrderData(response.data);
       } else {
-        // If not paid, show error
-        toast.error('Payment not confirmed. Please contact support.');
+        // If not paid and not confirmed COD, show error
+        toast.error('Order not confirmed. Please contact support.');
         setTimeout(() => navigate('/order/track'), 2000);
       }
     } catch (error) {
@@ -127,12 +134,15 @@ const OrderSuccessPage = () => {
                   {orderData.payment_method === 'online' ? 'Online Payment' : 'Cash on Delivery'}
                 </span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-[#6B7280]">Payment Status</span>
-                <span className="text-sm font-semibold text-green-600 capitalize">
-                  {orderData.payment_status}
-                </span>
-              </div>
+              {/* Show Payment Status only for online payments, not for COD */}
+              {orderData.payment_method === 'online' && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-[#6B7280]">Payment Status</span>
+                  <span className="text-sm font-semibold text-green-600 capitalize">
+                    {orderData.payment_status}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Products List */}
@@ -194,13 +204,13 @@ const OrderSuccessPage = () => {
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link
+          {/* <Link
             to="/order/track"
             className="inline-flex items-center justify-center gap-2 px-6 py-3 border-[1.5px] border-[rgb(72,29,111)] text-[rgb(72,29,111)] rounded-full font-semibold hover:bg-[rgba(72,29,111,0.08)] transition-all duration-200"
           >
             <Package className="w-5 h-5" />
             Track Order
-          </Link>
+          </Link> */}
           <Link
             to="/"
             className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[rgb(72,29,111)] text-white rounded-full font-semibold hover:bg-[#390e60] transition-all duration-200"

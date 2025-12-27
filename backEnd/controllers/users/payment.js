@@ -221,8 +221,11 @@ exports.get_payment_status = async (req, res) => {
       });
     }
 
-    // If payment is paid, return full order details for success page
-    if (order.payment_status === 'paid') {
+    // If payment is paid OR COD order is confirmed, return full order details for success page
+    const isPaid = order.payment_status === 'paid';
+    const isCODConfirmed = order.payment_method === 'cod' && order.order_status === 'confirmed';
+    
+    if (isPaid || isCODConfirmed) {
       return res.status(200).json({
         status: true,
         message: 'Order details retrieved successfully',
@@ -244,7 +247,7 @@ exports.get_payment_status = async (req, res) => {
       });
     }
 
-    // If not paid, return only payment status
+    // If not paid and not confirmed COD, return only payment status
     return res.status(200).json({
       status: true,
       message: 'Payment status retrieved successfully',

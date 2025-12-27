@@ -299,13 +299,13 @@ const CartPage = () => {
                   Proceed to Checkout
                 </button>
 
-                <button
+               {/*  <button
                   onClick={() => navigate('/order/track')}
                   className="w-full bg-white border-[1.5px] border-[rgb(72,29,111)] text-[rgb(72,29,111)] py-3 rounded-full font-semibold hover:bg-[rgba(72,29,111,0.08)] transition-all duration-200 mb-3 flex items-center justify-center gap-2"
                 >
                   <PackageSearch className="w-4 h-4" />
                   Track Order
-                </button>
+                </button> */}
 
                 <button
                   onClick={() => navigate('/sale')}
