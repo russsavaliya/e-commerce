@@ -9,8 +9,14 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Cabin', 'sans-serif'],
-        serif: ['Cabin', 'sans-serif'],
+        // Luxury serif fonts for headings and navbar
+        serif: ['Playfair Display', 'serif'],
+        elegant: ['Cormorant Garamond', 'serif'],
+        // Modern sans-serif for body and product cards
+        sans: ['Inter', 'sans-serif'],
+        // Legacy support
+        body: ['Inter', 'sans-serif'],
+        heading: ['Playfair Display', 'serif'],
       },
       fontSize: {
         base: '16px',

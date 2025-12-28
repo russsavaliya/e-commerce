@@ -148,7 +148,13 @@ const Navbar = () => {
                   >
                     <Link
                       to={item.path}
-                      className={`${textClasses} ${hoverClasses} transition-colors font-medium text-base tracking-wide uppercase flex items-center gap-1.5`}
+                      className={`${textClasses} ${hoverClasses} transition-colors font-luxury-nav flex items-center gap-1.5`}
+                      style={{
+                        fontFamily: '"Playfair Display", serif',
+                        fontWeight: 500,
+                        fontSize: '14px',
+                        letterSpacing: '0.08em',
+                      }}
                     >
                       <span>{item.name}</span>
                       <ChevronDown
@@ -169,7 +175,14 @@ const Navbar = () => {
                 <Link
                   key={item.name}
                   to={item.path}
-                  className={`${textClasses} ${hoverClasses} transition-colors font-medium text-base tracking-wide uppercase`}
+                  className={`${textClasses} ${hoverClasses} transition-colors`}
+                  style={{
+                    fontFamily: '"Playfair Display", serif',
+                    fontWeight: 500,
+                    fontSize: '14px',
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                  }}
                 >
                   {item.name}
                 </Link>

@@ -22,32 +22,72 @@
   box-sizing: border-box;
 }
 
-/* Global Font - Applied to all elements */
+/* Premium Typography System - Luxury Fashion Brand */
+
+/* Global Font - Inter for body text (modern, readable) */
 *,
 *::before,
 *::after {
-  font-family: "Cabin", sans-serif;
+  font-family: "Inter", sans-serif;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  font-family: "Cabin", sans-serif;
+  font-family: "Inter", sans-serif;
   font-size: 16px;
+  font-weight: 400;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: #faf9f5;
+  color: #1f2937;
 }
 
 /* User-side specific font styling */
 .user-page {
-  font-family: "Cabin", sans-serif;
+  font-family: "Inter", sans-serif;
 }
 
 #root {
   min-height: 100vh;
-  font-family: "Cabin", sans-serif;
+  font-family: "Inter", sans-serif;
   background-color: #faf9f5;
+}
+
+/* Luxury Typography Classes */
+.font-luxury-heading {
+  font-family: "Playfair Display", serif;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: rgb(72, 29, 111);
+}
+
+.font-luxury-nav {
+  font-family: "Playfair Display", serif;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-size: 14px;
+}
+
+.font-luxury-elegant {
+  font-family: "Cormorant Garamond", serif;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+.font-product-title {
+  font-family: "Inter", sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+}
+
+.font-product-price {
+  font-family: "Inter", sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 /* Range Slider Styles - Default browser colors */
