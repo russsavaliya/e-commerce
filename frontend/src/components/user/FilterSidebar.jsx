@@ -62,6 +62,27 @@ const FilterSidebar = ({
   // Ref to track if slider is being dragged (to prevent external sync interference)
   const isSliderDragging = useRef(false);
 
+  // Sort dropdown state
+  const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
+  const sortDropdownRef = useRef(null);
+
+  // Close sort dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target)) {
+        setSortDropdownOpen(false);
+      }
+    };
+
+    if (sortDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [sortDropdownOpen]);
+
   // Sync testRange when external priceRange changes (but not while dragging)
   useEffect(() => {
     if (!isSliderDragging.current && externalPriceRange) {
@@ -209,7 +230,7 @@ const FilterSidebar = ({
                       setCategorySearchTerm(e.target.value);
                     }}
                     onKeyDown={(e) => e.stopPropagation()}
-                    className="w-full pl-10 pr-3 py-2.5 text-sm border border-[rgb(72,29,111)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(72,29,111)] focus:border-[rgb(72,29,111)] bg-[#faf9f5]"
+                    className="w-full pl-10 pr-3 py-2.5 text-sm border border-[rgb(72,29,111)] rounded-lg focus:outline-none focus:ring-[rgb(72,29,111)] focus:border-[rgb(72,29,111)] bg-[#faf9f5]"
                     onClick={(e) => e.stopPropagation()}
                     onMouseDown={(e) => e.stopPropagation()}
                     autoFocus
@@ -553,7 +574,7 @@ const FilterSidebar = ({
                       setAttributeSearchTerm(e.target.value);
                     }}
                     onKeyDown={(e) => e.stopPropagation()}
-                    className="w-full pl-10 pr-3 py-2.5 text-sm border border-[rgb(72,29,111)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(72,29,111)] focus:border-[rgb(72,29,111)] bg-[#faf9f5]"
+                    className="w-full pl-10 pr-3 py-2.5 text-sm border border-[rgb(72,29,111)] rounded-lg focus:outline-none focus:ring-[rgb(72,29,111)] focus:border-[rgb(72,29,111)] bg-[#faf9f5]"
                     onClick={(e) => e.stopPropagation()}
                     onMouseDown={(e) => e.stopPropagation()}
                     autoFocus
@@ -639,7 +660,7 @@ const FilterSidebar = ({
                         setAttributeValueSearchTerm(e.target.value);
                       }}
                       onKeyDown={(e) => e.stopPropagation()}
-                      className="w-full pl-10 pr-3 py-2.5 text-sm border border-[rgb(72,29,111)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(72,29,111)] focus:border-[rgb(72,29,111)] bg-[#faf9f5]"
+                      className="w-full pl-10 pr-3 py-2.5 text-sm border border-[rgb(72,29,111)] rounded-lg focus:outline-none focus:ring-[rgb(72,29,111)] focus:border-[rgb(72,29,111)] bg-[#faf9f5]"
                       onClick={(e) => e.stopPropagation()}
                       onMouseDown={(e) => e.stopPropagation()}
                       autoFocus
@@ -710,27 +731,50 @@ const FilterSidebar = ({
           Clear All
         </button>
       </div>
-      <div className="mb-6">
+      <div className="mb-6 relative sort-dropdown-container" ref={sortDropdownRef}>
         <label className="flex items-center gap-2 text-xs font-semibold text-[rgb(72,29,111)] mb-2.5 uppercase tracking-wide">
           <ArrowUpDown className="w-4 h-4 text-[rgb(72,29,111)]" />
           Sort By
         </label>
         <div className="relative">
-          <select
-            value={`${filters.sort_by}-${filters.sort_order}`}
-            onChange={(e) => {
-              const [sort_by, sort_order] = e.target.value.split('-');
-              updateFilters({ sort_by, sort_order });
-            }}
-            className="w-full px-3 py-2.5 pr-10 border border-[rgb(72,29,111)] rounded-lg focus:outline-none text-sm bg-[#faf9f5] shadow-sm hover:border-[rgb(72,29,111)] transition-colors appearance-none"
+          <button
+            type="button"
+            onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
+            className="w-full px-3 py-2.5 border border-[rgb(72,29,111)] rounded-lg focus:outline-none text-sm text-left flex items-center justify-between bg-[#faf9f5] shadow-sm hover:border-[rgb(72,29,111)] transition-colors"
           >
-            {SORT_OPTIONS.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[rgb(72,29,111)] pointer-events-none" />
+            <span className="truncate">
+              {SORT_OPTIONS.find(opt => opt.value === `${filters.sort_by}-${filters.sort_order}`)?.label || 'Newest First'}
+            </span>
+            <ChevronDown className={`w-4 h-4 text-[rgb(72,29,111)] transition-transform flex-shrink-0 ${sortDropdownOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {sortDropdownOpen && (
+            <div className="absolute z-50 w-full mt-2 bg-[#faf9f5] border border-[rgb(72,29,111)] rounded-lg shadow-xl overflow-hidden">
+              <div className="max-h-[300px] overflow-y-auto">
+                {SORT_OPTIONS.map((option) => {
+                  const isSelected = option.value === `${filters.sort_by}-${filters.sort_order}`;
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => {
+                        const [sort_by, sort_order] = option.value.split('-');
+                        updateFilters({ sort_by, sort_order });
+                        setSortDropdownOpen(false);
+                      }}
+                      className={`w-full px-4 py-2.5 text-left text-sm hover:bg-[rgb(72,29,111)] hover:text-[#faf9f5] transition-colors ${
+                        isSelected
+                          ? 'bg-[rgb(72,29,111)] text-[#faf9f5] font-semibold'
+                          : 'text-[rgb(72,29,111)]'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
       <CategoryDropdown />

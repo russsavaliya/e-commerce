@@ -15,6 +15,7 @@ const admin_customer_controller = require('../controllers/admin_customer')
 const admin_dashboard_controller = require('../controllers/dashboard')
 const admin_review_controller = require('../controllers/admin_review')
 const utils_controller = require('../controllers/utils')
+const shipment_controller = require('../controllers/shipment');
 /* GET home page. */
 router.post('/admin/auth/signup', authorization.authorization, permission.checkPermission('admin_create'), admin_controller.signup);
 router.post('/admin/auth/login', admin_controller.login);
@@ -69,6 +70,12 @@ router.get('/orders/export-one', authorization.authorization, admin_order_contro
 router.get('/orders/:orderId', authorization.authorization, admin_order_controller.get_order_one);
 router.patch('/orders/:orderId/status', authorization.authorization, permission.checkPermission('order_update'), admin_order_controller.update_order_status);
 router.patch('/orders/:orderId/payment-status', authorization.authorization, permission.checkPermission('order_update'), admin_order_controller.update_payment_status);
+
+// shipment routes (admin)
+router.post('/shipments/create/:orderId', authorization.authorization, permission.checkPermission('order_update'), shipment_controller.create_shipment);
+router.get('/shipments/order/:orderId', authorization.authorization, shipment_controller.get_shipment_by_order);
+router.get('/shipments/list', authorization.authorization, shipment_controller.get_shipment_list);
+router.patch('/shipments/:shipmentId/status', authorization.authorization, permission.checkPermission('order_update'), shipment_controller.update_shipment_status);
 
 // customer routes (admin)
 router.get('/customers/list', authorization.authorization, admin_customer_controller.get_customer_list);

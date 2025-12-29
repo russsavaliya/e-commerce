@@ -13,16 +13,20 @@ import {
   Phone,
   Mail,
   FileText,
-  IndianRupee
+  IndianRupee,
+  Truck,
+  ExternalLink
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getOrderById, updateOrderStatus, updatePaymentStatus, downloadOrderPdf } from '../../services/admin/orderService';
+import { getShipmentByOrder } from '../../services/admin/shipmentService';
 import { API_BASE_URL } from '../../utils/constants';
 
 const getStatusColor = (status) => {
   const colors = {
     pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
     accepted: 'bg-blue-100 text-blue-800 border-blue-200',
+    shipment: 'bg-indigo-100 text-indigo-800 border-indigo-200',
     shipped: 'bg-purple-100 text-purple-800 border-purple-200',
     delivered: 'bg-green-100 text-green-800 border-green-200',
     cancelled: 'bg-red-100 text-red-800 border-red-200',
@@ -75,6 +79,8 @@ const OrderDetail = () => {
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [updatingPaymentStatus, setUpdatingPaymentStatus] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [shipment, setShipment] = useState(null);
+  const [loadingShipment, setLoadingShipment] = useState(false);
 
   useEffect(() => {
     const fetchOrderDetail = async () => {
@@ -111,7 +117,21 @@ const OrderDetail = () => {
 
       if (response.status) {
         setOrder(prev => ({ ...prev, order_status: newStatus }));
-        toast.success(`Order status updated to ${newStatus}`);
+        
+        // If status changed to 'shipment', fetch shipment details
+        if (newStatus === 'shipment') {
+          fetchShipmentDetails();
+        }
+        
+        // Show success message (handle warning if shipment creation failed)
+        if (response.warning) {
+          toast.success(`Order status updated to ${newStatus}`, {
+            icon: '⚠️',
+          });
+          toast.error(response.message || 'Shipment creation failed');
+        } else {
+          toast.success(`Order status updated to ${newStatus}`);
+        }
       }
     } catch (err) {
       console.error('Error updating order status:', err);
@@ -120,6 +140,32 @@ const OrderDetail = () => {
       setUpdatingStatus(false);
     }
   };
+
+  const fetchShipmentDetails = async () => {
+    if (!orderId) return;
+    
+    try {
+      setLoadingShipment(true);
+      const response = await getShipmentByOrder(orderId);
+      if (response.status && response.data) {
+        setShipment(response.data);
+      }
+    } catch (err) {
+      // Shipment might not exist yet, that's okay
+      console.log('Shipment not found or not created yet');
+      setShipment(null);
+    } finally {
+      setLoadingShipment(false);
+    }
+  };
+
+  // Fetch shipment when order status is 'shipment' or order loads
+  useEffect(() => {
+    if (order && (order.order_status === 'shipment' || order.order_status === 'shipped' || order.order_status === 'delivered')) {
+      fetchShipmentDetails();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [order?.order_status, orderId]);
 
   const handlePaymentStatusChange = async (newPaymentStatus) => {
     if (!order || updatingPaymentStatus) return;
@@ -145,7 +191,7 @@ const OrderDetail = () => {
   };
 
   const getAllStatusOptions = () => {
-    return ['pending', 'accepted', 'shipped', 'delivered', 'cancelled', 'missing', 'failed'];
+    return ['pending', 'accepted', 'shipment', 'shipped', 'delivered', 'cancelled', 'missing', 'failed'];
   };
 
   const handleDownloadPdf = async () => {
@@ -461,6 +507,75 @@ const OrderDetail = () => {
                   )}
                 </div>
               </div>
+
+              {/* Shipment Information */}
+              {(order.order_status === 'shipment' || order.order_status === 'shipped' || order.order_status === 'delivered' || shipment) && (
+                <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
+                  <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <Truck className="w-5 h-5 text-indigo-600" />
+                    Shipment Details
+                  </h2>
+                  {loadingShipment ? (
+                    <div className="flex items-center justify-center py-4">
+                      <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                      <span className="text-sm text-gray-600 ml-2">Loading shipment...</span>
+                    </div>
+                  ) : shipment ? (
+                    <div className="space-y-3 text-sm">
+                      {shipment.shiprocket_order_id && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Shiprocket Order ID</span>
+                          <span className="font-semibold text-gray-900">{shipment.shiprocket_order_id}</span>
+                        </div>
+                      )}
+                      {shipment.awb_code && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">AWB Code</span>
+                          <span className="font-semibold text-gray-900">{shipment.awb_code}</span>
+                        </div>
+                      )}
+                      {shipment.courier_name && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Courier</span>
+                          <span className="font-semibold text-gray-900">{shipment.courier_name}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Status</span>
+                        <span className="inline-flex px-2.5 py-1 text-xs font-bold rounded-full border bg-indigo-100 text-indigo-800 border-indigo-200">
+                          {shipment.shipment_status || 'created'}
+                        </span>
+                      </div>
+                      {shipment.tracking_url && (
+                        <div className="pt-2 border-t border-gray-100">
+                          <a
+                            href={shipment.tracking_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800 hover:underline"
+                          >
+                            Track Shipment
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </div>
+                      )}
+                      {(shipment.weight || shipment.length || shipment.breadth || shipment.height) && (
+                        <div className="pt-2 border-t border-gray-100">
+                          <span className="text-gray-600 text-xs">Dimensions:</span>
+                          <p className="text-xs text-gray-700 mt-1">
+                            {shipment.length}cm × {shipment.breadth}cm × {shipment.height}cm
+                            {shipment.weight && ` | Weight: ${shipment.weight}kg`}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-sm text-gray-500 italic py-2">
+                      Shipment details will be available once shipment is created
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Order Timeline */}
               <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5">

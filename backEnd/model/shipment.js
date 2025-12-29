@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const shipmentSchema = new mongoose.Schema({
     order_id: {
       type: mongoose.Types.ObjectId,

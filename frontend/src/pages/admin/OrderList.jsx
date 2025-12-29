@@ -8,6 +8,7 @@ const getStatusColor = (status) => {
   const colors = {
     pending: 'bg-yellow-100 text-yellow-800',
     accepted: 'bg-blue-100 text-blue-800',
+    shipment: 'bg-indigo-100 text-indigo-800',
     shipped: 'bg-purple-100 text-purple-800',
     delivered: 'bg-green-100 text-green-800',
     cancelled: 'bg-red-100 text-red-800',
@@ -316,6 +317,7 @@ const OrderList = () => {
               <option value="">All Order Status</option>
               <option value="pending">Pending</option>
               <option value="accepted">Accepted</option>
+              <option value="shipment">Shipment</option>
               <option value="shipped">Shipped</option>
               <option value="delivered">Delivered</option>
               <option value="cancelled">Cancelled</option>

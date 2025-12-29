@@ -73,6 +73,7 @@ import MarketingSpendManagement from './pages/admin/MarketingSpendManagement';
 import BannerManagement from './pages/admin/BannerManagement';
 import OrderList from './pages/admin/OrderList';
 import OrderDetail from './pages/admin/OrderDetail';
+import ShipmentList from './pages/admin/ShipmentList';
 import CustomerList from './pages/admin/CustomerList';
 import ReviewList from './pages/admin/ReviewList';
 import AddReview from './pages/admin/AddReview';
@@ -179,6 +180,11 @@ const ADMIN_ROUTES = [
     path: 'orders/:orderId',                  // URL path (will be /admin/orders/:orderId)
     component: OrderDetail,                   // The component to show
     description: 'Order Detail Page'
+  },
+  {
+    path: 'shipments/list',                   // URL path (will be /admin/shipments/list)
+    component: ShipmentList,                   // The component to show
+    description: 'Shipment List Page'
   },
   {
     path: 'customers/list',                   // URL path (will be /admin/customers/list)
