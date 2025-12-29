@@ -142,7 +142,7 @@ const Navbar = () => {
                 return (
                   <div
                     key={item.name}
-                    className="relative"
+                    // className="relative"
                     onMouseEnter={handleSaleMenuEnter}
                     onMouseLeave={handleSaleMenuLeave}
                   >

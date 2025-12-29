@@ -46,9 +46,9 @@ const CategoryMegaMenu = ({ isOpen, onClose }) => {
       }`}
       style={{
         top: '100%',
-        width: `${columnCount * 160 + 64}px`,
-        maxWidth: '95vw',
-        minWidth: '600px',
+        width: `100%`,
+        // maxWidth: '95vw',
+        // minWidth: '600px',
         borderRadius: '0',
         margin: '0',
         padding: '0',
