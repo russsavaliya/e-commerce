@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, ArrowRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { getCategoriesGrouped } from '../../services/user/categoryService';
 
 const CategoryMegaMenu = ({ isOpen, onClose }) => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [hoveredParentId, setHoveredParentId] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -30,126 +29,151 @@ const CategoryMegaMenu = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
-  const hoveredCategory = categories.find(cat => cat._id === hoveredParentId);
+  // Limit to maximum 5 parent categories
+  const MAX_PARENT_CATEGORIES = 5;
+  const MAX_CHILD_CATEGORIES = 5;
+  
+  const visibleCategories = categories.slice(0, MAX_PARENT_CATEGORIES);
+  const hasMoreCategories = categories.length > MAX_PARENT_CATEGORIES;
+
+  // Calculate dynamic width based on number of columns
+  const columnCount = Math.min(visibleCategories.length + (hasMoreCategories ? 1 : 0), 6);
 
   return (
     <div
-      className={`absolute top-full left-0 mt-3 w-[700px] max-w-[90vw] bg-white border border-[#E5E7EB] rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.12)] z-50 overflow-hidden transition-all duration-300 ${
+      className={`absolute left-0 bg-[#FAF9F5] border-t border-[rgba(72,29,111,0.15)] shadow-[0_4px_12px_rgba(0,0,0,0.08)] z-50 overflow-hidden transition-all duration-300 ${
         isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
       }`}
+      style={{
+        top: '100%',
+        width: `${columnCount * 160 + 64}px`,
+        maxWidth: '95vw',
+        minWidth: '600px',
+        borderRadius: '0',
+        margin: '0',
+        padding: '0',
+      }}
       onMouseEnter={() => {}} // Keep menu open when hovering over it
       onMouseLeave={onClose}
     >
-      <div className="flex min-h-[360px]">
-        {/* Left Column - Parent Categories */}
-        <div className="w-[320px] border-r border-[#E5E7EB] bg-gradient-to-b from-[#FAF9F5] via-[#FAF9F5] to-white max-h-[500px] overflow-y-auto custom-scrollbar">
-          <div className="p-6">
-            <h3 className="text-[10px] font-bold text-[rgb(72,29,111)] uppercase tracking-[0.15em] mb-6 pb-4 border-b border-[#E5E7EB]">
-              Shop by Category
-            </h3>
-            {loading ? (
-              <div className="text-sm text-[#6B7280] py-8 text-center">Loading...</div>
-            ) : categories.length === 0 ? (
-              <div className="text-sm text-[#6B7280] py-8 text-center">No categories available</div>
-            ) : (
-              <div className="space-y-1">
-                {categories.map((category) => (
-                  <div
-                    key={category._id}
-                    className={`group relative rounded-lg transition-all duration-300 ${
-                      hoveredParentId === category._id
-                        ? 'bg-white shadow-lg scale-[1.02] translate-x-1'
-                        : 'hover:bg-white/70 translate-x-0'
-                    }`}
-                    onMouseEnter={() => setHoveredParentId(category._id)}
+      <div className="p-8">
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-sm text-[#6B7280]">Loading categories...</div>
+          </div>
+        ) : visibleCategories.length === 0 ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-sm text-[#6B7280]">No categories available</div>
+          </div>
+        ) : (
+          <div 
+            className="grid gap-6"
+            style={{
+              gridTemplateColumns: `repeat(${columnCount}, 1fr)`,
+            }}
+          >
+            {visibleCategories.map((parentCategory, index) => {
+              const children = parentCategory.children || [];
+              const visibleChildren = children.slice(0, MAX_CHILD_CATEGORIES);
+              const hasMoreChildren = children.length > MAX_CHILD_CATEGORIES;
+
+              return (
+                <div
+                  key={parentCategory._id}
+                  className={`flex flex-col ${index < visibleCategories.length - 1 || hasMoreCategories ? 'border-r border-[rgba(72,29,111,0.1)] pr-6' : ''}`}
+                >
+                  {/* Parent Category Title */}
+                  <Link
+                    to={`/sale/${parentCategory._id}`}
+                    onClick={onClose}
+                    className="mb-4 group"
                   >
-                    <Link
-                      to={`/sale/${category._id}`}
-                      className="flex items-center justify-between px-4 py-4 rounded-lg"
-                      onClick={onClose}
+                    <h3
+                      className="text-sm font-semibold text-[rgb(72,29,111)] uppercase tracking-wide mb-1 transition-colors duration-200 group-hover:opacity-80"
+                      style={{
+                        fontFamily: '"Playfair Display", serif',
+                        fontWeight: 600,
+                        letterSpacing: '0.05em',
+                      }}
                     >
-                      <span
-                        className={`text-sm font-bold transition-colors duration-300 ${
-                          hoveredParentId === category._id
-                            ? 'text-[rgb(72,29,111)]'
-                            : 'text-[#1F2937] group-hover:text-[rgb(72,29,111)]'
-                        }`}
-                      >
-                        {category.name}
-                      </span>
-                      {category.children && category.children.length > 0 && (
-                        <ArrowRight
-                          className={`w-4 h-4 transition-all duration-300 ${
-                            hoveredParentId === category._id
-                              ? 'text-[rgb(72,29,111)] translate-x-1 opacity-100'
-                              : 'text-[#9CA3AF] opacity-50 group-hover:opacity-100 group-hover:translate-x-0.5'
-                          }`}
-                        />
+                      {parentCategory.name}
+                    </h3>
+                    <div className="w-12 h-[2px] bg-gradient-to-r from-[rgb(72,29,111)] to-transparent"></div>
+                  </Link>
+
+                  {/* Child Categories */}
+                  {visibleChildren.length > 0 && (
+                    <div className="space-y-1.5 flex-1">
+                      {visibleChildren.map((child) => (
+                        <Link
+                          key={child._id}
+                          to={`/sale/${child._id}`}
+                          onClick={onClose}
+                          className="block py-2 text-sm text-[#374151] hover:text-[rgb(72,29,111)] transition-all duration-200 group"
+                          style={{
+                            fontFamily: '"Inter", sans-serif',
+                            fontWeight: 400,
+                          }}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="group-hover:font-medium transition-all duration-200">
+                              {child.name}
+                            </span>
+                            <ChevronRight className="w-3 h-3 text-[#9CA3AF] opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" />
+                          </div>
+                        </Link>
+                      ))}
+
+                      {/* "View More" Link if parent has more than 5 children */}
+                      {hasMoreChildren && (
+                        <Link
+                          to={`/sale/${parentCategory._id}`}
+                          onClick={onClose}
+                          className="block py-2 text-xs text-[rgb(72,29,111)] font-medium hover:opacity-80 transition-opacity duration-200 mt-2 pt-2 border-t border-[rgba(72,29,111,0.1)]"
+                          style={{
+                            fontFamily: '"Inter", sans-serif',
+                          }}
+                        >
+                          View More ({children.length - MAX_CHILD_CATEGORIES} more)
+                        </Link>
                       )}
-                    </Link>
-                    {/* Active indicator */}
-                    {hoveredParentId === category._id && (
-                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-12 bg-[rgb(72,29,111)] rounded-r-full shadow-sm" />
-                    )}
+                    </div>
+                  )}
+
+                  {/* Empty State for Parent with No Children */}
+                  {visibleChildren.length === 0 && (
+                    <div className="text-xs text-[#9CA3AF] italic py-2">
+                      No subcategories
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            {/* "More" Indicator Column (if more than 5 parent categories) */}
+            {hasMoreCategories && (
+              <div className="flex flex-col items-center justify-center border-l border-[rgba(72,29,111,0.1)] pl-6">
+                <Link
+                  to="/sale"
+                  onClick={onClose}
+                  className="text-sm font-medium text-[rgb(72,29,111)] hover:opacity-80 transition-opacity duration-200 text-center"
+                  style={{
+                    fontFamily: '"Playfair Display", serif',
+                    fontWeight: 500,
+                  }}
+                >
+                  <div className="mb-2">
+                    <ChevronRight className="w-5 h-5 mx-auto rotate-[-90deg] opacity-60" />
                   </div>
-                ))}
+                  <div>More</div>
+                  <div className="text-xs mt-1 opacity-70">
+                    ({categories.length - MAX_PARENT_CATEGORIES} more)
+                  </div>
+                </Link>
               </div>
             )}
           </div>
-        </div>
-
-        {/* Right Column - Child Categories */}
-        <div className="flex-1 bg-white max-h-[500px] overflow-y-auto custom-scrollbar">
-          {hoveredCategory && hoveredCategory.children && hoveredCategory.children.length > 0 ? (
-            <div className="p-6">
-              <Link
-                to={`/sale/${hoveredCategory._id}`}
-                onClick={onClose}
-                className="block mb-6 pb-4 border-b border-[#E5E7EB] group"
-              >
-                <h4 className="text-base font-bold text-[rgb(72,29,111)] uppercase tracking-wide group-hover:underline transition-all duration-200 mb-1">
-                  {hoveredCategory.name}
-                </h4>
-                <p className="text-xs text-[#6B7280] font-medium">View all products in this category</p>
-              </Link>
-              <div className="space-y-0.5">
-                {hoveredCategory.children.map((child) => (
-                  <Link
-                    key={child._id}
-                    to={`/sale/${child._id}`}
-                    className="block px-4 py-3.5 rounded-lg text-sm text-[#374151] hover:bg-[rgba(72,29,111,0.08)] hover:text-[rgb(72,29,111)] transition-all duration-300 hover:translate-x-1 group"
-                    onClick={onClose}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-[#1F2937] group-hover:font-semibold group-hover:text-[rgb(72,29,111)] transition-all duration-200">
-                        {child.name}
-                      </span>
-                      <ChevronRight className="w-3.5 h-3.5 text-[#9CA3AF] opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:translate-x-1" />
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="p-6 flex items-center justify-center h-full min-h-[320px]">
-              <div className="text-center">
-                <div className="w-16 h-16 rounded-full bg-[rgba(72,29,111,0.05)] flex items-center justify-center mx-auto mb-4">
-                  <ChevronRight className="w-6 h-6 text-[rgb(72,29,111)] opacity-30" />
-                </div>
-                <p className="text-sm font-medium text-[#6B7280] mb-1">
-                  {hoveredCategory
-                    ? 'No subcategories available'
-                    : 'Hover over a category'}
-                </p>
-                <p className="text-xs text-[#9CA3AF]">
-                  {hoveredCategory
-                    ? 'This category has no subcategories'
-                    : 'to see subcategories'}
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );

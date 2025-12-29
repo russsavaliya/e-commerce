@@ -83,9 +83,93 @@ const FilterSidebar = ({
 
   // Category Dropdown Component
   const CategoryDropdown = () => {
-    const filteredCategories = categories.filter(cat =>
-      cat.name.toLowerCase().includes(categorySearchTerm.toLowerCase())
-    );
+    // Group categories by parent/child relationship
+    const parentCategories = categories.filter(cat => !cat.parent_category_id);
+    const childCategoriesMap = new Map();
+    
+    categories.forEach(cat => {
+      if (cat.parent_category_id) {
+        const parentId = cat.parent_category_id.toString();
+        if (!childCategoriesMap.has(parentId)) {
+          childCategoriesMap.set(parentId, []);
+        }
+        childCategoriesMap.get(parentId).push(cat);
+      }
+    });
+
+    // Helper function to get all child category IDs for a parent
+    const getChildCategoryIds = (parentId) => {
+      const children = childCategoriesMap.get(parentId?.toString()) || [];
+      return children.map(child => child._id);
+    };
+
+    // Helper function to check if a category is selected (directly or as parent)
+    const isCategorySelected = (categoryId, isParent = false) => {
+      if (!filters.category_id) return false;
+      
+      // Direct match
+      if (filters.category_id === categoryId) return true;
+      
+      // If checking a parent category, see if any child is selected
+      if (isParent) {
+        const children = getChildCategoryIds(categoryId);
+        return children.includes(filters.category_id);
+      }
+      
+      return false;
+    };
+
+    // Helper function to get display name for selected category
+    const getSelectedCategoryName = () => {
+      if (!filters.category_id) return 'All Categories';
+      
+      const selectedCategory = categories.find(c => c._id === filters.category_id);
+      if (!selectedCategory) return 'All Categories';
+      
+      // If it's a child category, show "Parent > Child" format
+      if (selectedCategory.parent_category_id) {
+        const parent = categories.find(c => c._id === selectedCategory.parent_category_id);
+        return parent ? `${parent.name} > ${selectedCategory.name}` : selectedCategory.name;
+      }
+      
+      return selectedCategory.name;
+    };
+
+    // Filter categories based on search term
+    const filterCategories = (catList) => {
+      if (!categorySearchTerm) return catList;
+      const searchLower = categorySearchTerm.toLowerCase();
+      return catList.filter(cat => {
+        const matchesName = cat.name.toLowerCase().includes(searchLower);
+        // Also include if any child matches
+        const children = childCategoriesMap.get(cat._id?.toString()) || [];
+        const childMatches = children.some(child => 
+          child.name.toLowerCase().includes(searchLower)
+        );
+        return matchesName || childMatches;
+      });
+    };
+
+    const filteredParentCategories = filterCategories(parentCategories);
+
+    // Handle category selection
+    const handleCategorySelect = (categoryId, isParent = false) => {
+      if (isParent) {
+        // Parent selected: filter by parent ID + all child IDs
+        // We'll pass the parent ID and let the backend handle including children
+        // OR we can pass comma-separated IDs. For now, let's use parent ID
+        // and the backend should handle it, or we modify to pass all IDs
+        const childIds = getChildCategoryIds(categoryId);
+        // Pass parent ID - backend will need to handle parent+children filtering
+        // For now, we'll pass parent ID and update backend if needed
+        updateFilters({ category_id: categoryId, attribute_id: '', attribute_value_id: '' });
+      } else {
+        // Child selected: filter by child ID only
+        updateFilters({ category_id: categoryId, attribute_id: '', attribute_value_id: '' });
+      }
+      setCategoryDropdownOpen(false);
+      setCategorySearchTerm('');
+    };
 
     return (
       <div className="mb-6 relative category-dropdown-container">
@@ -105,9 +189,7 @@ const FilterSidebar = ({
             className="w-full px-3 py-2.5 border border-[rgb(72,29,111)] rounded-lg focus:outline-none text-sm text-left flex items-center justify-between bg-[#faf9f5] shadow-sm hover:border-[rgb(72,29,111)] transition-colors"
           >
             <span className="truncate">
-              {filters.category_id
-                ? categories.find(c => c._id === filters.category_id)?.name || 'All Categories'
-                : 'All Categories'}
+              {getSelectedCategoryName()}
             </span>
             <ChevronDown className={`w-4 h-4 text-[rgb(72,29,111)] transition-transform ${categoryDropdownOpen ? 'rotate-180' : ''}`} />
           </button>
@@ -134,7 +216,7 @@ const FilterSidebar = ({
                   />
                 </div>
               </div>
-              <div className="max-h-[210px] overflow-y-auto">
+              <div className="max-h-[300px] overflow-y-auto">
                 <button
                   type="button"
                   onClick={() => {
@@ -150,25 +232,74 @@ const FilterSidebar = ({
                 >
                   All Categories
                 </button>
-                {filteredCategories.map((cat) => (
-                  <button
-                    key={cat._id}
-                    type="button"
-                    onClick={() => {
-                      updateFilters({ category_id: cat._id, attribute_id: '', attribute_value_id: '' });
-                      setCategoryDropdownOpen(false);
-                      setCategorySearchTerm('');
-                    }}
-                    className={`w-full px-4 py-2.5 text-left text-sm hover:bg-[rgb(72,29,111)] hover:text-[#faf9f5] transition-colors ${
-                      filters.category_id === cat._id
-                        ? 'bg-[rgb(72,29,111)] text-[#faf9f5] font-semibold'
-                        : 'text-[rgb(72,29,111)]'
-                    }`}
-                  >
-                    {cat.name}
-                  </button>
-                ))}
-                {filteredCategories.length === 0 && (
+                
+                {filteredParentCategories.map((parentCat) => {
+                  const children = childCategoriesMap.get(parentCat._id?.toString()) || [];
+                  const isParentSelected = isCategorySelected(parentCat._id, true);
+                  const hasChildren = children.length > 0;
+                  
+                  // Filter children based on search term
+                  const filteredChildren = categorySearchTerm
+                    ? children.filter(child => 
+                        child.name.toLowerCase().includes(categorySearchTerm.toLowerCase())
+                      )
+                    : children;
+                  
+                  // Show parent if it matches search OR if it has matching children
+                  const shouldShowParent = !categorySearchTerm || 
+                    parentCat.name.toLowerCase().includes(categorySearchTerm.toLowerCase()) ||
+                    filteredChildren.length > 0;
+
+                  if (!shouldShowParent) return null;
+
+                  return (
+                    <div key={parentCat._id}>
+                      {/* Parent Category */}
+                      <button
+                        type="button"
+                        onClick={() => handleCategorySelect(parentCat._id, true)}
+                        className={`w-full px-4 py-2.5 text-left text-sm hover:bg-[rgb(72,29,111)] hover:text-[#faf9f5] transition-colors font-medium ${
+                          isParentSelected && filters.category_id === parentCat._id
+                            ? 'bg-[rgb(72,29,111)] text-[#faf9f5] font-semibold'
+                            : 'text-[rgb(72,29,111)]'
+                        }`}
+                      >
+                        {parentCat.name}
+                        {hasChildren && (
+                          <span className="ml-2 text-xs opacity-75">
+                            ({children.length})
+                          </span>
+                        )}
+                      </button>
+                      
+                      {/* Child Categories - Nested with indentation */}
+                      {filteredChildren.length > 0 && (
+                        <div className="pl-6 bg-gray-50/50">
+                          {filteredChildren.map((childCat) => {
+                            const isChildSelected = filters.category_id === childCat._id;
+                            return (
+                              <button
+                                key={childCat._id}
+                                type="button"
+                                onClick={() => handleCategorySelect(childCat._id, false)}
+                                className={`w-full px-4 py-2 text-left text-sm hover:bg-[rgb(72,29,111)] hover:text-[#faf9f5] transition-colors ${
+                                  isChildSelected
+                                    ? 'bg-[rgb(72,29,111)] text-[#faf9f5] font-semibold'
+                                    : 'text-[rgb(72,29,111)]'
+                                }`}
+                              >
+                                <span className="text-xs opacity-60 mr-1">└</span>
+                                {childCat.name}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                
+                {filteredParentCategories.length === 0 && (
                   <div className="px-4 py-3 text-sm text-[rgb(72,29,111)] text-center">
                     No categories found
                   </div>

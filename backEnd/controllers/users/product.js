@@ -1,4 +1,5 @@
 const product_model = require("../../model/product");
+const category_model = require("../../model/category");
 const mongoose = require("mongoose");
 
 // User: Get single product detail (with attribute values and variant attributes)
@@ -420,9 +421,25 @@ exports.get_all_products = async (req, res) => {
             status: 'ACTIVE'
         };
 
-        // Category filter
+        // Category filter - Support parent and child categories
         if (category_id) {
-            query.category = category_id;
+            // Check if this is a parent category (has no parent_category_id)
+            const category = await category_model.findById(category_id).select('parent_category_id');
+            
+            if (category && !category.parent_category_id) {
+                // Parent category: Get all child category IDs
+                const childCategories = await category_model.find({ 
+                    parent_category_id: category_id 
+                }).select('_id');
+                
+                const childCategoryIds = childCategories.map(child => child._id);
+                // Include parent ID + all child IDs
+                const allCategoryIds = [new mongoose.Types.ObjectId(category_id), ...childCategoryIds];
+                query.category = { $in: allCategoryIds };
+            } else {
+                // Child category: Filter by child ID only
+                query.category = category_id;
+            }
         }
 
         // Price filter

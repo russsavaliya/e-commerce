@@ -4,7 +4,7 @@ const category_model = require("../../model/category");
 exports.get_categories_list = async (req, res) => {
     try {
         const categories = await category_model.find({})
-            .select('name _id')
+            .select('name _id parent_category_id')
             .sort({ name: 1 });
 
         return res.status(200).json({
