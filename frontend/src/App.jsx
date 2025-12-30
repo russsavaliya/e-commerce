@@ -77,6 +77,7 @@ import ShipmentList from './pages/admin/ShipmentList';
 import CustomerList from './pages/admin/CustomerList';
 import ReviewList from './pages/admin/ReviewList';
 import AddReview from './pages/admin/AddReview';
+import Notes from './pages/admin/Notes';
 
 // TODO: When you create new pages, import them here:
 // import ProductManagement from './pages/admin/ProductManagement';
@@ -200,6 +201,11 @@ const ADMIN_ROUTES = [
     path: 'reviews/add',                       // URL path (will be /admin/reviews/add)
     component: AddReview,                      // The component to show
     description: 'Add Review Page'
+  },
+  {
+    path: 'notes',                            // URL path (will be /admin/notes)
+    component: Notes,                         // The component to show
+    description: 'Admin Notes Page'
   },
   // ============================================
   // ADD NEW ADMIN PAGES HERE - IT'S THAT EASY!

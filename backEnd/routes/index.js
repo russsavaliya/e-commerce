@@ -16,6 +16,7 @@ const admin_dashboard_controller = require('../controllers/dashboard')
 const admin_review_controller = require('../controllers/admin_review')
 const utils_controller = require('../controllers/utils')
 const shipment_controller = require('../controllers/shipment');
+const note_controller = require('../controllers/note');
 /* GET home page. */
 router.post('/admin/auth/signup', authorization.authorization, permission.checkPermission('admin_create'), admin_controller.signup);
 router.post('/admin/auth/login', admin_controller.login);
@@ -92,5 +93,12 @@ router.delete('/reviews/:reviewId', authorization.authorization, permission.chec
 
 // utils routes
 router.post('/utils/add-random-data', authorization.authorization, utils_controller.add_random_data);
+
+// note routes (admin)
+router.post('/notes/create', authorization.authorization, note_controller.create_note);
+router.get('/notes/list', authorization.authorization, note_controller.get_all_notes);
+router.get('/notes/one/:id', authorization.authorization, note_controller.get_note_by_id);
+router.put('/notes/update/:id', authorization.authorization, note_controller.update_note);
+router.delete('/notes/delete/:id', authorization.authorization, note_controller.delete_note);
 
 module.exports = router;

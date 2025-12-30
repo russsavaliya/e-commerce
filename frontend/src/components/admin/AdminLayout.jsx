@@ -26,6 +26,7 @@ import {
   ShoppingBag,
   Star,
   Truck,
+  FileText,
 } from 'lucide-react';
 import { ROUTES } from '../../utils/constants';
 
@@ -154,6 +155,11 @@ const AdminLayout = () => {
           path: ROUTES.ADMIN_REVIEWS_ADD,
         },
       ],
+    },
+    {
+      name: 'Notes',
+      icon: FileText,
+      path: ROUTES.ADMIN_NOTES,
     },
     {
       name: 'Settings',
