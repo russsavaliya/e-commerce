@@ -5,8 +5,9 @@ import Footer from '../../components/user/Footer';
 import { getProductDetail } from '../../services/user/productService';
 import { addToCart } from '../../services/user/cartService';
 import { getReviews, addReview } from '../../services/user/reviewService';
-import { Loader2, ChevronLeft, IndianRupee, Package, X, ShoppingBag, Star } from 'lucide-react';
+import { Loader2, ChevronLeft, IndianRupee, Package, X, ShoppingBag, Star, Truck, Box } from 'lucide-react';
 import toast from 'react-hot-toast';
+import paymentGroupSvg from '../../assets/images/payment-group.svg';
 
 const ProductDetailPage = () => {
   const { productId } = useParams();
@@ -500,6 +501,48 @@ const ProductDetailPage = () => {
               >
                 View Cart
               </button>
+            </div>
+
+            {/* Payment & Delivery Info Section */}
+            <div className="pt-6 mt-6 border-t border-gray-200 space-y-4">
+              {/* Payment Method Logos */}
+              <div className="flex items-center">
+                <img 
+                  src={paymentGroupSvg} 
+                  alt="Payment Methods" 
+                  className="h-10 w-auto opacity-90 hover:opacity-100 transition-opacity"
+                />
+              </div>
+
+              {/* Delivery Info Rows */}
+              <div className="space-y-3">
+                {/* Estimated Delivery */}
+                <div className="flex items-center gap-3 text-sm text-[#374151]">
+                  <Truck className="w-4 h-4 text-[#6B7280] flex-shrink-0" strokeWidth={1.5} />
+                  <span>
+                    <span className="font-medium">Estimated Delivery:</span>{' '}
+                    {(() => {
+                      const today = new Date();
+                      const startDate = new Date(today);
+                      startDate.setDate(today.getDate() + 3);
+                      const endDate = new Date(today);
+                      endDate.setDate(today.getDate() + 7);
+                      const formatDate = (date) => {
+                        return date.toLocaleDateString('en-IN', { month: 'short', day: '2-digit' });
+                      };
+                      return `${formatDate(startDate)} – ${formatDate(endDate)}`;
+                    })()}
+                  </span>
+                </div>
+
+                {/* Free Shipping & Returns */}
+                <div className="flex items-center gap-3 text-sm text-[#374151]">
+                  <Box className="w-4 h-4 text-[#6B7280] flex-shrink-0" strokeWidth={1.5} />
+                  <span>
+                    <span className="font-medium">Free Shipping & Returns:</span> On all orders
+                  </span>
+                </div>
+              </div>
             </div>
 
             {/* Reviews Section */}

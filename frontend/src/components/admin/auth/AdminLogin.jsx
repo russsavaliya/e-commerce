@@ -72,10 +72,11 @@ const AdminLogin = () => {
     <div
       className="min-h-screen flex items-center justify-center p-4"
       style={{
-        backgroundImage: `url(${adminLoginImage})`,
+        // backgroundImage: `url(${adminLoginImage})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        backgroundColor: '#000'
+        // backgroundColor: '#000',
+        background: 'linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7))',  
       }}
     >
       {/* Dark overlay for better readability */}
@@ -99,9 +100,13 @@ const AdminLogin = () => {
             <span>{error}</span>
           </div>
         )}
-        <div className="flex items-center justify-center mb-4">
+        <div className="flex items-center justify-center mb-4 -mt-8">
           <Link to="/" className="flex items-center justify-center">
-            <img src={logo || ""} alt="Logo"/>
+            <img 
+              src={logo || ""} 
+              alt="Logo"
+              className="h-24 w-auto max-w-[220px] object-contain"
+            />
           </Link>
         </div>
         {/* Card */}
