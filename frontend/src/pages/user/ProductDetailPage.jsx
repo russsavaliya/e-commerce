@@ -171,6 +171,18 @@ const ProductDetailPage = () => {
     ? activeVariant.variant_image
     : activeImage;
 
+  // Calculate available quantity (variant quantity if variant selected, otherwise product quantity)
+  const availableQuantity = useMemo(() => {
+    if (!product) return 0;
+    if (selectedVariantId && activeVariant) {
+      return activeVariant.quantity ?? 0;
+    }
+    return product.quantity ?? 0;
+  }, [product, selectedVariantId, activeVariant]);
+
+  // Check if product is out of stock
+  const isOutOfStock = availableQuantity <= 0;
+
   const handleVariantSelect = (variantId) => {
     setSelectedVariantId(variantId);
     const variant = product?.variants?.find((v) => v._id === variantId);
@@ -181,6 +193,12 @@ const ProductDetailPage = () => {
 
   const handleAddToCart = async () => {
     if (!product) return;
+
+    // Prevent adding to cart if out of stock
+    if (isOutOfStock) {
+      toast.error('This product is currently out of stock');
+      return;
+    }
 
     try {
       setAddingToCart(true);
@@ -372,7 +390,15 @@ const ProductDetailPage = () => {
           {/* Right Column: Details, Price, Variants, Actions, Reviews */}
           <div className="space-y-6">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-[rgb(72,29,111)] leading-tight">{product.name}</h1>
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <h1 className="text-3xl md:text-4xl font-bold text-[rgb(72,29,111)] leading-tight flex-1">{product.name}</h1>
+                {/* Out of Stock Badge */}
+                {isOutOfStock && (
+                  <span className="px-3 py-1.5 bg-red-100 text-red-700 text-xs font-semibold rounded-full border border-red-200 whitespace-nowrap flex-shrink-0">
+                    Out of Stock
+                  </span>
+                )}
+              </div>
               {product.category?.name && (
                 <p className="text-sm text-[#6B7280] mt-2 uppercase tracking-wide">{product.category.name}</p>
               )}
@@ -386,7 +412,7 @@ const ProductDetailPage = () => {
               )}
             </div>
 
-            <div className="flex items-baseline gap-3">
+            <div className="flex items-baseline gap-3 flex-wrap">
               <div className="flex items-baseline gap-1">
                 <IndianRupee className="w-5 h-5 text-[#1F2937] self-center" />
                 <span className="text-3xl font-bold text-[#1F2937] leading-none">
@@ -436,66 +462,90 @@ const ProductDetailPage = () => {
               <div>
                 <div className="text-sm font-semibold text-[#374151] mb-3 uppercase tracking-wide">Options</div>
                 <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                  {product.variants.map((variant) => (
-                    <button
-                      key={variant._id}
-                      onClick={() => handleVariantSelect(variant._id)}
-                      className={`flex-shrink-0 border-2 rounded-lg overflow-hidden transition-all ${selectedVariantId === variant._id
-                        ? 'border-[rgb(72,29,111)] bg-[rgba(72,29,111,0.06)] shadow-sm'
-                        : 'border-[#E5E7EB] hover:border-[#D1D5DB]'
+                  {product.variants.map((variant) => {
+                    const variantOutOfStock = (variant.quantity ?? 0) <= 0;
+                    return (
+                      <button
+                        key={variant._id}
+                        onClick={() => !variantOutOfStock && handleVariantSelect(variant._id)}
+                        disabled={variantOutOfStock}
+                        className={`flex-shrink-0 border-2 rounded-lg overflow-hidden transition-all relative ${
+                          variantOutOfStock
+                            ? 'opacity-60 cursor-not-allowed border-gray-200'
+                            : selectedVariantId === variant._id
+                            ? 'border-[rgb(72,29,111)] bg-[rgba(72,29,111,0.06)] shadow-sm'
+                            : 'border-[#E5E7EB] hover:border-[#D1D5DB]'
                         }`}
-                    >
-                      {variant.variant_image ? (
-                        <div className="w-24 h-32 bg-gray-100 overflow-hidden select-none">
-                          <img
-                            src={normalizeImagePath(variant.variant_image)}
-                            alt={variant.variant_name}
-                            className="w-full h-full object-cover pointer-events-none select-none"
-                            draggable="false"
-                            onContextMenu={handleContextMenu}
-                            onDragStart={handleDragStart}
-                            onError={(e) => {
-                              e.target.src = 'https://via.placeholder.com/100x150?text=Image';
-                            }}
-                          />
+                      >
+                        {variantOutOfStock && (
+                          <div className="absolute inset-0 bg-gray-100/80 flex items-center justify-center z-10 rounded-lg">
+                            <span className="text-[10px] font-semibold text-red-600 bg-white px-2 py-0.5 rounded border border-red-200">
+                              Out of Stock
+                            </span>
+                          </div>
+                        )}
+                        {variant.variant_image ? (
+                          <div className="w-24 h-32 bg-gray-100 overflow-hidden select-none">
+                            <img
+                              src={normalizeImagePath(variant.variant_image)}
+                              alt={variant.variant_name}
+                              className="w-full h-full object-cover pointer-events-none select-none"
+                              draggable="false"
+                              onContextMenu={handleContextMenu}
+                              onDragStart={handleDragStart}
+                              onError={(e) => {
+                                e.target.src = 'https://via.placeholder.com/100x150?text=Image';
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-24 h-32 bg-gray-100 flex items-center justify-center">
+                            <Package className="w-6 h-6 text-gray-400" />
+                          </div>
+                        )}
+                        <div className={`p-2 w-24 ${selectedVariantId === variant._id ? 'bg-[rgba(72,29,111,0.06)]' : 'bg-white'}`}>
+                          <div className={`text-xs font-semibold mb-0.5 truncate ${selectedVariantId === variant._id
+                            ? 'text-[rgb(72,29,111)] font-medium'
+                            : 'text-[#374151]'
+                            }`}>{variant.variant_name || 'Variant'}</div>
+                          <div className="text-[10px] text-[#6B7280]">₹ {variant.variant_price?.toLocaleString('en-IN') || displayPrice}</div>
                         </div>
-                      ) : (
-                        <div className="w-24 h-32 bg-gray-100 flex items-center justify-center">
-                          <Package className="w-6 h-6 text-gray-400" />
-                        </div>
-                      )}
-                      <div className={`p-2 w-24 ${selectedVariantId === variant._id ? 'bg-[rgba(72,29,111,0.06)]' : 'bg-white'}`}>
-                        <div className={`text-xs font-semibold mb-0.5 truncate ${selectedVariantId === variant._id
-                          ? 'text-[rgb(72,29,111)] font-medium'
-                          : 'text-[#374151]'
-                          }`}>{variant.variant_name || 'Variant'}</div>
-                        <div className="text-[10px] text-[#6B7280]">₹ {variant.variant_price?.toLocaleString('en-IN') || displayPrice}</div>
-                      </div>
-                    </button>
-                  ))}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
 
             {/* Actions */}
             <div className="flex gap-3">
-              <button
-                onClick={handleAddToCart}
-                disabled={addingToCart}
-                className="flex-1 flex items-center justify-center gap-2 bg-[rgb(72,29,111)] text-white py-3 rounded-full text-sm font-semibold hover:bg-[#390e60] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {addingToCart ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Adding...
-                  </>
-                ) : (
-                  <>
-                    <ShoppingBag className="w-4 h-4" />
-                    Add to Bag
-                  </>
-                )}
-              </button>
+              {isOutOfStock ? (
+                <button
+                  disabled
+                  className="flex-1 flex items-center justify-center gap-2 bg-gray-400 text-white py-3 rounded-full text-sm font-semibold opacity-60 cursor-not-allowed transition-all duration-200"
+                >
+                  <Package className="w-4 h-4" />
+                  Out of Stock
+                </button>
+              ) : (
+                <button
+                  onClick={handleAddToCart}
+                  disabled={addingToCart}
+                  className="flex-1 flex items-center justify-center gap-2 bg-[rgb(72,29,111)] text-white py-3 rounded-full text-sm font-semibold hover:bg-[#390e60] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {addingToCart ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Adding...
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingBag className="w-4 h-4" />
+                      Add to Bag
+                    </>
+                  )}
+                </button>
+              )}
               <button
                 onClick={() => navigate('/cart')}
                 className="px-5 py-3 rounded-full border-[1.5px] border-[rgb(72,29,111)] text-sm font-semibold text-[rgb(72,29,111)] hover:bg-[rgba(72,29,111,0.08)] transition-all duration-200"
