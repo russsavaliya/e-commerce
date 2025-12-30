@@ -213,3 +213,85 @@ input[type="range"]::-moz-range-track {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(72, 29, 111, 0.4);
 }
+
+/* Rich Text Editor Styles */
+[contenteditable] {
+  outline: none;
+  min-height: 150px;
+  padding: 12px;
+  line-height: 1.6;
+  color: #374151;
+}
+
+[contenteditable]:focus {
+  outline: none;
+}
+
+[contenteditable] p {
+  margin: 0.5em 0;
+}
+
+[contenteditable] p:first-child {
+  margin-top: 0;
+}
+
+[contenteditable] p:last-child {
+  margin-bottom: 0;
+}
+
+[contenteditable] strong,
+[contenteditable] b {
+  font-weight: 700;
+}
+
+[contenteditable] em,
+[contenteditable] i {
+  font-style: italic;
+}
+
+[contenteditable] u {
+  text-decoration: underline;
+}
+
+[contenteditable] .text-sm {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* Product Description HTML Rendering Styles */
+.prose {
+  color: #374151;
+}
+
+.prose p {
+  margin: 0.75em 0;
+  line-height: 1.6;
+}
+
+.prose p:first-child {
+  margin-top: 0;
+}
+
+.prose p:last-child {
+  margin-bottom: 0;
+}
+
+.prose strong,
+.prose b {
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.prose em,
+.prose i {
+  font-style: italic;
+}
+
+.prose u {
+  text-decoration: underline;
+}
+
+.prose .text-sm {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}

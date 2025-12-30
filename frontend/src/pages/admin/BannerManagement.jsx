@@ -696,77 +696,88 @@ const BannerManagement = () => {
                       />
                     </button>
                     {categoryDropdownOpen && (
-                      <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-hidden">
-                        {/* Search Input */}
-                        <div className="p-2 border-b border-gray-200">
+                      <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-xl overflow-hidden">
+                        {/* Search Input Section */}
+                        <div className="p-2.5 border-b border-gray-200 bg-gray-50">
                           <div className="relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                             <input
                               type="text"
                               placeholder="Search categories..."
                               value={categorySearchTerm}
                               onChange={(e) => setCategorySearchTerm(e.target.value)}
-                              className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm"
+                              className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm bg-white"
                               onClick={(e) => e.stopPropagation()}
+                              onKeyDown={(e) => e.stopPropagation()}
                             />
                           </div>
                         </div>
-                        {/* Category List */}
-                        <div className="max-h-56 overflow-y-auto">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setFormData((prev) => ({ ...prev, category: '' }));
-                              setCategoryDropdownOpen(false);
-                              setCategorySearchTerm('');
-                              if (formErrors.category) {
-                                setFormErrors((prev) => {
-                                  const newErrors = { ...prev };
-                                  delete newErrors.category;
-                                  return newErrors;
-                                });
-                              }
-                            }}
-                            className={`w-full px-4 py-2.5 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 ${
-                              !formData.category ? 'bg-green-50 text-green-700' : ''
-                            }`}
-                          >
-                            <FolderTree className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                            <span>No Category</span>
-                          </button>
-                          {filteredCategories.length > 0 ? (
-                            filteredCategories.map((cat) => (
-                              <button
-                                key={cat._id}
-                                type="button"
-                                onClick={() => {
-                                  setFormData((prev) => ({ ...prev, category: cat._id }));
-                                  setCategoryDropdownOpen(false);
-                                  setCategorySearchTerm('');
-                                  if (formErrors.category) {
-                                    setFormErrors((prev) => {
-                                      const newErrors = { ...prev };
-                                      delete newErrors.category;
-                                      return newErrors;
-                                    });
-                                  }
-                                }}
-                                className={`w-full px-4 py-2.5 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 ${
-                                  formData.category === cat._id ? 'bg-green-50 text-green-700' : ''
-                                }`}
-                              >
-                                <FolderTree className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                                <span className="truncate flex-1">{cat.name}</span>
-                                {formData.category === cat._id && (
-                                  <span className="text-green-600 font-semibold">✓</span>
-                                )}
-                              </button>
-                            ))
-                          ) : (
-                            <div className="px-4 py-8 text-center text-gray-500">
-                              <p className="text-sm">No categories found</p>
-                            </div>
-                          )}
+
+                        {/* Category List Section - Scrollable */}
+                        <div className="max-h-[240px] overflow-y-auto custom-scrollbar">
+                          <div className="py-1">
+                            {/* No Category Option */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setFormData((prev) => ({ ...prev, category: '' }));
+                                setCategoryDropdownOpen(false);
+                                setCategorySearchTerm('');
+                                if (formErrors.category) {
+                                  setFormErrors((prev) => {
+                                    const newErrors = { ...prev };
+                                    delete newErrors.category;
+                                    return newErrors;
+                                  });
+                                }
+                              }}
+                              className={`w-full px-4 py-2.5 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 ${
+                                !formData.category ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-700'
+                              }`}
+                            >
+                              <FolderTree className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                              <span className="flex-1">No Category</span>
+                            </button>
+
+                            {/* Category Options */}
+                            {filteredCategories.length > 0 ? (
+                              <div className="pb-2">
+                                {filteredCategories.map((cat, index) => (
+                                  <button
+                                    key={cat._id}
+                                    type="button"
+                                    onClick={() => {
+                                      setFormData((prev) => ({ ...prev, category: cat._id }));
+                                      setCategoryDropdownOpen(false);
+                                      setCategorySearchTerm('');
+                                      if (formErrors.category) {
+                                        setFormErrors((prev) => {
+                                          const newErrors = { ...prev };
+                                          delete newErrors.category;
+                                          return newErrors;
+                                        });
+                                      }
+                                    }}
+                                    className={`w-full px-4 py-2.5 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 ${
+                                      formData.category === cat._id 
+                                        ? 'bg-green-50 text-green-700 font-medium' 
+                                        : 'text-gray-700'
+                                    }`}
+                                  >
+                                    <FolderTree className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                    <span className="truncate flex-1">{cat.name}</span>
+                                    {formData.category === cat._id && (
+                                      <span className="text-green-600 font-semibold flex-shrink-0">✓</span>
+                                    )}
+                                  </button>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="px-4 py-8 text-center text-gray-500">
+                                <p className="text-sm">No categories found</p>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     )}

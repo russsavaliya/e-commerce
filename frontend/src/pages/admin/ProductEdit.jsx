@@ -26,6 +26,7 @@ import { getProductById, updateProduct } from '../../services/admin/productServi
 import { getAllCategories } from '../../services/admin/categoryService';
 import { getAllAttributes } from '../../services/admin/attributeService';
 import { API_BASE_URL } from '../../utils/constants';
+import RichTextEditor from '../../components/admin/RichTextEditor';
 
 // Helper function to normalize image paths (supports Cloudinary URLs and local paths)
 // Cloudinary URLs (https://...) are returned as-is, local paths are normalized
@@ -853,6 +854,16 @@ const ProductEdit = () => {
         </div>
       ) : (
         <>
+          {/* Page Header */}
+          <div className="mb-6 pb-4 border-b border-gray-200">
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">
+              Update Product
+            </h1>
+            <p className="text-sm text-gray-600">
+              Edit product details and update information in your catalog
+            </p>
+          </div>
+
           {/* Action Buttons */}
           <div className="flex items-center justify-end gap-3 mb-4">
             <button
@@ -1221,12 +1232,22 @@ const ProductEdit = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Description
                   </label>
-                  <textarea
-                    name="description"
+                  <RichTextEditor
                     value={formData.description}
-                    onChange={handleInputChange}
-                    rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    onChange={(html) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        description: html,
+                      }));
+                      // Clear error for this field
+                      if (formErrors.description) {
+                        setFormErrors((prev) => {
+                          const newErrors = { ...prev };
+                          delete newErrors.description;
+                          return newErrors;
+                        });
+                      }
+                    }}
                     placeholder="Enter product description"
                   />
                 </div>

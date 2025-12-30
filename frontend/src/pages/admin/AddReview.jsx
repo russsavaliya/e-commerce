@@ -182,22 +182,27 @@ const AddReview = () => {
   const renderStars = (rating) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
+      const isFilled = i <= rating;
       stars.push(
         <button
           key={i}
           type="button"
           onClick={() => handleRatingClick(i)}
-          className={`transition-colors ${
-            i <= rating
-              ? 'text-yellow-400 fill-yellow-400'
-              : 'text-gray-300 hover:text-yellow-300'
+          className={`transition-all duration-200 hover:scale-110 ${
+            isFilled
+              ? 'text-green-600'
+              : 'text-gray-300 hover:text-green-600'
           }`}
         >
-          <Star className="w-8 h-8" />
+          <Star 
+            className="w-5 h-5" 
+            fill={isFilled ? 'currentColor' : 'none'}
+            strokeWidth={isFilled ? 0 : 1.5}
+          />
         </button>
       );
     }
-    return <div className="flex items-center gap-1">{stars}</div>;
+    return <div className="flex items-center gap-1.5">{stars}</div>;
   };
 
   return (

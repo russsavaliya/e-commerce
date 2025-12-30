@@ -360,9 +360,10 @@ const ProductDetailPage = () => {
                   </h3>
                 </div>
                 <div className="px-6 py-5">
-                  <p className="text-base text-[#374151] leading-relaxed whitespace-pre-line">
-                    {product.description}
-                  </p>
+                  <div 
+                    className="text-base text-[#374151] leading-relaxed prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{ __html: product.description }}
+                  />
                 </div>
               </div>
             )}
@@ -545,9 +546,8 @@ const ProductDetailPage = () => {
               </div>
             </div>
 
-            {/* Reviews Section */}
-            <div className="mt-10 border-t border-[#E5E7EB] pt-8 space-y-6">
-              {/* Summary row */}
+            {/* Reviews Summary Section - Side by side with Product Description */}
+            <div className="mt-10 border-t border-[#E5E7EB] pt-8">
               <div className="bg-white border border-[#E5E7EB] rounded-2xl shadow-sm px-6 py-5">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
                   {/* Left: average rating */}
@@ -610,97 +610,107 @@ const ProductDetailPage = () => {
                   </div>
                 </div>
               </div>
-
-
-              {/* Review list */}
-              <div className="space-y-3">
-                {reviewLoading ? (
-                  <div className="flex items-center gap-2 text-sm text-[#6B7280]">
-                    <Loader2 className="w-4 h-4 animate-spin text-[rgb(72,29,111)]" />
-                    Loading reviews...
-                  </div>
-                ) : reviews.length === 0 ? (
-                  <p className="text-sm text-[#6B7280]">
-                    No reviews for this product yet.
-                  </p>
-                ) : (
-                  <>
-                    <div className="space-y-3">
-                      {reviews.map((rev) => (
-                        <div
-                          key={rev._id}
-                          className="border border-[#E5E7EB] rounded-xl p-4 bg-white shadow-sm"
-                        >
-                          <div className="flex items-center justify-between mb-1.5">
-                            <div>
-                              <p className="text-sm font-semibold text-[#374151]">
-                                {rev.name}
-                              </p>
-                              <div className="mt-0.5">
-                                {renderStars(rev.rating, 'sm')}
-                              </div>
-                            </div>
-                            <p className="text-xs text-[#6B7280]">
-                              {rev.createdAt
-                                ? new Date(rev.createdAt).toLocaleDateString(
-                                  'en-IN',
-                                  {
-                                    day: '2-digit',
-                                    month: 'short',
-                                    year: 'numeric',
-                                  }
-                                )
-                                : ''}
-                            </p>
-                          </div>
-                          {rev.comment && (
-                            <p className="text-sm text-[#374151] whitespace-pre-line mt-1.5">
-                              {rev.comment}
-                            </p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Reviews pagination */}
-                    {reviewTotalPages > 1 && (
-                      <div className="flex items-center justify-between pt-2 text-xs text-[#6B7280]">
-                        <span>
-                          Page {reviewPage} of {reviewTotalPages}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setReviewPage((p) => Math.max(1, p - 1))
-                            }
-                            disabled={reviewPage === 1 || reviewLoading}
-                            className="px-3 py-1.5 border border-[#E5E7EB] rounded-full hover:bg-[#F9FAFB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-[#374151]"
-                          >
-                            Previous
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setReviewPage((p) =>
-                                Math.min(reviewTotalPages, p + 1)
-                              )
-                            }
-                            disabled={
-                              reviewPage === reviewTotalPages || reviewLoading
-                            }
-                            className="px-3 py-1.5 border border-[#E5E7EB] rounded-full hover:bg-[#F9FAFB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-[#374151]"
-                          >
-                            Next
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
             </div>
           </div>
+        </div>
+
+        {/* Divider Section */}
+        <div className="mt-12 mb-8">
+          <div className="border-t border-[#E5E7EB]"></div>
+        </div>
+
+        {/* Reviews Listing Section - Full Width Grid Layout */}
+        <div className="w-full">
+          {reviewLoading ? (
+            <div className="flex items-center justify-center gap-2 py-12 text-sm text-[#6B7280]">
+              <Loader2 className="w-5 h-5 animate-spin text-[rgb(72,29,111)]" />
+              <span>Loading reviews...</span>
+            </div>
+          ) : reviews.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-sm text-[#6B7280]">
+                No reviews for this product yet.
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Reviews Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                {reviews.map((rev) => (
+                  <div
+                    key={rev._id}
+                    className="border border-[#E5E7EB] rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition-all duration-200 hover:border-[rgb(72,29,111)] flex flex-col h-full"
+                  >
+                    {/* Review Header */}
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-[#374151] mb-1.5">
+                          {rev.name}
+                        </p>
+                        <div className="mb-2">
+                          {renderStars(rev.rating, 'sm')}
+                        </div>
+                      </div>
+                      <p className="text-xs text-[#6B7280] whitespace-nowrap ml-3">
+                        {rev.createdAt
+                          ? new Date(rev.createdAt).toLocaleDateString(
+                            'en-IN',
+                            {
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric',
+                            }
+                          )
+                          : ''}
+                      </p>
+                    </div>
+
+                    {/* Review Comment */}
+                    {rev.comment && (
+                      <p className="text-sm text-[#374151] whitespace-pre-line flex-1 leading-relaxed">
+                        {rev.comment}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Reviews Pagination */}
+              {reviewTotalPages > 1 && (
+                <div className="flex items-center justify-between pt-6 mt-6 border-t border-[#E5E7EB] text-sm text-[#6B7280]">
+                  <span>
+                    Page {reviewPage} of {reviewTotalPages}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setReviewPage((p) => Math.max(1, p - 1))
+                      }
+                      disabled={reviewPage === 1 || reviewLoading}
+                      className="px-4 py-2 border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-[#374151] font-medium"
+                    >
+                      Previous
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setReviewPage((p) =>
+                          Math.min(reviewTotalPages, p + 1)
+                        )
+                      }
+                      disabled={
+                        reviewPage === reviewTotalPages || reviewLoading
+                      }
+                      className="px-4 py-2 border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-[#374151] font-medium"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </main>
       <Footer />
