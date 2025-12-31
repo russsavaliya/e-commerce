@@ -91,6 +91,7 @@ export const ROUTES = {
   ADMIN_REVIEWS_LIST: '/admin/reviews/list',
   ADMIN_REVIEWS_ADD: '/admin/reviews/add',
   ADMIN_NOTES: '/admin/notes',
+  ADMIN_COUPONS: '/admin/coupons',
   HOME: '/',
 };
 

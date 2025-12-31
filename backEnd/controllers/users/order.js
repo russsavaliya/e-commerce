@@ -1,5 +1,6 @@
 const product_model = require('../../model/product');
 const order_model = require('../../model/order');
+const coupon_model = require('../../model/coupon');
 const customer_controller = require('./customer');
 const { sendOrderSuccessEmail } = require('../../helper/emailHelper');
 
@@ -73,6 +74,9 @@ exports.init_order = async (req, res) => {
       state,
       pincode,
       landmark,
+      coupon_id,
+      coupon_code,
+      discount_amount,
     } = req.body || {};
 
     if (!fullName || !phone || !email || !address || !city || !state || !pincode) {
@@ -86,7 +90,8 @@ exports.init_order = async (req, res) => {
 
     const shipping_amount = 0;
     const total_tax = 0;
-    const total_amount = subtotal + shipping_amount + total_tax;
+    const coupon_discount = discount_amount ? Number(discount_amount) : 0;
+    const total_amount = Math.max(0, subtotal + shipping_amount + total_tax - coupon_discount);
 
     const orderPayload = {
       order_id: `ORD-${Date.now()}`,
@@ -108,6 +113,11 @@ exports.init_order = async (req, res) => {
         pincode,
         landmark,
       },
+      coupon: coupon_id && coupon_code ? {
+        coupon_id,
+        coupon_code,
+        discount_amount: coupon_discount,
+      } : null,
     };
 
     const order = await order_model.create(orderPayload);
@@ -160,13 +170,27 @@ exports.update_payment = async (req, res) => {
         },
       },
       { new: true }
-    );
+    ).populate('coupon.coupon_id');
 
     if (!order) {
       return res.status(404).json({
         status: false,
         message: 'Order not found.',
       });
+    }
+
+    // Increment coupon usedCount only after successful order confirmation
+    if (order.coupon && order.coupon.coupon_id) {
+      try {
+        await coupon_model.findByIdAndUpdate(
+          order.coupon.coupon_id,
+          { $inc: { usedCount: 1 } },
+          { new: true }
+        );
+      } catch (err) {
+        console.error('Failed to increment coupon usage:', err);
+        // Don't throw - order is already created successfully
+      }
     }
 
     // Clear cart only after payment is confirmed/order is placed

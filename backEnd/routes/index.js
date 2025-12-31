@@ -17,6 +17,7 @@ const admin_review_controller = require('../controllers/admin_review')
 const utils_controller = require('../controllers/utils')
 const shipment_controller = require('../controllers/shipment');
 const note_controller = require('../controllers/note');
+const coupon_controller = require('../controllers/coupon');
 /* GET home page. */
 router.post('/admin/auth/signup', authorization.authorization, permission.checkPermission('admin_create'), admin_controller.signup);
 router.post('/admin/auth/login', admin_controller.login);
@@ -100,5 +101,12 @@ router.get('/notes/list', authorization.authorization, note_controller.get_all_n
 router.get('/notes/one/:id', authorization.authorization, note_controller.get_note_by_id);
 router.put('/notes/update/:id', authorization.authorization, note_controller.update_note);
 router.delete('/notes/delete/:id', authorization.authorization, note_controller.delete_note);
+
+// coupon routes (admin)
+router.post('/coupons', authorization.authorization, permission.checkPermission('coupon_add'), coupon_controller.create_coupon);
+router.get('/coupons/list', authorization.authorization, coupon_controller.get_coupon_list);
+router.get('/coupons/get-one', authorization.authorization, coupon_controller.get_coupon_one);
+router.put('/coupons/update', authorization.authorization, permission.checkPermission('coupon_update'), coupon_controller.update_coupon);
+router.delete('/coupons/delete', authorization.authorization, permission.checkPermission('coupon_delete'), coupon_controller.delete_coupon);
 
 module.exports = router;

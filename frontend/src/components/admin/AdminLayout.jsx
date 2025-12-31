@@ -162,6 +162,11 @@ const AdminLayout = () => {
       path: ROUTES.ADMIN_NOTES,
     },
     {
+      name: 'Coupons',
+      icon: Tag,
+      path: ROUTES.ADMIN_COUPONS,
+    },
+    {
       name: 'Settings',
       icon: Settings,
       path: ROUTES.ADMIN_SETTINGS,

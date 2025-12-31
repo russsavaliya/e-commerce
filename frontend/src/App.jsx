@@ -78,6 +78,7 @@ import CustomerList from './pages/admin/CustomerList';
 import ReviewList from './pages/admin/ReviewList';
 import AddReview from './pages/admin/AddReview';
 import Notes from './pages/admin/Notes';
+import CouponManagement from './pages/admin/CouponManagement';
 
 // TODO: When you create new pages, import them here:
 // import ProductManagement from './pages/admin/ProductManagement';
@@ -206,6 +207,11 @@ const ADMIN_ROUTES = [
     path: 'notes',                            // URL path (will be /admin/notes)
     component: Notes,                         // The component to show
     description: 'Admin Notes Page'
+  },
+  {
+    path: 'coupons',                         // URL path (will be /admin/coupons)
+    component: CouponManagement,              // The component to show
+    description: 'Coupon Management Page'
   },
   // ============================================
   // ADD NEW ADMIN PAGES HERE - IT'S THAT EASY!

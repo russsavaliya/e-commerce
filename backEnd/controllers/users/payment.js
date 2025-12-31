@@ -6,6 +6,7 @@
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const order_model = require('../../model/order');
+const coupon_model = require('../../model/coupon');
 const { sendOrderSuccessEmail } = require('../../helper/emailHelper');
 
 // Initialize Razorpay instance
@@ -163,7 +164,21 @@ exports.verify_payment = async (req, res) => {
           },
         },
         { new: true }
-      );
+      ).populate('coupon.coupon_id');
+
+      // Increment coupon usedCount only after successful payment
+      if (updatedOrder.coupon && updatedOrder.coupon.coupon_id) {
+        try {
+          await coupon_model.findByIdAndUpdate(
+            updatedOrder.coupon.coupon_id,
+            { $inc: { usedCount: 1 } },
+            { new: true }
+          );
+        } catch (err) {
+          console.error('Failed to increment coupon usage:', err);
+          // Don't throw - order is already created successfully
+        }
+      }
 
       // Clear cart from session
       if (req.session) {

@@ -4,16 +4,116 @@
  */
 
 import React from 'react';
-import { IndianRupee, Loader2 } from 'lucide-react';
+import { IndianRupee, Loader2, Tag, X, Copy, CheckCircle2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
-const OrderSummary = ({ cart, onPlaceOrder, isSubmitting, buttonLabel = 'Place Order' }) => {
+const OrderSummary = ({ 
+  cart, 
+  onPlaceOrder, 
+  isSubmitting, 
+  buttonLabel = 'Place Order',
+  currentStep = 'shipping',
+  couponCode = '',
+  appliedCoupon = null,
+  onCouponCodeChange = () => {},
+  onApplyCoupon = () => {},
+  onRemoveCoupon = () => {},
+  applyingCoupon = false,
+  couponError = '',
+  availableCoupons = [],
+  selectedPayment = 'cod',
+}) => {
+  const [copiedCode, setCopiedCode] = React.useState('');
+  
   const subtotal = cart?.subtotal || 0;
   const shipping = 0; // Free shipping for now
-  const total = subtotal + shipping;
+  const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
+  const total = Math.max(0, subtotal + shipping - discount);
+
+  const handleCopyCode = (code) => {
+    navigator.clipboard.writeText(code);
+    setCopiedCode(code);
+    toast.success(`Coupon code "${code}" copied!`);
+    setTimeout(() => setCopiedCode(''), 2000);
+  };
 
   return (
     <div className="bg-white border-2 border-gray-200 rounded-lg p-6 shadow-sm sticky top-6">
       <h2 className="text-xl font-bold text-gray-900 mb-6">Order Summary</h2>
+
+      {/* Coupon Section - Only show in payment step */}
+      {currentStep === 'payment' && (
+        <div className="mb-6 pb-6 border-b border-gray-200">
+          {!appliedCoupon ? (
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Have a coupon code?
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={couponCode}
+                  onChange={(e) => onCouponCodeChange(e.target.value)}
+                  placeholder="Enter code"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      onApplyCoupon();
+                    }
+                  }}
+                />
+                <button
+                  onClick={onApplyCoupon}
+                  disabled={applyingCoupon || !couponCode.trim()}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold"
+                >
+                  {applyingCoupon ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    'Apply'
+                  )}
+                </button>
+              </div>
+              {couponError && (
+                <p className="text-xs text-red-600 mt-1">{couponError}</p>
+              )}
+            </div>
+          ) : (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Tag className="w-4 h-4 text-green-700" />
+                  <span className="text-sm font-semibold text-green-900">
+                    {appliedCoupon.couponCode}
+                  </span>
+                  <button
+                    onClick={() => handleCopyCode(appliedCoupon.couponCode)}
+                    className="p-1 hover:bg-green-100 rounded transition-colors ml-1"
+                    title="Copy coupon code"
+                  >
+                    {copiedCode === appliedCoupon.couponCode ? (
+                      <CheckCircle2 className="w-4 h-4 text-green-700" />
+                    ) : (
+                      <Copy className="w-4 h-4 text-green-700" />
+                    )}
+                  </button>
+                </div>
+                <button
+                  onClick={onRemoveCoupon}
+                  className="p-1 hover:bg-green-100 rounded transition-colors"
+                  title="Remove coupon"
+                >
+                  <X className="w-4 h-4 text-green-700" />
+                </button>
+              </div>
+              <p className="text-xs text-green-700">
+                You saved ₹{appliedCoupon.discountAmount.toFixed(2)} with this coupon
+              </p>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="space-y-4 mb-6">
         {/* Subtotal */}
@@ -26,6 +126,19 @@ const OrderSummary = ({ cart, onPlaceOrder, isSubmitting, buttonLabel = 'Place O
             </span>
           </div>
         </div>
+
+        {/* Coupon Discount */}
+        {appliedCoupon && (
+          <div className="flex justify-between text-green-700">
+            <span>Coupon Discount ({appliedCoupon.couponCode})</span>
+            <div className="flex items-center gap-1">
+              <IndianRupee className="w-4 h-4" />
+              <span className="font-semibold">
+                -{discount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Shipping */}
         <div className="flex justify-between text-gray-700">

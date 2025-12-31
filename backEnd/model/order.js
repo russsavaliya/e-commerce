@@ -102,6 +102,21 @@ const orderSchema = new schema({
     pincode: { type: String, required: true },
     landmark: { type: String },
   },
+  coupon: {
+    coupon_id: {
+      type: mongoose.Types.ObjectId,
+      ref: 'coupon',
+      default: null,
+    },
+    coupon_code: {
+      type: String,
+      default: null,
+    },
+    discount_amount: {
+      type: Number,
+      default: 0,
+    },
+  },
 }, {
   timestamps: true,
 });

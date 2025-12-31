@@ -10,6 +10,7 @@ const user_order_controller = require('../controllers/users/order');
 const user_payment_controller = require('../controllers/users/payment');
 const user_support_controller = require('../controllers/users/support');
 const user_review_controller = require('../controllers/users/review');
+const user_coupon_controller = require('../controllers/users/coupon');
 
 // User routes - No authentication required
 
@@ -58,5 +59,9 @@ router.post('/support/contact', user_support_controller.send_support_email);
 // Product reviews
 router.get('/reviews', user_review_controller.get_reviews);
 router.post('/reviews', user_review_controller.add_review);
+
+// Coupon routes (user)
+router.get('/coupons/available', user_coupon_controller.get_available_coupons);
+router.post('/coupons/apply', user_coupon_controller.apply_coupon);
 
 module.exports = router;
