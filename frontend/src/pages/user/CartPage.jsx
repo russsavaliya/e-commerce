@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/user/Navbar';
 import Footer from '../../components/user/Footer';
-import { Loader2, ShoppingBag, Trash2, Plus, Minus, IndianRupee, X, PackageSearch } from 'lucide-react';
+import { Loader2, ShoppingBag, Trash2, Plus, Minus, IndianRupee, X, PackageSearch, Tag } from 'lucide-react';
 import { getCart, updateCartItem, removeFromCart, clearCart } from '../../services/user/cartService';
+import { getAvailableCoupons } from '../../services/user/couponService';
 import toast from 'react-hot-toast';
 
 const CartPage = () => {
@@ -12,10 +13,29 @@ const CartPage = () => {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(null);
   const [clearing, setClearing] = useState(false);
+  const [availableCoupons, setAvailableCoupons] = useState([]);
+  const [loadingCoupons, setLoadingCoupons] = useState(false);
 
   useEffect(() => {
     fetchCart();
+    fetchAvailableCoupons();
   }, []);
+
+  const fetchAvailableCoupons = async () => {
+    try {
+      setLoadingCoupons(true);
+      const response = await getAvailableCoupons();
+      if (response.status) {
+        setAvailableCoupons(response.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching coupons:', error);
+      // Don't show error toast, just silently fail
+      setAvailableCoupons([]);
+    } finally {
+      setLoadingCoupons(false);
+    }
+  };
 
   const fetchCart = async () => {
     try {
@@ -262,8 +282,32 @@ const CartPage = () => {
 
             {/* Order Summary */}
             <div className="lg:col-span-1">
-              <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-6 sticky top-4">
+              <div className="bg-white border-2 border-gray-200 rounded-lg p-6 sticky top-4">
                 <h2 className="text-xl font-bold text-gray-900 mb-6">Order Summary</h2>
+
+                {/* Coupon Message */}
+                {availableCoupons.length > 0 && (
+                  <div className="mb-6 pb-6 border-b border-gray-200">
+                    <div className="bg-[rgba(72,29,111,0.05)] border border-[rgb(72,29,111)] rounded-lg p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 mt-0.5">
+                          <Tag className="w-5 h-5 text-[rgb(72,29,111)]" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold text-[rgb(72,29,111)] mb-1">
+                            🎉 Special Offers Available!
+                          </p>
+                          <p className="text-xs text-gray-700 mb-2">
+                            Discount coupons are applied at the payment step. Proceed to payment to use your coupon code.
+                          </p>
+                          <p className="text-xs text-[rgb(72,29,111)] font-semibold">
+                            {availableCoupons.length} {availableCoupons.length === 1 ? 'coupon' : 'coupons'} available
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="space-y-4 mb-6">
                   <div className="flex justify-between text-gray-700">
@@ -299,7 +343,7 @@ const CartPage = () => {
                   Proceed to Checkout
                 </button>
 
-               {/*  <button
+                {/*  <button
                   onClick={() => navigate('/order/track')}
                   className="w-full bg-white border-[1.5px] border-[rgb(72,29,111)] text-[rgb(72,29,111)] py-3 rounded-full font-semibold hover:bg-[rgba(72,29,111,0.08)] transition-all duration-200 mb-3 flex items-center justify-center gap-2"
                 >

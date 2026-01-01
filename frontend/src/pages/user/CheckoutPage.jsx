@@ -535,17 +535,17 @@ const CheckoutPage = () => {
           {/* Left Column - Steps */}
           <div className="lg:col-span-2 space-y-6">
             {/* Coupon Instruction */}
-            {availableCoupons.length > 0 && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            {availableCoupons.length > 0 && currentStep !== 'payment' && (
+              <div className="bg-[rgba(72,29,111,0.05)] border border-[rgb(72,29,111)] rounded-lg p-4">
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 mt-0.5">
-                    <Tag className="w-5 h-5 text-blue-600" />
+                    <Tag className="w-5 h-5 text-[rgb(72,29,111)]" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-semibold text-blue-900 mb-1">
+                    <p className="text-sm font-semibold text-[rgb(72,29,111)] mb-1">
                       Have a coupon code?
                     </p>
-                    <p className="text-xs text-blue-700">
+                    <p className="text-xs text-gray-700">
                       You can apply your coupon code in the next step (Payment) to get discounts on your order.
                     </p>
                   </div>
@@ -634,22 +634,10 @@ const CheckoutPage = () => {
                               <div className="flex items-start justify-between gap-3">
                                 <div className="flex-1">
                                   {/* Coupon Code and Discount */}
-                                  <div className="flex items-center gap-2 mb-2">
+                                  <div className="flex items-center gap-2 mb-2 flex-wrap">
                                     <Tag className={`w-4 h-4 ${isCompatibleWithSelected ? 'text-green-600' : 'text-gray-400'}`} />
                                     <span className="font-bold text-gray-900 text-base">{coupon.code}</span>
-                                    <span className={`text-sm font-semibold ${isCompatibleWithSelected ? 'text-green-600' : 'text-gray-500'}`}>
-                                      {discountText}
-                                    </span>
-                                  </div>
-                                  
-                                  {/* Description */}
-                                  {coupon.description && (
-                                    <p className="text-sm text-gray-700 mb-2">{coupon.description}</p>
-                                  )}
-                                  
-                                  {/* Payment Method Badges */}
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <span className="text-xs font-medium text-gray-600">Applicable for:</span>
+                                    {/* Payment Method Badges - Next to coupon name */}
                                     {coupon.applicableToCOD && (
                                       <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
                                         selectedPayment === 'cod' && isCompatibleWithSelected
@@ -668,7 +656,15 @@ const CheckoutPage = () => {
                                         💳 Online
                                       </span>
                                     )}
+                                    <span className={`text-sm font-semibold ${isCompatibleWithSelected ? 'text-green-600' : 'text-gray-500'}`}>
+                                      {discountText}
+                                    </span>
                                   </div>
+                                  
+                                  {/* Description */}
+                                  {coupon.description && (
+                                    <p className="text-sm text-gray-700 mb-2">{coupon.description}</p>
+                                  )}
                                   
                                   {/* Min Order Value */}
                                   <p className="text-xs text-gray-500">
