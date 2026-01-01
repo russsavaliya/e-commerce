@@ -19,7 +19,7 @@ const getShiprocketToken = async () => {
 
     const email = process.env.SHIPROCKET_EMAIL;
     const password = process.env.SHIPROCKET_PASSWORD;
-
+    // console.log(email, password, 'email and password');
     if (!email || !password) {
       throw new Error('Shiprocket credentials not configured');
     }
@@ -106,7 +106,7 @@ const createShiprocketOrder = async (order, shipmentData) => {
         },
       }
     );
-
+    // console.log(response.data, 'response data');
     if (response.data && response.data.order_id) {
       return {
         shiprocket_order_id: response.data.order_id,
@@ -116,10 +116,12 @@ const createShiprocketOrder = async (order, shipmentData) => {
         courier_id: response.data.courier_id || null,
         tracking_url: response.data.tracking_url || null,
       };
+    } else {
+      throw new Error(response.data.message);
     }
 
-    throw new Error('Invalid response from Shiprocket');
   } catch (error) {
+    console.log(error, 'create order error');
     console.error('Error creating Shiprocket order:', error.response?.data || error.message);
     throw new Error(
       error.response?.data?.message || error.response?.data?.errors?.[0]?.message || 'Failed to create Shiprocket order'
@@ -431,3 +433,4 @@ exports.get_shipment_list = async (req, res) => {
     });
   }
 };
+
