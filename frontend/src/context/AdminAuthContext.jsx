@@ -62,8 +62,6 @@ export const AdminAuthProvider = ({ children }) => {
 
   /**
    * Login function
-   * @param {object} credentials - { email, password }
-   * @returns {Promise<void>}
    */
   const login = async (credentials) => {
     try {
@@ -82,8 +80,6 @@ export const AdminAuthProvider = ({ children }) => {
 
   /**
    * Signup function
-   * @param {object} userData - { name, email, phone, password }
-   * @returns {Promise<void>}
    */
   const signup = async (userData) => {
     try {
@@ -102,7 +98,6 @@ export const AdminAuthProvider = ({ children }) => {
 
   /**
    * Logout function
-   * @returns {Promise<void>}
    */
   const logout = async () => {
     try {
