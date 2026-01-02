@@ -295,3 +295,32 @@ input[type="range"]::-moz-range-track {
   font-size: 0.875rem;
   line-height: 1.5;
 }
+
+/* WhatsApp Support Button Animations */
+@keyframes fadeInTooltip {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseSlow {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.animate-fade-in-tooltip {
+  animation: fadeInTooltip 0.2s ease-out forwards;
+}
+
+.animate-pulse-slow {
+  animation: pulseSlow 3s ease-in-out infinite;
+}

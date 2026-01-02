@@ -103,6 +103,11 @@ import OrderTrackPage from './pages/user/OrderTrackPage';
 import OrderSuccessPage from './pages/user/OrderSuccessPage';
 import ReturnPolicyPage from './pages/user/ReturnPolicyPage';
 
+// ============================================
+// STEP 7: Import User Components
+// ============================================
+import WhatsAppSupport from './components/user/WhatsAppSupport';
+
 // TODO: When you create new user pages, import them here:
 // import UserOrders from './pages/user/UserOrders';
 // import UserReturns from './pages/user/UserReturns';
@@ -341,10 +346,10 @@ function App() {
               ))}
 
               {/* If someone visits /admin/settings, redirect to categories */}
-              <Route
+              {/* <Route
                 path="settings"
                 element={<Navigate to={ROUTES.ADMIN_CATEGORIES} replace />}
-              />
+              /> */}
             </Route>
 
             {/* 
@@ -369,6 +374,9 @@ function App() {
             />
 
           </Routes>
+
+          {/* WhatsApp Support Button - Visible on all user pages */}
+          <WhatsAppSupport />
 
       </AdminAuthProvider>
 
