@@ -39,6 +39,22 @@ export const createShipment = async (orderId, shipmentData = {}) => {
 };
 
 /**
+ * Get shipment details by shipment ID
+ */
+export const getShipmentById = async (shipmentId) => {
+  try {
+    const response = await api.get('/shipments/one', {
+      params: { shipment_id: shipmentId },
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || 'Failed to fetch shipment'
+    );
+  }
+};
+
+/**
  * Get shipment details by order ID
  */
 export const getShipmentByOrder = async (orderId) => {
@@ -91,6 +107,7 @@ export const updateShipmentStatus = async (shipmentId, shipment_status) => {
 
 export default {
   createShipment,
+  getShipmentById,
   getShipmentByOrder,
   getAllShipments,
   updateShipmentStatus,

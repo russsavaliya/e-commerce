@@ -67,6 +67,7 @@ router.patch('/banners/:id/toggle', authorization.authorization, permission.chec
 
 // order routes (admin)
 router.get('/orders/list', authorization.authorization, admin_order_controller.get_order_list);
+router.get('/orders/accepted', authorization.authorization, admin_order_controller.get_accepted_orders);
 router.get('/orders/export', authorization.authorization, admin_order_controller.export_orders);
 router.get('/orders/export-one', authorization.authorization, admin_order_controller.export_order_one);
 router.get('/orders/:orderId', authorization.authorization, admin_order_controller.get_order_one);
@@ -75,6 +76,7 @@ router.patch('/orders/:orderId/payment-status', authorization.authorization, per
 
 // shipment routes (admin)
 router.post('/shipments/create/:orderId', authorization.authorization, permission.checkPermission('order_update'), shipment_controller.create_shipment);
+router.get('/shipments/one', authorization.authorization, shipment_controller.get_one_shipment);
 router.get('/shipments/order/:orderId', authorization.authorization, shipment_controller.get_shipment_by_order);
 router.get('/shipments/list', authorization.authorization, shipment_controller.get_shipment_list);
 router.patch('/shipments/:shipmentId/status', authorization.authorization, permission.checkPermission('order_update'), shipment_controller.update_shipment_status);

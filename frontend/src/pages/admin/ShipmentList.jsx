@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Truck, Loader2, Search, ChevronLeft, ChevronRight, Filter, ChevronDown, ExternalLink } from 'lucide-react';
+import { Truck, Loader2, Search, ChevronLeft, ChevronRight, Filter, ChevronDown, ExternalLink, Plus, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { getAllShipments } from '../../services/admin/shipmentService';
+import { getAllShipments, createShipment } from '../../services/admin/shipmentService';
+import { getAcceptedOrders } from '../../services/admin/orderService';
 
 const getShipmentStatusColor = (status) => {
   const colors = {
@@ -45,8 +46,24 @@ const ShipmentList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [shipmentStatusFilter, setShipmentStatusFilter] = useState('');
 
+  // Modal states
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [acceptedOrders, setAcceptedOrders] = useState([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
+  const [formData, setFormData] = useState({
+    orderId: '',
+    weight: '',
+    length: '',
+    breadth: '',
+    height: '',
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [orderDropdownOpen, setOrderDropdownOpen] = useState(false);
+  const [orderSearchTerm, setOrderSearchTerm] = useState('');
+
   // Refs
   const searchTimeoutRef = useRef(null);
+  const orderDropdownRef = useRef(null);
 
   const fetchShipments = async () => {
     try {
@@ -78,6 +95,24 @@ const ShipmentList = () => {
   useEffect(() => {
     fetchShipments();
   }, [pagination.page, shipmentStatusFilter]);
+
+  // Close order dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (orderDropdownRef.current && !orderDropdownRef.current.contains(event.target)) {
+        setOrderDropdownOpen(false);
+        setOrderSearchTerm('');
+      }
+    };
+
+    if (orderDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [orderDropdownOpen]);
 
   // Debounced search
   useEffect(() => {
@@ -121,6 +156,152 @@ const ShipmentList = () => {
     navigate(`/admin/orders/${orderId}`);
   };
 
+  const handleShipmentClick = (shipmentId) => {
+    navigate(`/admin/shipments/${shipmentId}`);
+  };
+
+  // Fetch accepted orders for dropdown
+  const fetchAcceptedOrders = async () => {
+    try {
+      setLoadingOrders(true);
+      const response = await getAcceptedOrders();
+      if (response.status && response.data) {
+        setAcceptedOrders(response.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching accepted orders:', error);
+      toast.error(error.message || 'Failed to fetch accepted orders');
+    } finally {
+      setLoadingOrders(false);
+    }
+  };
+
+  // Open create shipment modal
+  const handleOpenCreateModal = () => {
+    setShowCreateModal(true);
+    fetchAcceptedOrders();
+    setFormData({
+      orderId: '',
+      weight: '',
+      length: '',
+      breadth: '',
+      height: '',
+    });
+    setOrderDropdownOpen(false);
+    setOrderSearchTerm('');
+  };
+
+  // Close create shipment modal
+  const handleCloseCreateModal = () => {
+    setShowCreateModal(false);
+    setFormData({
+      orderId: '',
+      weight: '',
+      length: '',
+      breadth: '',
+      height: '',
+    });
+    setOrderDropdownOpen(false);
+    setOrderSearchTerm('');
+  };
+
+  // Filter orders based on search term
+  const filteredOrders = acceptedOrders.filter((order) => {
+    const searchLower = orderSearchTerm.toLowerCase();
+    const orderId = order.order_id?.toLowerCase() || '';
+    const customerName = order.shipping_address?.fullName?.toLowerCase() || '';
+    const email = order.shipping_address?.email?.toLowerCase() || '';
+    return orderId.includes(searchLower) || customerName.includes(searchLower) || email.includes(searchLower);
+  });
+
+  // Get selected order display text
+  const getSelectedOrderText = () => {
+    if (!formData.orderId) return 'Select an order';
+    const selectedOrder = acceptedOrders.find((o) => o.order_id === formData.orderId);
+    if (selectedOrder) {
+      return `${selectedOrder.order_id} - ${selectedOrder.shipping_address?.fullName || 'N/A'} (₹${selectedOrder.total_amount?.toLocaleString('en-IN') || '0'})`;
+    }
+    return 'Select an order';
+  };
+
+  // Handle order selection
+  const handleOrderSelect = (orderId) => {
+    setFormData((prev) => ({ ...prev, orderId }));
+    setOrderDropdownOpen(false);
+    setOrderSearchTerm('');
+  };
+
+  // Handle form input change
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  // Handle form submit
+  const handleCreateShipment = async (e) => {
+    e.preventDefault();
+
+    // Validation
+    if (!formData.orderId) {
+      toast.error('Please select an order');
+      return;
+    }
+
+    if (!formData.weight || !formData.length || !formData.breadth || !formData.height) {
+      toast.error('Please fill all dimension fields');
+      return;
+    }
+
+    const weight = parseFloat(formData.weight);
+    const length = parseFloat(formData.length);
+    const breadth = parseFloat(formData.breadth);
+    const height = parseFloat(formData.height);
+
+    if (isNaN(weight) || weight <= 0) {
+      toast.error('Weight must be a positive number');
+      return;
+    }
+
+    if (isNaN(length) || length <= 0) {
+      toast.error('Length must be a positive number');
+      return;
+    }
+
+    if (isNaN(breadth) || breadth <= 0) {
+      toast.error('Breadth must be a positive number');
+      return;
+    }
+
+    if (isNaN(height) || height <= 0) {
+      toast.error('Height must be a positive number');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      const response = await createShipment(formData.orderId, {
+        weight,
+        length,
+        breadth,
+        height,
+      });
+
+      if (response.status) {
+        toast.success(response.message || 'Shipment created successfully');
+        handleCloseCreateModal();
+        fetchShipments(); // Refresh the list
+      }
+    } catch (error) {
+      console.error('Error creating shipment:', error);
+      toast.error(error.message || 'Failed to create shipment');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="w-full space-y-6">
       {/* Header */}
@@ -135,6 +316,13 @@ const ShipmentList = () => {
               Manage and track all shipments
             </p>
           </div>
+          <button
+            onClick={handleOpenCreateModal}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            Create Shipment
+          </button>
         </div>
 
         {/* Search and Filters */}
@@ -210,6 +398,9 @@ const ShipmentList = () => {
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Shipment ID
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       Shiprocket Order ID
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
@@ -236,9 +427,16 @@ const ShipmentList = () => {
                   {shipments.map((shipment) => (
                     <tr
                       key={shipment._id}
-                      className="hover:bg-gray-50 transition-colors cursor-pointer"
-                      onClick={() => shipment.order_details?.order_id && handleOrderClick(shipment.order_details.order_id)}
+                      className="hover:bg-gray-50 transition-colors"
                     >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div 
+                          className="text-sm font-medium text-indigo-600 hover:text-indigo-800 cursor-pointer"
+                          onClick={() => handleShipmentClick(shipment._id)}
+                        >
+                          {shipment._id?.substring(0, 8) || 'N/A'}...
+                        </div>
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
                           {shipment.shiprocket_order_id || 'N/A'}
@@ -266,8 +464,7 @@ const ShipmentList = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div 
                           className="text-sm font-medium text-indigo-600 hover:text-indigo-800 cursor-pointer"
-                          onClick={(e) => {
-                            e.stopPropagation();
+                          onClick={() => {
                             if (shipment.order_details?.order_id) {
                               handleOrderClick(shipment.order_details.order_id);
                             }
@@ -287,7 +484,6 @@ const ShipmentList = () => {
                             href={shipment.tracking_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
                             className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800 hover:underline"
                           >
                             Track
@@ -341,6 +537,224 @@ const ShipmentList = () => {
           </>
         )}
       </div>
+
+      {/* Create Shipment Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div
+            className="bg-white rounded-lg shadow-2xl p-6 border border-gray-200 w-full max-w-lg max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900">
+                Create New Shipment
+              </h2>
+              <button
+                onClick={handleCloseCreateModal}
+                className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Close modal"
+              >
+                <X className="w-5 h-5 text-gray-600" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateShipment} className="space-y-4">
+              {/* Order ID Dropdown - Searchable */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Order ID <span className="text-red-500">*</span>
+                </label>
+                {loadingOrders ? (
+                  <div className="flex items-center justify-center py-3 border border-gray-300 rounded-lg">
+                    <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
+                  </div>
+                ) : (
+                  <div ref={orderDropdownRef} className="relative">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (acceptedOrders.length > 0) {
+                          setOrderDropdownOpen(!orderDropdownOpen);
+                          setOrderSearchTerm('');
+                        }
+                      }}
+                      className={`w-full px-3.5 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all flex items-center justify-between ${
+                        !formData.orderId ? 'text-gray-500' : 'text-gray-900'
+                      } ${
+                        acceptedOrders.length === 0
+                          ? 'bg-gray-100 cursor-not-allowed border-gray-300'
+                          : 'bg-white cursor-pointer border-gray-300 hover:border-gray-400'
+                      }`}
+                      disabled={acceptedOrders.length === 0}
+                    >
+                      <span className="truncate">{getSelectedOrderText()}</span>
+                      <ChevronDown
+                        className={`w-4 h-4 text-gray-400 transition-transform ${
+                          orderDropdownOpen ? 'transform rotate-180' : ''
+                        }`}
+                      />
+                    </button>
+
+                    {orderDropdownOpen && acceptedOrders.length > 0 && (
+                      <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-hidden">
+                        {/* Search Input */}
+                        <div className="p-2 border-b border-gray-200">
+                          <div className="relative">
+                            <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                            <input
+                              type="text"
+                              placeholder="Search by Order ID, Customer Name, or Email..."
+                              value={orderSearchTerm}
+                              onChange={(e) => setOrderSearchTerm(e.target.value)}
+                              onClick={(e) => e.stopPropagation()}
+                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm"
+                              autoFocus
+                            />
+                          </div>
+                        </div>
+
+                        {/* Order List */}
+                        <div className="max-h-48 overflow-y-auto">
+                          {filteredOrders.length === 0 ? (
+                            <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                              No orders found
+                            </div>
+                          ) : (
+                            filteredOrders.map((order) => (
+                              <button
+                                key={order._id}
+                                type="button"
+                                onClick={() => handleOrderSelect(order.order_id)}
+                                className={`w-full px-4 py-2.5 text-left text-sm hover:bg-indigo-50 transition-colors ${
+                                  formData.orderId === order.order_id
+                                    ? 'bg-indigo-100 text-indigo-900'
+                                    : 'text-gray-900'
+                                }`}
+                              >
+                                <div className="font-medium">{order.order_id}</div>
+                                <div className="text-xs text-gray-600 mt-0.5">
+                                  {order.shipping_address?.fullName || 'N/A'} • ₹
+                                  {order.total_amount?.toLocaleString('en-IN') || '0'}
+                                </div>
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {acceptedOrders.length === 0 && !loadingOrders && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Only orders with status "accepted" that don't have shipments yet are shown
+                  </p>
+                )}
+              </div>
+
+              {/* Weight */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Weight (kg) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  name="weight"
+                  value={formData.weight}
+                  onChange={handleInputChange}
+                  required
+                  min="0.01"
+                  step="0.01"
+                  placeholder="e.g., 0.5"
+                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                />
+              </div>
+
+              {/* Dimensions Row */}
+              <div className="grid grid-cols-3 gap-4">
+                {/* Length */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Length (cm) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    name="length"
+                    value={formData.length}
+                    onChange={handleInputChange}
+                    required
+                    min="1"
+                    step="0.1"
+                    placeholder="e.g., 10"
+                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                  />
+                </div>
+
+                {/* Breadth */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Breadth (cm) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    name="breadth"
+                    value={formData.breadth}
+                    onChange={handleInputChange}
+                    required
+                    min="1"
+                    step="0.1"
+                    placeholder="e.g., 10"
+                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                  />
+                </div>
+
+                {/* Height */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Height (cm) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    name="height"
+                    value={formData.height}
+                    onChange={handleInputChange}
+                    required
+                    min="1"
+                    step="0.1"
+                    placeholder="e.g., 10"
+                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Form Actions */}
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={handleCloseCreateModal}
+                  disabled={submitting}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    'Create Shipment'
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

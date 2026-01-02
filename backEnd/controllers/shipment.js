@@ -133,7 +133,7 @@ const createShiprocketOrder = async (order, shipmentData) => {
  * Internal helper: Create shipment for an order (can be called from other controllers)
  * Exported for use in admin_order controller
  */
-exports.createShipmentForOrder = async (orderId, shipmentData = {}) => {
+const createShipmentForOrder = async (orderId, shipmentData = {}) => {
   // Find the order
   const order = await order_model.findOne({ order_id: orderId });
 
@@ -221,7 +221,7 @@ exports.create_shipment = async (req, res) => {
     }
 
     // Create shipment
-    const shipment = await exports.createShipmentForOrder(orderId, {
+    const shipment = await createShipmentForOrder(orderId, {
       weight,
       length,
       breadth,
@@ -245,6 +245,46 @@ exports.create_shipment = async (req, res) => {
     return res.status(500).json({
       status: false,
       message: error.message || 'Failed to create shipment',
+    });
+  }
+};
+
+/**
+ * Admin: Get shipment details by shipment ID
+ */
+exports.get_one_shipment = async (req, res) => {
+  try {
+    const { shipment_id } = req.query;
+
+    if (!shipment_id) {
+      return res.status(400).json({
+        status: false,
+        message: 'Shipment ID is required',
+      });
+    }
+
+    const shipment = await shipment_model
+      .findById(shipment_id)
+      .populate('order_id', 'order_id shipping_address total_amount payment_method payment_status order_status createdAt')
+      .lean();
+
+    if (!shipment) {
+      return res.status(404).json({
+        status: false,
+        message: 'Shipment not found',
+      });
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: 'Shipment fetched successfully',
+      data: shipment,
+    });
+  } catch (error) {
+    console.error('Error fetching shipment:', error);
+    return res.status(500).json({
+      status: false,
+      message: error.message || 'Failed to fetch shipment',
     });
   }
 };

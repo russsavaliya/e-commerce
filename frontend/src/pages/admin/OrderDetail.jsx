@@ -117,12 +117,7 @@ const OrderDetail = () => {
 
       if (response.status) {
         setOrder(prev => ({ ...prev, order_status: newStatus }));
-        
-        // If status changed to 'shipment', fetch shipment details
-        if (newStatus === 'shipment') {
-          fetchShipmentDetails();
-        }
-        
+       
         // Show success message (handle warning if shipment creation failed)
         if (response.warning) {
           toast.success(`Order status updated to ${newStatus}`, {

@@ -116,6 +116,20 @@ export const downloadOrders = async (format = 'csv', filters = {}) => {
   }
 };
 
+/**
+ * Get accepted orders for shipment creation dropdown
+ */
+export const getAcceptedOrders = async () => {
+  try {
+    const response = await api.get('/orders/accepted');
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || 'Failed to fetch accepted orders'
+    );
+  }
+};
+
 export default {
   getAllOrders,
   getOrderById,

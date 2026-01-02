@@ -7,6 +7,48 @@ const pdf = require('html-pdf');
 const shipment_model = require('../model/shipment');
 
 /**
+ * Get accepted orders for shipment creation dropdown
+ */
+exports.get_accepted_orders = async (req, res) => {
+  try {
+    // Get all accepted orders
+    const orders = await order_model
+      .find({ order_status: 'accepted' })
+      .select('order_id shipping_address.fullName shipping_address.email total_amount createdAt')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Get all order IDs that already have shipments
+    const shipments = await shipment_model
+      .find({})
+      .select('order_id')
+      .lean();
+
+    // Create a set of order MongoDB IDs that already have shipments
+    const orderIdsWithShipments = new Set(
+      shipments.map((s) => s.order_id?.toString())
+    );
+
+    // Filter out orders that already have shipments
+    const availableOrders = orders.filter(
+      (order) => !orderIdsWithShipments.has(order._id.toString())
+    );
+
+    return res.status(200).json({
+      status: true,
+      message: 'Accepted orders fetched successfully',
+      data: availableOrders,
+    });
+  } catch (error) {
+    console.error('Error fetching accepted orders:', error);
+    return res.status(500).json({
+      status: false,
+      message: error.message || 'Failed to fetch accepted orders',
+    });
+  }
+};
+
+/**
  * Get all orders with pagination and filters
  */
 exports.get_order_list = async (req, res) => {
@@ -201,10 +243,7 @@ exports.get_order_one = async (req, res) => {
   }
 };
 
-/**
- * Update order status
- * If status is 'shipment', automatically create shipment in Shiprocket
- */
+
 exports.update_order_status = async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -228,40 +267,7 @@ exports.update_order_status = async (req, res) => {
       });
     }
 
-    // If status is 'shipment', create shipment in Shiprocket
-    if (order_status === 'shipment') {
-      try {
-        const existingShipment = await shipment_model.findOne({ order_id: order._id });
-
-        if (!existingShipment) {
-          // Check if order is in valid state for shipment
-          if (order.order_status !== 'confirmed' && order.order_status !== 'accepted') {
-            return res.status(400).json({
-              status: false,
-              message: 'Order must be confirmed or accepted before creating shipment',
-            });
-          }
-
-          // Create shipment using the helper function
-          await shipment_controller.createShipmentForOrder(orderId, {});
-        }
-      } catch (shipmentError) {
-        console.error('Error creating shipment:', shipmentError);
-        // Still update order status, but return warning
-        const updatedOrder = await order_model.findOneAndUpdate(
-          { order_id: orderId },
-          { $set: { order_status } },
-          { new: true }
-        );
-        
-        return res.status(200).json({
-          status: true,
-          message: `Order status updated to 'shipment', but shipment creation failed: ${shipmentError.message}. Please create shipment manually.`,
-          data: updatedOrder,
-          warning: true,
-        });
-      }
-    }
+  
 
     // Update order status
     const updatedOrder = await order_model.findOneAndUpdate(
@@ -272,9 +278,7 @@ exports.update_order_status = async (req, res) => {
 
     return res.status(200).json({
       status: true,
-      message: order_status === 'shipment' 
-        ? 'Order status updated and shipment created successfully'
-        : 'Order status updated successfully',
+      message: 'Order status updated successfully',
       data: updatedOrder,
     });
   } catch (error) {
