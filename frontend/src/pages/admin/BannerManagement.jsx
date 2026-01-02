@@ -640,19 +640,26 @@ const BannerManagement = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Banner Position <span className="text-red-500">*</span>
                 </label>
-                <select
-                  name="position"
-                  value={formData.position}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 max-h-48 overflow-y-auto shadow-sm"
-                >
-                  <option value="homepage_hero">Homepage Hero (Top Carousel)</option>
-                  <option value="homepage_category_strip">Homepage Category Strip (Curved Cards)</option>
-                  <option value="homepage_middle">Homepage Middle Section</option>
-                  <option value="homepage_bottom">Homepage Bottom Section</option>
-                  <option value="category_page">Category Page</option>
-                  <option value="product_page">Product Page</option>
-                </select>
+                <div className="relative z-10">
+                  <select
+                    name="position"
+                    value={formData.position}
+                    onChange={handleInputChange}
+                    className="appearance-none bg-white border border-gray-300 rounded-lg px-3 py-2 pr-8 text-sm text-gray-700 cursor-pointer hover:border-gray-400 transition-all w-full"
+                  >
+                    <option value="homepage_hero">Homepage Hero (Top Carousel)</option>
+                    <option value="homepage_category_strip">Homepage Category Strip (Curved Cards)</option>
+                    <option value="homepage_middle">Homepage Middle Section</option>
+                    <option value="homepage_bottom">Homepage Bottom Section</option>
+                    <option value="category_page">Category Page</option>
+                    <option value="product_page">Product Page</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
                 <p className="text-xs text-gray-500 mt-1">
                   Select where this banner should be displayed
                 </p>

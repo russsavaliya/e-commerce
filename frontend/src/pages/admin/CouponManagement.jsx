@@ -390,17 +390,27 @@ const CouponManagement = () => {
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Discount Type <span className="text-red-500">*</span>
                   </label>
-                  <select
-                    name="discountType"
-                    value={formData.discountType}
-                    onChange={handleInputChange}
-                    className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
-                      formErrors.discountType ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                  >
-                    <option value="percentage">Percentage</option>
-                    <option value="flat">Flat Amount</option>
-                  </select>
+                  <div className="relative z-10">
+                    <select
+                      name="discountType"
+                      value={formData.discountType}
+                      onChange={handleInputChange}
+                      className={`appearance-none bg-white border rounded-lg px-4 py-2.5 pr-8 text-sm text-gray-700 cursor-pointer hover:border-gray-400 transition-all w-full ${
+                        formErrors.discountType ? 'border-red-300' : 'border-gray-300'
+                      }`}
+                    >
+                      <option value="percentage">Percentage</option>
+                      <option value="flat">Flat Amount</option>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
+                  {formErrors.discountType && (
+                    <p className="mt-1 text-sm text-red-600">{formErrors.discountType}</p>
+                  )}
                 </div>
 
                 {/* Discount Value */}

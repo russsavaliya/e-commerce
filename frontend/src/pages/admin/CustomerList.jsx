@@ -1,8 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Search, Users, Filter, RefreshCw, Phone, Mail, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useEffect, useState, useRef } from 'react';
+import { Search, Users, Filter, RefreshCw, Phone, Mail, MapPin, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { getCustomers } from '../../services/admin/customerService';
 import { ROUTES } from '../../utils/constants';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 const formatDate = (dateString) => {
   if (!dateString) return '—';
@@ -12,54 +13,153 @@ const formatDate = (dateString) => {
 
 const CustomerList = () => {
   const [customers, setCustomers] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
-  const [search, setSearch] = useState('');
+  const [totalCustomers, setTotalCustomers] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
   const [hasOrder, setHasOrder] = useState('');
-  const [refreshKey, setRefreshKey] = useState(0);
 
   const navigate = useNavigate();
 
-  const debouncedSearch = useMemo(() => search, [search]);
+  const searchTimeoutRef = useRef(null);
+  const isFetchingRef = useRef(false);
+  const lastParamsRef = useRef({ page: null, limit: null, search: null, has_order: null });
 
+  // Single unified effect to handle all data fetching
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      setError('');
-      try {
-        const response = await getCustomers({
-          page,
-          limit,
-          search: debouncedSearch,
-          has_order: hasOrder,
-        });
-        if (response.status) {
-          setCustomers(response.data.customers || []);
-          setTotalPages(response.data.total_pages || 1);
-        } else {
-          setError(response.message || 'Failed to fetch customers');
+    // Clear any existing search timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+      searchTimeoutRef.current = null;
+    }
+
+    // Determine fetch parameters
+    let fetchPage = currentPage;
+    let fetchLimit = itemsPerPage;
+    let fetchSearch = searchQuery;
+    let fetchHasOrder = hasOrder;
+
+    // If search query exists, debounce and reset to page 1
+    if (searchQuery.trim() !== '') {
+      searchTimeoutRef.current = setTimeout(() => {
+        fetchPage = 1;
+        fetchSearch = searchQuery;
+        const params = { page: fetchPage, limit: fetchLimit, search: fetchSearch, has_order: fetchHasOrder };
+
+        // Only fetch if parameters changed and not already fetching
+        if (!isFetchingRef.current &&
+          (lastParamsRef.current.page !== params.page ||
+            lastParamsRef.current.limit !== params.limit ||
+            lastParamsRef.current.search !== params.search ||
+            lastParamsRef.current.has_order !== params.has_order)) {
+          fetchCustomers(fetchPage, fetchLimit, fetchSearch, fetchHasOrder);
         }
-      } catch (err) {
-        setError(err.message || 'Failed to fetch customers');
-      } finally {
-        setLoading(false);
+      }, 500);
+    } else {
+      // No search query - fetch immediately
+      const params = { page: fetchPage, limit: fetchLimit, search: fetchSearch, has_order: fetchHasOrder };
+
+      // Only fetch if parameters changed and not already fetching
+      if (!isFetchingRef.current &&
+        (lastParamsRef.current.page !== params.page ||
+          lastParamsRef.current.limit !== params.limit ||
+          lastParamsRef.current.search !== params.search ||
+          lastParamsRef.current.has_order !== params.has_order)) {
+        fetchCustomers(fetchPage, fetchLimit, fetchSearch, fetchHasOrder);
+      }
+    }
+
+    // Cleanup
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+        searchTimeoutRef.current = null;
       }
     };
+  }, [currentPage, itemsPerPage, searchQuery, hasOrder]);
 
-    fetchData();
-  }, [page, limit, debouncedSearch, hasOrder, refreshKey]);
+  // Fetch Customers from API with Pagination and Search
+  const fetchCustomers = async (page = currentPage, limit = itemsPerPage, search = '', has_order = '') => {
+    // Prevent duplicate calls
+    if (isFetchingRef.current) {
+      return;
+    }
+
+    // Check if same parameters
+    if (lastParamsRef.current.page === page &&
+      lastParamsRef.current.limit === limit &&
+      lastParamsRef.current.search === search &&
+      lastParamsRef.current.has_order === has_order) {
+      return;
+    }
+
+    isFetchingRef.current = true;
+    lastParamsRef.current = { page, limit, search, has_order };
+
+    try {
+      setLoading(true);
+      setError('');
+      const response = await getCustomers({
+        page,
+        limit,
+        search,
+        has_order,
+      });
+
+      if (response.status) {
+        setCustomers(response.data.customers || []);
+
+        // Update pagination metadata from API response
+        if (response.data?.total_count !== undefined) {
+          setTotalCustomers(response.data.total_count);
+          setTotalPages(response.data.total_pages || 1);
+        } else {
+          // Fallback: calculate from array length if API doesn't return total
+          const customersArray = response.data.customers || [];
+          setTotalCustomers(customersArray.length);
+          setTotalPages(Math.ceil(customersArray.length / limit));
+        }
+      } else {
+        setError(response.message || 'Failed to fetch customers');
+        setCustomers([]);
+        setTotalCustomers(0);
+        setTotalPages(1);
+      }
+    } catch (err) {
+      console.error('Error fetching customers:', err);
+      toast.error(err.message || 'Failed to fetch customers');
+      setError(err.message || 'Failed to fetch customers');
+      setCustomers([]);
+      setTotalCustomers(0);
+      setTotalPages(1);
+      // Reset last params on error so we can retry
+      lastParamsRef.current = { page: null, limit: null, search: null, has_order: null };
+    } finally {
+      setLoading(false);
+      isFetchingRef.current = false;
+    }
+  };
 
   const handleSearchChange = (e) => {
-    setSearch(e.target.value);
-    setPage(1);
+    setSearchQuery(e.target.value);
+    setCurrentPage(1);
   };
 
   const handleHasOrderChange = (e) => {
     setHasOrder(e.target.value);
-    setPage(1);
+    setCurrentPage(1);
+  };
+
+  const handleRefresh = () => {
+    // Reset to page 1 and clear search
+    setCurrentPage(1);
+    setSearchQuery('');
+    setHasOrder('');
+    // Force refetch by resetting last params
+    lastParamsRef.current = { page: null, limit: null, search: null, has_order: null };
   };
 
   const renderOrderBadge = (count) => {
@@ -107,10 +207,11 @@ const CustomerList = () => {
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setRefreshKey((k) => k + 1)}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50"
+            onClick={handleRefresh}
+            disabled={loading}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </button>
         </div>
@@ -119,27 +220,34 @@ const CustomerList = () => {
       {/* Filters */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
         <div className="relative w-full sm:w-1/2">
-          <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 z-10" />
           <input
             type="text"
-            value={search}
+            value={searchQuery}
             onChange={handleSearchChange}
             placeholder="Search by name, email, or phone"
-            className="w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+            className="w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg bg-white"
           />
         </div>
 
-        <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-gray-500" />
-          <select
-            value={hasOrder}
-            onChange={handleHasOrderChange}
-            className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
-          >
-            <option value="">All customers</option>
-            <option value="true">With orders</option>
-            <option value="false">No orders</option>
-          </select>
+        <div className="flex items-center gap-2 relative z-10">
+          <Filter className="w-4 h-4 text-gray-500 flex-shrink-0" />
+          <div className="relative">
+            <select
+              value={hasOrder}
+              onChange={handleHasOrderChange}
+              className="appearance-none bg-white border border-gray-200 rounded-lg px-3 py-2.5 pr-8 text-sm text-gray-700 cursor-pointer min-w-[160px]"
+            >
+              <option value="">All customers</option>
+              <option value="true">With orders</option>
+              <option value="false">No orders</option>
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -157,18 +265,27 @@ const CustomerList = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {!loading && customers.length === 0 && (
+              {loading && (
                 <tr>
-                  <td colSpan="5" className="px-6 py-6 text-center text-sm text-gray-500">
-                    No customers found
+                  <td colSpan="5" className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <Loader2 className="w-8 h-8 animate-spin text-green-600 mb-2" />
+                      <span className="text-sm text-gray-500">Loading customers...</span>
+                    </div>
                   </td>
                 </tr>
               )}
 
-              {loading && (
+              {!loading && customers.length === 0 && (
                 <tr>
-                  <td colSpan="5" className="px-6 py-6 text-center text-sm text-gray-500">
-                    Loading customers...
+                  <td colSpan="5" className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <Users className="w-12 h-12 text-gray-300 mb-2" />
+                      <p className="text-sm font-medium text-gray-700">No customers found</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {searchQuery || hasOrder ? 'Try adjusting your filters' : 'Customers will appear here once they place orders'}
+                      </p>
+                    </div>
                   </td>
                 </tr>
               )}
@@ -213,29 +330,95 @@ const CustomerList = () => {
         </div>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between px-6 py-3 bg-gray-50 border-t border-gray-100">
-          <span className="text-sm text-gray-600">
-            Page {page} of {totalPages}
-          </span>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1 || loading}
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg disabled:opacity-50"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Prev
-            </button>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages || loading}
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg disabled:opacity-50"
-            >
-              Next
-              <ChevronRight className="w-4 h-4" />
-            </button>
+        {totalPages > 0 && (
+          <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              {/* Items per page selector */}
+              <div className="flex items-center gap-2 relative z-10">
+                <label className="text-sm text-gray-700">Show:</label>
+                <div className="relative">
+                  <select
+                    value={itemsPerPage}
+                    onChange={(e) => {
+                      setItemsPerPage(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    className="appearance-none bg-white border border-gray-300 rounded-lg px-3 py-1.5 pr-8 text-sm text-gray-700 cursor-pointer"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              {/* Page info */}
+              <div className="text-sm text-gray-700">
+                Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to{' '}
+                <span className="font-medium">
+                  {Math.min(currentPage * itemsPerPage, totalCustomers)}
+                </span>{' '}
+                of <span className="font-medium">{totalCustomers}</span> customers
+              </div>
+
+              {/* Pagination buttons */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1 || loading}
+                  className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label="Previous page"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+
+                {/* Page numbers */}
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${currentPage === pageNum
+                          ? 'bg-green-600 text-white'
+                          : 'border border-gray-300 hover:bg-gray-50'
+                          }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages || loading}
+                  className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label="Next page"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Error banner */}

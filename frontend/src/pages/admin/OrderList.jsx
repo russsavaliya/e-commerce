@@ -252,6 +252,11 @@ const OrderList = () => {
 
   return (
     <div className="w-full space-y-5">
+      <div className="flex items-center justify-between mb-2">
+        <h1 className="text-2xl font-bold text-gray-900">
+          Orders List
+        </h1>
+      </div>
       {/* Search, Filters & Download */}
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
         <div className="p-4 space-y-4">
@@ -306,35 +311,49 @@ const OrderList = () => {
           {/* Filters */}
           <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-gray-100">
             <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-gray-500" />
+              <Filter className="w-4 h-4 text-gray-500 flex-shrink-0" />
               <label className="text-sm text-gray-700 font-semibold">Filters:</label>
             </div>
-            <select
-              value={orderStatusFilter}
-              onChange={handleOrderStatusFilterChange}
-              className="px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all bg-white hover:border-gray-400"
-            >
-              <option value="">All Order Status</option>
-              <option value="pending">Pending</option>
-              <option value="accepted">Accepted</option>
-              <option value="shipment">Shipment</option>
-              <option value="shipped">Shipped</option>
-              <option value="delivered">Delivered</option>
-              <option value="cancelled">Cancelled</option>
-              <option value="missing">Missing</option>
-              <option value="failed">Failed</option>
-            </select>
-            <select
-              value={paymentStatusFilter}
-              onChange={handlePaymentStatusFilterChange}
-              className="px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all bg-white hover:border-gray-400"
-            >
-              <option value="">All Payment Status</option>
-              <option value="pending">Pending</option>
-              <option value="paid">Paid</option>
-              <option value="failed">Failed</option>
-              <option value="refunded">Refunded</option>
-            </select>
+            <div className="relative z-10">
+              <select
+                value={orderStatusFilter}
+                onChange={handleOrderStatusFilterChange}
+                className="appearance-none bg-white border border-gray-300 rounded-lg px-3.5 py-2 pr-8 text-sm text-gray-700 cursor-pointer hover:border-gray-400 transition-all min-w-[160px]"
+              >
+                <option value="">All Order Status</option>
+                <option value="pending">Pending</option>
+                <option value="accepted">Accepted</option>
+                <option value="shipment">Shipment</option>
+                <option value="shipped">Shipped</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="missing">Missing</option>
+                <option value="failed">Failed</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+            <div className="relative z-10">
+              <select
+                value={paymentStatusFilter}
+                onChange={handlePaymentStatusFilterChange}
+                className="appearance-none bg-white border border-gray-300 rounded-lg px-3.5 py-2 pr-8 text-sm text-gray-700 cursor-pointer hover:border-gray-400 transition-all min-w-[160px]"
+              >
+                <option value="">All Payment Status</option>
+                <option value="pending">Pending</option>
+                <option value="paid">Paid</option>
+                <option value="failed">Failed</option>
+                <option value="refunded">Refunded</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
             {(searchTerm || orderStatusFilter || paymentStatusFilter) && (
               <button
                 onClick={clearFilters}
@@ -447,18 +466,25 @@ const OrderList = () => {
             {pagination.total_pages > 1 && (
               <div className="bg-gray-50 border-t border-gray-200 px-6 py-4">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 relative z-10">
                     <label className="text-sm text-gray-600 font-medium">Items per page:</label>
-                    <select
-                      value={pagination.limit}
-                      onChange={handleLimitChange}
-                      className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all bg-white hover:border-gray-400"
-                    >
-                      <option value={5}>5</option>
-                      <option value={10}>10</option>
-                      <option value={20}>20</option>
-                      <option value={50}>50</option>
-                    </select>
+                    <div className="relative">
+                      <select
+                        value={pagination.limit}
+                        onChange={handleLimitChange}
+                        className="appearance-none bg-white border border-gray-300 rounded-lg px-3 py-1.5 pr-8 text-sm text-gray-700 cursor-pointer hover:border-gray-400 transition-all"
+                      >
+                        <option value={5}>5</option>
+                        <option value={10}>10</option>
+                        <option value={20}>20</option>
+                        <option value={50}>50</option>
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="text-sm text-gray-600">
@@ -500,11 +526,10 @@ const OrderList = () => {
                           <button
                             key={pageNum}
                             onClick={() => handlePageChange(pageNum)}
-                            className={`px-3.5 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ${
-                              pagination.page === pageNum
-                                ? 'bg-green-600 text-white shadow-sm'
-                                : 'border border-gray-300 hover:bg-white hover:border-gray-400 active:bg-gray-50 text-gray-700'
-                            }`}
+                            className={`px-3.5 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ${pagination.page === pageNum
+                              ? 'bg-green-600 text-white shadow-sm'
+                              : 'border border-gray-300 hover:bg-white hover:border-gray-400 active:bg-gray-50 text-gray-700'
+                              }`}
                           >
                             {pageNum}
                           </button>

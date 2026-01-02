@@ -438,22 +438,29 @@ const CategoryManagement = () => {
                 >
                   Parent Category <span className="text-gray-400 text-xs">(Optional)</span>
                 </label>
-                <select
-                  id="parentCategory"
-                  value={formData.parent_category_id}
-                  onChange={(e) =>
-                    setFormData({ ...formData, parent_category_id: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
-                >
-                  <option value="">None (Top Level Category)</option>
-                  {/* Use _id for option value - this ensures we pass _id instead of name */}
-                  {getAllParentOptions(editingCategory?._id).map((cat) => (
-                    <option key={cat._id} value={cat._id}>
-                      {getCategoryPath(cat)}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative z-10">
+                  <select
+                    id="parentCategory"
+                    value={formData.parent_category_id}
+                    onChange={(e) =>
+                      setFormData({ ...formData, parent_category_id: e.target.value })
+                    }
+                    className="appearance-none bg-white border border-gray-300 rounded-lg px-3 py-2 pr-8 text-sm text-gray-700 cursor-pointer hover:border-gray-400 transition-all w-full"
+                  >
+                    <option value="">None (Top Level Category)</option>
+                    {/* Use _id for option value - this ensures we pass _id instead of name */}
+                    {getAllParentOptions(editingCategory?._id).map((cat) => (
+                      <option key={cat._id} value={cat._id}>
+                        {getCategoryPath(cat)}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
                 <p className="mt-1.5 text-xs text-gray-500">
                   Leave empty to create a top-level category
                 </p>
@@ -607,21 +614,28 @@ const CategoryManagement = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             {/* Items per page selector */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 relative z-10">
               <label className="text-sm text-gray-700">Items per page:</label>
-              <select
-                value={itemsPerPage}
-                onChange={(e) => {
-                  setItemsPerPage(Number(e.target.value));
-                  setCurrentPage(1); // Reset to first page when changing items per page
-                }}
-                className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-              </select>
+              <div className="relative">
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value));
+                    setCurrentPage(1); // Reset to first page when changing items per page
+                  }}
+                  className="appearance-none bg-white border border-gray-300 rounded px-2 py-1 pr-8 text-sm text-gray-700 cursor-pointer hover:border-gray-400 transition-all"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
             </div>
 
             {/* Page info */}
