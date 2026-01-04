@@ -1,293 +1,398 @@
-/**
- * ProductCarousel Component - Reusable horizontal scrolling carousel
- * Features: Arrow controls (desktop), swipe gestures (mobile), infinite loop
- */
-
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import ProductCard from './ProductCard';
 
 const ProductCarousel = ({ products = [] }) => {
   const scrollContainerRef = useRef(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   // Touch/swipe state
   const touchStartX = useRef(0);
-  const touchEndX = useRef(0);
+  const touchStartY = useRef(0);
+  const touchStartTime = useRef(0);
+  const swipeDirection = useRef(null);
   const isDragging = useRef(false);
+  const scrollPosition = useRef(0);
+  
+  // Scroll handling refs
+  const scrollTimeout = useRef(null);
+  const isLooping = useRef(false);
+  const isProgrammaticScroll = useRef(false);
+  const ignoreScrollEvent = useRef(false);
+  const isInitialized = useRef(false);
+
+  const minSwipeDistance = 50;
+  const minSwipeThreshold = 15;
+  const maxSwipeVelocity = 0.5;
 
   // Check if mobile
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Update scroll buttons visibility
-  const updateScrollButtons = useCallback(() => {
-    if (!scrollContainerRef.current) return;
-    const container = scrollContainerRef.current;
-    const { scrollLeft, scrollWidth, clientWidth } = container;
-    
-    // For infinite loop, we always allow scrolling
-    // But we can show/hide buttons based on position
-    setCanScrollLeft(scrollLeft > 10);
-    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+  if (products.length === 0) return null;
+
+  const hasEnoughProducts = products.length >= 2;
+
+  // Get card width including gap
+  const getCardWidth = useCallback(() => {
+    if (!scrollContainerRef.current) return 304;
+    const card = scrollContainerRef.current.querySelector('.product-card');
+    if (!card) return 304;
+    return card.offsetWidth + 24; // card width + gap
   }, []);
 
-  // Scroll handler
-  const scroll = useCallback((direction) => {
-    if (!scrollContainerRef.current || isScrolling) return;
+  // Scroll to specific index
+  const scrollToIndex = useCallback((index, immediate = false) => {
+    if (!scrollContainerRef.current || isLooping.current) return;
     
-    setIsScrolling(true);
     const container = scrollContainerRef.current;
-    const cardWidth = container.querySelector('.product-card')?.offsetWidth || 280;
-    const gap = 24; // gap-6 = 24px
-    const scrollAmount = cardWidth + gap;
-    
-    const currentScroll = container.scrollLeft;
-    const maxScroll = container.scrollWidth - container.clientWidth;
-    
-    let targetScroll;
-    if (direction === 'left') {
-      targetScroll = Math.max(0, currentScroll - scrollAmount);
-      // If at start and trying to go left, loop to end
-      if (currentScroll <= 5 && maxScroll > 0) {
-        targetScroll = maxScroll;
-      }
+    const cardWidth = getCardWidth();
+    const targetScroll = (index + 1) * cardWidth;
+
+    // Mark as programmatic scroll
+    isProgrammaticScroll.current = true;
+    ignoreScrollEvent.current = true;
+    setIsScrolling(true);
+
+    if (immediate) {
+      container.style.scrollBehavior = 'auto';
+      container.scrollLeft = targetScroll;
+      setCurrentIndex(index);
+      scrollPosition.current = targetScroll;
+      
+      setTimeout(() => {
+        container.style.scrollBehavior = '';
+        isProgrammaticScroll.current = false;
+        ignoreScrollEvent.current = false;
+        setIsScrolling(false);
+      }, 50);
     } else {
-      targetScroll = Math.min(maxScroll, currentScroll + scrollAmount);
-      // If at end and trying to go right, loop to start
-      if (currentScroll >= maxScroll - 5 && maxScroll > 0) {
-        targetScroll = 0;
-      }
+      container.style.scrollBehavior = 'smooth';
+      container.scrollTo({
+        left: targetScroll,
+        behavior: 'smooth'
+      });
+
+      setCurrentIndex(index);
+      scrollPosition.current = targetScroll;
+
+      setTimeout(() => {
+        container.style.scrollBehavior = '';
+        isProgrammaticScroll.current = false;
+        ignoreScrollEvent.current = false;
+        setIsScrolling(false);
+      }, 500);
     }
-    
-    container.scrollTo({
-      left: targetScroll,
-      behavior: 'smooth'
-    });
-    
-    // Reset scrolling flag after animation
-    setTimeout(() => {
-      setIsScrolling(false);
-      updateScrollButtons();
-    }, 500);
-  }, [isScrolling, updateScrollButtons]);
+  }, [getCardWidth]);
 
-  // Handle scroll end - update button states
-  const handleScrollEnd = useCallback(() => {
-    updateScrollButtons();
-  }, [updateScrollButtons]);
+  // Navigate to next/previous
+  const navigate = useCallback((direction) => {
+    if (isScrolling || isLooping.current || products.length === 0) {
+      return;
+    }
 
-  // Touch event handlers for swipe
-  const touchStartY = useRef(0);
-  const swipeDirection = useRef(null); // 'horizontal' | 'vertical' | null
-  const minSwipeThreshold = 15; // Minimum pixels to determine direction (increased for better detection)
+    const newIndex = direction === 'next'
+      ? (currentIndex + 1) % products.length
+      : (currentIndex - 1 + products.length) % products.length;
+
+    scrollToIndex(newIndex);
+  }, [currentIndex, products.length, isScrolling, scrollToIndex]);
+
+  // Handle scroll events - use ref to avoid dependency issues
+  const handleScrollRef = useRef(null);
   
+  handleScrollRef.current = () => {
+    // Ignore if programmatic scroll or during drag
+    if (!scrollContainerRef.current || !hasEnoughProducts) return;
+    if (ignoreScrollEvent.current || isProgrammaticScroll.current || isDragging.current || isLooping.current) return;
+    
+    const container = scrollContainerRef.current;
+    const scrollLeft = container.scrollLeft;
+    
+    // Clear previous timeout
+    if (scrollTimeout.current) {
+      clearTimeout(scrollTimeout.current);
+    }
+
+    // Debounce to avoid too many calculations
+    scrollTimeout.current = setTimeout(() => {
+      // Double check conditions
+      if (ignoreScrollEvent.current || isProgrammaticScroll.current || isDragging.current || isLooping.current) return;
+      
+      const cardWidth = getCardWidth();
+      const itemIndex = Math.round(scrollLeft / cardWidth);
+      
+      // Check if at the end (viewing last clone)
+      const lastClonePosition = (products.length + 1) * cardWidth;
+      if (scrollLeft >= lastClonePosition - (cardWidth * 0.5)) {
+        isLooping.current = true;
+        ignoreScrollEvent.current = true;
+        
+        container.style.scrollBehavior = 'auto';
+        container.scrollLeft = cardWidth;
+        setCurrentIndex(0);
+        scrollPosition.current = cardWidth;
+        
+        setTimeout(() => {
+          container.style.scrollBehavior = '';
+          isLooping.current = false;
+          ignoreScrollEvent.current = false;
+        }, 50);
+        return;
+      }
+      
+      // Check if at the start (viewing first clone)
+      if (scrollLeft <= cardWidth * 0.5) {
+        isLooping.current = true;
+        ignoreScrollEvent.current = true;
+        
+        const lastRealPosition = products.length * cardWidth;
+        container.style.scrollBehavior = 'auto';
+        container.scrollLeft = lastRealPosition;
+        setCurrentIndex(products.length - 1);
+        scrollPosition.current = lastRealPosition;
+        
+        setTimeout(() => {
+          container.style.scrollBehavior = '';
+          isLooping.current = false;
+          ignoreScrollEvent.current = false;
+        }, 50);
+        return;
+      }
+      
+      // Update current index based on scroll position
+      const realIndex = itemIndex - 1;
+      const clampedIndex = Math.max(0, Math.min(products.length - 1, realIndex));
+      
+      // Only update if different to avoid unnecessary re-renders
+      setCurrentIndex(prevIndex => {
+        if (clampedIndex !== prevIndex) {
+          return clampedIndex;
+        }
+        return prevIndex;
+      });
+      
+      scrollPosition.current = scrollLeft;
+    }, 100);
+  };
+
+  // Touch handlers for mobile
   const handleTouchStart = (e) => {
+    if (!isMobile) return;
+    
     touchStartX.current = e.touches[0].clientX;
     touchStartY.current = e.touches[0].clientY;
-    touchEndX.current = e.touches[0].clientX;
-    swipeDirection.current = null; // Reset direction on new touch
+    touchStartTime.current = Date.now();
+    swipeDirection.current = null;
     isDragging.current = true;
+    
+    if (scrollContainerRef.current) {
+      scrollPosition.current = scrollContainerRef.current.scrollLeft;
+    }
   };
 
   const handleTouchMove = (e) => {
-    if (!isDragging.current || !scrollContainerRef.current) return;
+    if (!isMobile || !isDragging.current || !scrollContainerRef.current) return;
     
     const currentX = e.touches[0].clientX;
     const currentY = e.touches[0].clientY;
     const deltaX = Math.abs(touchStartX.current - currentX);
     const deltaY = Math.abs(touchStartY.current - currentY);
     
-    // Determine swipe direction on first significant movement
-    // Use a higher threshold and clearer direction detection
+    // Determine swipe direction
     if (swipeDirection.current === null) {
-      // Need at least minSwipeThreshold pixels of movement to determine direction
       if (deltaX >= minSwipeThreshold || deltaY >= minSwipeThreshold) {
-        // Determine primary direction - horizontal must be clearly dominant
-        if (deltaX > deltaY * 1.5 && deltaX >= minSwipeThreshold) {
-          swipeDirection.current = 'horizontal';
-        } else if (deltaY > deltaX * 1.5 && deltaY >= minSwipeThreshold) {
-          swipeDirection.current = 'vertical';
-        }
-        // If neither is clearly dominant, don't set direction yet
+        swipeDirection.current = deltaX > deltaY * 1.5 ? 'horizontal' : 'vertical';
       }
     }
     
-    // Only prevent default for clearly horizontal swipes
-    // This allows the carousel to scroll horizontally
+    // Handle horizontal swipe
     if (swipeDirection.current === 'horizontal') {
       e.preventDefault();
-      // Let the native browser scrolling handle the carousel
-      // Don't manually manipulate scrollLeft
+      
+      const scrollDelta = touchStartX.current - currentX;
+      const newScroll = scrollPosition.current + scrollDelta;
+      
+      const container = scrollContainerRef.current;
+      const cardWidth = getCardWidth();
+      const minScroll = 0;
+      const maxScroll = container.scrollWidth - container.clientWidth;
+      const clampedScroll = Math.max(minScroll - cardWidth * 0.3, Math.min(maxScroll + cardWidth * 0.3, newScroll));
+      
+      container.scrollLeft = clampedScroll;
     }
-    // For vertical swipes or undetermined direction:
-    // - Do NOT call preventDefault
-    // - Let the browser handle page scrolling naturally
-    // - This allows vertical page scrolling to work
-    
-    touchEndX.current = currentX;
   };
 
   const handleTouchEnd = (e) => {
-    if (!isDragging.current || !scrollContainerRef.current) return;
+    if (!isMobile || !isDragging.current) return;
     
-    const swipeDistance = touchStartX.current - touchEndX.current;
-    const minSwipeDistance = 30; // Minimum distance for a swipe
+    isDragging.current = false;
     
-    // Only trigger carousel scroll if it was a clear horizontal swipe
-    if (swipeDirection.current === 'horizontal' && Math.abs(swipeDistance) > minSwipeDistance) {
-      if (swipeDistance > 0) {
-        // Swipe left - scroll right
-        scroll('right');
-      } else {
-        // Swipe right - scroll left
-        scroll('left');
-      }
+    if (swipeDirection.current !== 'horizontal' || !scrollContainerRef.current) {
+      swipeDirection.current = null;
+      return;
     }
     
-    // Reset state
-    isDragging.current = false;
+    const currentX = e.changedTouches[0].clientX;
+    const swipeDistance = touchStartX.current - currentX;
+    const swipeTime = Date.now() - touchStartTime.current;
+    const swipeVelocity = swipeTime > 0 ? Math.abs(swipeDistance) / swipeTime : 0;
+    
+    const isSignificantSwipe = Math.abs(swipeDistance) > minSwipeDistance;
+    const isFastSwipe = swipeVelocity > maxSwipeVelocity;
+    
+    if (isSignificantSwipe || isFastSwipe) {
+      navigate(swipeDistance > 0 ? 'next' : 'prev');
+    } else {
+      scrollToIndex(currentIndex, true);
+    }
+    
     swipeDirection.current = null;
   };
 
-  // Mouse drag handlers for desktop (optional enhancement)
-  const handleMouseDown = (e) => {
-    if (!isMobile) {
-      touchStartX.current = e.clientX;
-      isDragging.current = true;
-    }
-  };
-
-  const handleMouseMove = (e) => {
-    if (!isMobile && isDragging.current && scrollContainerRef.current) {
-      const deltaX = touchStartX.current - e.clientX;
-      scrollContainerRef.current.scrollLeft += deltaX;
-      touchStartX.current = e.clientX;
-    }
-  };
-
-  const handleMouseUp = () => {
-    isDragging.current = false;
-  };
-
-  // Attach scroll listener
+  // Initialize scroll position - ONLY ONCE when products change
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
 
-    container.addEventListener('scroll', updateScrollButtons);
-    container.addEventListener('scrollend', handleScrollEnd);
-    
-    // Fallback for browsers that don't support scrollend
-    let scrollTimeout;
-    const handleScroll = () => {
-      clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(() => {
-        handleScrollEnd();
-      }, 150);
-    };
-    container.addEventListener('scroll', handleScroll);
+    // Only initialize if not already initialized or if products changed
+    if (hasEnoughProducts && !isInitialized.current) {
+      const cardWidth = getCardWidth();
+      ignoreScrollEvent.current = true;
+      isProgrammaticScroll.current = true;
+      container.scrollLeft = cardWidth;
+      setCurrentIndex(0);
+      scrollPosition.current = cardWidth;
+      isInitialized.current = true;
+      
+      setTimeout(() => {
+        ignoreScrollEvent.current = false;
+        isProgrammaticScroll.current = false;
+      }, 200);
+    }
 
-    // Initial check
-    updateScrollButtons();
+    // Add scroll listener with stable reference
+    const handleScroll = () => {
+      if (handleScrollRef.current) {
+        handleScrollRef.current();
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => {
-      container.removeEventListener('scroll', updateScrollButtons);
-      container.removeEventListener('scrollend', handleScrollEnd);
       container.removeEventListener('scroll', handleScroll);
-      clearTimeout(scrollTimeout);
+      if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
     };
-  }, [updateScrollButtons, handleScrollEnd]);
+  }, [products.length, hasEnoughProducts, getCardWidth]);
 
-  // Don't render if no products
-  if (products.length === 0) {
-    return null;
-  }
+  // Reset initialization flag when products change
+  useEffect(() => {
+    isInitialized.current = false;
+  }, [products.length]);
+
+  // Handle resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (scrollContainerRef.current && !isScrolling && !isLooping.current) {
+        scrollToIndex(currentIndex, true);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [currentIndex, isScrolling, scrollToIndex]);
+
+  // Prepare products with clones for infinite loop
+  const getDisplayProducts = () => {
+    if (!hasEnoughProducts) return products;
+    return [products[products.length - 1], ...products, products[0]];
+  };
+
+  const displayProducts = getDisplayProducts();
 
   return (
     <div className="relative group">
-      {/* Left Arrow - Desktop only */}
-      {!isMobile && products.length > 0 && (
+      {/* Left Arrow */}
+      {products.length > 0 && (
         <button
-          onClick={() => scroll('left')}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              scroll('left');
-            }
-          }}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 -translate-x-4 lg:-translate-x-6 bg-white shadow-lg rounded-full p-2 lg:p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:scale-110 active:scale-95 disabled:opacity-0 disabled:cursor-not-allowed"
-          aria-label="Scroll left"
-          disabled={isScrolling}
+          onClick={() => navigate('prev')}
+          className={`absolute left-0 top-1/2 -translate-y-1/2 z-10 -translate-x-2 sm:-translate-x-3 lg:-translate-x-4 
+            bg-white/90 backdrop-blur-sm shadow-md rounded-lg 
+            p-1.5 sm:p-2 
+            ${isMobile ? 'opacity-60' : 'opacity-0 group-hover:opacity-100'} 
+            transition-all duration-300 
+            hover:bg-white hover:shadow-lg hover:scale-105 
+            active:scale-95 active:bg-white/95 
+            disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100
+            focus:outline-none focus:ring-2 focus:ring-[rgb(72,29,111)] focus:ring-opacity-30`}
+          aria-label="Previous"
+          disabled={isScrolling || isLooping.current}
         >
-          <ChevronLeft className="w-5 h-5 lg:w-6 lg:h-6 text-[rgb(72,29,111)]" />
+          <ChevronLeft className="w-4 h-4 sm:w-4 sm:h-4 lg:w-5 lg:h-5 text-[rgb(72,29,111)] transition-colors duration-200 hover:text-[rgb(72,29,111)]/90" />
         </button>
       )}
 
       {/* Scrollable Container */}
       <div
         ref={scrollContainerRef}
-        className="flex gap-6 overflow-x-auto scrollbar-hide scroll-smooth pb-4"
+        className="flex gap-6 overflow-x-auto scrollbar-hide pb-4"
         style={{
           scrollbarWidth: 'none',
           msOverflowStyle: 'none',
           WebkitOverflowScrolling: 'touch',
           scrollSnapType: isMobile ? 'x mandatory' : 'none',
-          // On mobile: use 'manipulation' to allow panning in all directions
-          // JavaScript handlers will determine swipe direction and only preventDefault for horizontal
-          // This allows vertical page scrolling to work naturally
-          // On desktop: only horizontal panning needed
-          touchAction: isMobile ? 'manipulation' : 'pan-x',
+          touchAction: 'pan-x pan-y',
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
       >
-        {products.map((product, index) => (
-          <div
-            key={product._id || index}
-            className="product-card flex-shrink-0 w-[280px] sm:w-[300px] lg:w-[320px]"
-            style={{
-              scrollSnapAlign: isMobile ? 'start' : 'none',
-            }}
-          >
-            <ProductCard product={product} />
-          </div>
-        ))}
+        {displayProducts.map((product, index) => {
+          const isClone = hasEnoughProducts && (index === 0 || index === displayProducts.length - 1);
+          const key = isClone 
+            ? `${product._id || 'clone'}-clone-${index}`
+            : `${product._id || index}-${index}`;
+          
+          return (
+            <div
+              key={key}
+              className="product-card flex-shrink-0 w-[280px] sm:w-[300px] lg:w-[320px]"
+              style={{ scrollSnapAlign: isMobile ? 'start' : 'none' }}
+            >
+              <ProductCard product={product} />
+            </div>
+          );
+        })}
       </div>
 
-      {/* Right Arrow - Desktop only */}
-      {!isMobile && products.length > 0 && (
+      {/* Right Arrow */}
+      {products.length > 0 && (
         <button
-          onClick={() => scroll('right')}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              scroll('right');
-            }
-          }}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 translate-x-4 lg:translate-x-6 bg-white shadow-lg rounded-full p-2 lg:p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:scale-110 active:scale-95 disabled:opacity-0 disabled:cursor-not-allowed"
-          aria-label="Scroll right"
-          disabled={isScrolling}
+          onClick={() => navigate('next')}
+          className={`absolute right-0 top-1/2 -translate-y-1/2 z-10 translate-x-2 sm:translate-x-3 lg:translate-x-4 
+            bg-white/90 backdrop-blur-sm shadow-md rounded-lg 
+            p-1.5 sm:p-2 
+            ${isMobile ? 'opacity-60' : 'opacity-0 group-hover:opacity-100'} 
+            transition-all duration-300 
+            hover:bg-white hover:shadow-lg hover:scale-105 
+            active:scale-95 active:bg-white/95 
+            disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100
+            focus:outline-none focus:ring-2 focus:ring-[rgb(72,29,111)] focus:ring-opacity-30`}
+          aria-label="Next"
+          disabled={isScrolling || isLooping.current}
         >
-          <ChevronRight className="w-5 h-5 lg:w-6 lg:h-6 text-[rgb(72,29,111)]" />
+          <ChevronRight className="w-4 h-4 sm:w-4 sm:h-4 lg:w-5 lg:h-5 text-[rgb(72,29,111)] transition-colors duration-200 hover:text-[rgb(72,29,111)]/90" />
         </button>
       )}
 
-      {/* Hide scrollbar styles */}
+      {/* Hide scrollbar */}
       <style jsx>{`
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
@@ -298,4 +403,3 @@ const ProductCarousel = ({ products = [] }) => {
 };
 
 export default ProductCarousel;
-
