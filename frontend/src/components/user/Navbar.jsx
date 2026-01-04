@@ -103,18 +103,22 @@ const Navbar = () => {
   // Hover color exactly rgb(72 29 111) with slight opacity change
   const hoverClasses = 'hover:text-[rgb(72,29,111)] hover:opacity-80';
 
+  // Shared menu item typography (matches mobile navbar)
+  const menuItemClasses = 'font-medium text-sm tracking-wide uppercase';
+
   return (
     <nav className={navClasses}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-24">
+        {/* Desktop Navbar */}
+        <div className="hidden md:flex items-center justify-between py-3">
           {/* Logo */}
-          <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-3 group">
+          <div className="flex items-center flex-shrink-0">
+            <Link to="/" className="flex items-center group">
               <div className="relative">
                 <img 
                   src={logoImage} 
                   alt="Logo" 
-                  className="h-24 w-auto object-contain"
+                  className="h-14 w-auto object-contain"
                   onError={(e) => {
                     // Fallback if logo image doesn't load
                     e.target.style.display = 'none';
@@ -123,10 +127,10 @@ const Navbar = () => {
                   }}
                 />
                 <div 
-                  className="w-16 h-16 bg-gradient-to-br from-rose-500 to-pink-600 rounded-full hidden items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow absolute"
+                  className="w-12 h-12 bg-gradient-to-br from-rose-500 to-pink-600 rounded-full hidden items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow absolute"
                   style={{ display: 'none' }}
                 >
-                  <span className="text-white text-xl font-bold">
+                  <span className="text-white text-lg font-bold">
                     S
                   </span>
                 </div>
@@ -135,7 +139,7 @@ const Navbar = () => {
           </div>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="flex items-center space-x-6 lg:space-x-8 flex-1 justify-center">
             {menuItems.map((item) => {
               // Special handling for Sale menu with mega-menu
               if (item.name === 'Sale') {
@@ -148,13 +152,7 @@ const Navbar = () => {
                   >
                     <Link
                       to={item.path}
-                      className={`${textClasses} ${hoverClasses} transition-colors font-luxury-nav flex items-center gap-1.5`}
-                      style={{
-                        fontFamily: '"Playfair Display", serif',
-                        fontWeight: 500,
-                        fontSize: '14px',
-                        letterSpacing: '0.08em',
-                      }}
+                      className={`${textClasses} ${hoverClasses} ${menuItemClasses} transition-colors flex items-center gap-1.5`}
                     >
                       <span>{item.name}</span>
                       <ChevronDown
@@ -175,14 +173,7 @@ const Navbar = () => {
                 <Link
                   key={item.name}
                   to={item.path}
-                  className={`${textClasses} ${hoverClasses} transition-colors`}
-                  style={{
-                    fontFamily: '"Playfair Display", serif',
-                    fontWeight: 500,
-                    fontSize: '14px',
-                    letterSpacing: '0.08em',
-                    textTransform: 'uppercase',
-                  }}
+                  className={`${textClasses} ${hoverClasses} ${menuItemClasses} transition-colors`}
                 >
                   {item.name}
                 </Link>
@@ -191,12 +182,12 @@ const Navbar = () => {
           </div>
 
           {/* Right Icons */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="flex items-center space-x-3 lg:space-x-4 flex-shrink-0">
             {/* Track Order Icon with Tooltip */}
             <div className="relative group">
               <button
                 onClick={() => navigate('/order/track')}
-                className={`p-2 ${textClasses} ${hoverClasses} transition-colors`}
+                className={`p-1.5 ${textClasses} ${hoverClasses} transition-colors`}
                 aria-label="Track Order"
               >
                 <PackageSearch className="w-5 h-5" />
@@ -211,13 +202,13 @@ const Navbar = () => {
 
             {/* Return Policy Icon with Tooltip */}
             <div className="relative group">
-            <button
+              <button
                 onClick={() => navigate('/return-policy')}
-              className={`p-2 ${textClasses} ${hoverClasses} transition-colors`}
+                className={`p-1.5 ${textClasses} ${hoverClasses} transition-colors`}
                 aria-label="Return Policy"
-            >
+              >
                 <RefreshCw className="w-5 h-5" />
-            </button>
+              </button>
               <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-1.5 bg-[rgb(72,29,111)] text-white text-xs font-medium rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                 Return Policy
                 <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 -mb-1">
@@ -235,18 +226,18 @@ const Navbar = () => {
 
             {/* Cart Icon with Tooltip */}
             <div className="relative group">
-            <button
-              onClick={() => navigate('/cart')}
-              className={`p-2 ${textClasses} ${hoverClasses} transition-colors relative`}
-              aria-label="Cart"
-            >
-              <ShoppingBag className="w-5 h-5" />
-              {cartCount > 0 && (
-                <span className="absolute top-0 right-0 w-5 h-5 bg-rose-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-                  {cartCount > 99 ? '99+' : cartCount}
-                </span>
-              )}
-            </button>
+              <button
+                onClick={() => navigate('/cart')}
+                className={`p-1.5 ${textClasses} ${hoverClasses} transition-colors relative`}
+                aria-label="Cart"
+              >
+                <ShoppingBag className="w-5 h-5" />
+                {cartCount > 0 && (
+                  <span className="absolute top-0 right-0 w-5 h-5 bg-rose-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                    {cartCount > 99 ? '99+' : cartCount}
+                  </span>
+                )}
+              </button>
               <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-1.5 bg-[rgb(72,29,111)] text-white text-xs font-medium rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                 Cart
                 <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 -mb-1">
@@ -256,102 +247,132 @@ const Navbar = () => {
             </div>
           </div>
 
+        </div>
+
+        {/* Mobile Navbar */}
+        <div className="md:hidden flex items-center justify-between py-2.5">
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className={`md:hidden p-2 ${textClasses}`}
+            className={`p-2 ${textClasses} flex-shrink-0`}
             aria-label="Toggle menu"
           >
             {mobileMenuOpen ? (
-              <X className="w-6 h-6" />
+              <X className="w-5 h-5" />
             ) : (
-              <Menu className="w-6 h-6" />
+              <Menu className="w-5 h-5" />
             )}
           </button>
+
+          {/* Centered Logo on Mobile */}
+          <div className="flex-1 flex justify-center">
+            <Link to="/" className="flex items-center group">
+              <div className="relative">
+                <img 
+                  src={logoImage} 
+                  alt="Logo" 
+                  className="h-12 w-auto object-contain"
+                  onError={(e) => {
+                    // Fallback if logo image doesn't load
+                    e.target.style.display = 'none';
+                    const fallback = e.target.nextElementSibling;
+                    if (fallback) fallback.style.display = 'flex';
+                  }}
+                />
+                <div 
+                  className="w-10 h-10 bg-gradient-to-br from-rose-500 to-pink-600 rounded-full hidden items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow absolute"
+                  style={{ display: 'none' }}
+                >
+                  <span className="text-white text-base font-bold">
+                    S
+                  </span>
+                </div>
+              </div>
+            </Link>
+          </div>
+
+          {/* Mobile Right Icons */}
+          <div className="flex items-center space-x-2 flex-shrink-0">
+            {/* Track Order Icon */}
+            <button
+              onClick={() => navigate('/order/track')}
+              className={`p-1.5 ${textClasses} ${hoverClasses} transition-colors`}
+              aria-label="Track Order"
+            >
+              <PackageSearch className="w-4 h-4" />
+            </button>
+
+            {/* Cart Icon */}
+            <button
+              onClick={() => navigate('/cart')}
+              className={`p-1.5 ${textClasses} ${hoverClasses} transition-colors relative`}
+              aria-label="Cart"
+            >
+              <ShoppingBag className="w-4 h-4" />
+              {cartCount > 0 && (
+                <span className="absolute top-0 right-0 w-4 h-4 bg-rose-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold">
+                  {cartCount > 99 ? '99+' : cartCount}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className={`md:hidden py-4 ${isHomePage && !isScrolled ? 'border-t border-white/20' : 'border-t border-gray-100'}`}>
-            <div className="flex flex-col space-y-4">
+          <div className={`md:hidden py-3 border-t ${isHomePage && !isScrolled ? 'border-white/20' : 'border-gray-100'}`}>
+            <div className="flex flex-col space-y-3">
               {menuItems.map((item) => (
                 <Link
                   key={item.name}
                   to={item.path}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`${textClasses} ${hoverClasses} transition-colors font-medium text-base tracking-wide uppercase py-2`}
+                  className={`${textClasses} ${hoverClasses} ${menuItemClasses} transition-colors py-1.5`}
                 >
                   {item.name}
                 </Link>
               ))}
-              <div className={`flex items-center space-x-4 pt-4 ${isHomePage && !isScrolled ? 'border-t border-white/20' : 'border-t border-gray-100'}`}>
-                {/* Track Order Icon with Tooltip */}
-                <div className="relative group">
-                  <button
-                    onClick={() => {
-                      navigate('/order/track');
-                      setMobileMenuOpen(false);
-                    }}
-                    className={`p-2 ${textClasses} ${hoverClasses} transition-colors`}
-                    aria-label="Track Order"
-                  >
-                    <PackageSearch className="w-5 h-5" />
-                  </button>
-                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-1.5 bg-[rgb(72,29,111)] text-white text-xs font-medium rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                    Track Order
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 -mb-1">
-                      <div className="w-2 h-2 bg-[rgb(72,29,111)] rotate-45"></div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Return Policy Icon with Tooltip */}
-                <div className="relative group">
-                  <button
-                    onClick={() => {
-                      navigate('/return-policy');
-                      setMobileMenuOpen(false);
-                    }}
-                    className={`p-2 ${textClasses} ${hoverClasses} transition-colors`}
-                    aria-label="Return Policy"
-                  >
-                    <RefreshCw className="w-5 h-5" />
-                </button>
-                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-1.5 bg-[rgb(72,29,111)] text-white text-xs font-medium rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                    Return Policy
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 -mb-1">
-                      <div className="w-2 h-2 bg-[rgb(72,29,111)] rotate-45"></div>
-                    </div>
-                  </div>
-                </div>
-
-                <button className={`p-2 ${textClasses} ${hoverClasses} transition-colors`}>
-                  <Heart className="w-5 h-5" />
+              <div className={`flex items-center space-x-3 pt-3 ${isHomePage && !isScrolled ? 'border-t border-white/20' : 'border-t border-gray-100'}`}>
+                {/* Track Order Icon */}
+                <button
+                  onClick={() => {
+                    navigate('/order/track');
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`p-1.5 ${textClasses} ${hoverClasses} transition-colors`}
+                  aria-label="Track Order"
+                >
+                  <PackageSearch className="w-4 h-4" />
                 </button>
 
-                {/* Cart Icon with Tooltip */}
-                <div className="relative group">
+                {/* Return Policy Icon */}
+                <button
+                  onClick={() => {
+                    navigate('/return-policy');
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`p-1.5 ${textClasses} ${hoverClasses} transition-colors`}
+                  aria-label="Return Policy"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </button>
+
+                {/* Cart Icon */}
                 <button
                   onClick={() => {
                     navigate('/cart');
                     setMobileMenuOpen(false);
                   }}
-                  className={`p-2 ${textClasses} ${hoverClasses} transition-colors relative`}
+                  className={`p-1.5 ${textClasses} ${hoverClasses} transition-colors relative`}
+                  aria-label="Cart"
                 >
-                  <ShoppingBag className="w-5 h-5" />
+                  <ShoppingBag className="w-4 h-4" />
                   {cartCount > 0 && (
-                    <span className="absolute top-0 right-0 w-5 h-5 bg-rose-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                    <span className="absolute top-0 right-0 w-4 h-4 bg-rose-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold">
                       {cartCount > 99 ? '99+' : cartCount}
                     </span>
                   )}
                 </button>
-                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-1.5 bg-[rgb(72,29,111)] text-white text-xs font-medium rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                    Cart
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 -mb-1">
-                      <div className="w-2 h-2 bg-[rgb(72,29,111)] rotate-45"></div>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </div>

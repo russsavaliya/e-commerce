@@ -33,15 +33,15 @@ const HomePage = () => {
       try {
         setLoading(true);
         // Optimized: Fetch all homepage banners in one API call
-        // Keep API payloads small for homepage (limit 4 products for each section)
+        // Fetch all products for carousel display (no limit)
         const [
           homepageBannersRes,
           bestsellersRes,
           trendingRes,
         ] = await Promise.all([
           getHomepageBanners(), // All homepage banners in one call
-          getBestsellerProducts(4),
-          getTrendingProducts(4),
+          getBestsellerProducts(), // Fetch all bestseller products
+          getTrendingProducts(), // Fetch all trending products
         ]);
 
         // Extract banners by position from the grouped response

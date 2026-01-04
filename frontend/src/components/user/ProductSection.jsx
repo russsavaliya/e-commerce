@@ -1,10 +1,11 @@
 /**
  * ProductSection Component - Reusable product listing section
  * Used for Bestsellers, Trending, and other product sections
+ * Now uses ProductCarousel for horizontal scrolling
  */
 
 import React from 'react';
-import ProductCard from './ProductCard';
+import ProductCarousel from './ProductCarousel';
 
 const ProductSection = ({
   title,
@@ -40,22 +41,9 @@ const ProductSection = ({
           </div>
         </div>
 
-        {/* Products Grid */}
+        {/* Products Carousel */}
         {products.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.map((product, index) => (
-              <div
-                key={product._id}
-                style={{
-                  animationDelay: `${index * 100}ms`,
-                  animation: 'fadeInUp 0.6s ease-out forwards',
-                  opacity: 0
-                }}
-              >
-                <ProductCard product={product} />
-              </div>
-            ))}
-          </div>
+          <ProductCarousel products={products} />
         ) : (
           <div className="text-center py-12">
             <p className="text-gray-600">No products available in this section.</p>
