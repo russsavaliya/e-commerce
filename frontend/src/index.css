@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom Font - GeorgiaBallpark Serif */
+@font-face {
+  font-family: 'GeorgiaBallpark Serif';
+  src: url('./assets/fonts/GeorgiaBallpark Serif.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Hide scrollbar for horizontal scroll */
 .scrollbar-hide {
   -ms-overflow-style: none;  /* IE and Edge */

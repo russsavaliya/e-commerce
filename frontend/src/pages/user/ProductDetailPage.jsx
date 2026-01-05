@@ -418,7 +418,12 @@ const ProductDetailPage = () => {
           <div className="space-y-6">
             <div>
               <div className="flex items-start justify-between gap-3 mb-2">
-                <h1 className="text-3xl md:text-4xl font-bold text-[rgb(72,29,111)] leading-tight flex-1">{product.name}</h1>
+                <h1 
+                  className="text-3xl md:text-4xl font-bold text-[rgb(72,29,111)] leading-tight flex-1"
+                  style={{ fontFamily: '"GeorgiaBallpark Serif", serif' }}
+                >
+                  {product.name}
+                </h1>
                 {/* Out of Stock Badge */}
                 {isOutOfStock && (
                   <span className="px-3 py-1.5 bg-red-100 text-red-700 text-xs font-semibold rounded-full border border-red-200 whitespace-nowrap flex-shrink-0">
