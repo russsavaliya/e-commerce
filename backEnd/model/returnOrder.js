@@ -51,6 +51,10 @@ const returnOrderSchema = new schema({
     type: Date,
     default: Date.now,
   },
+  shiprocket_return_id: {
+    type: String,
+    default: null,
+  },
 }, {
   timestamps: true,
 });
