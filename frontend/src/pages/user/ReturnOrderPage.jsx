@@ -39,6 +39,18 @@ const ReturnOrderPage = () => {
   const [error, setError] = useState('');
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [returnReason, setReturnReason] = useState('');
+  const [selectedReason, setSelectedReason] = useState('');
+  const [otherReason, setOtherReason] = useState('');
+
+  // Fixed return reasons
+  const returnReasons = [
+    'Product damaged or defective',
+    'Wrong item received',
+    'Size/fit not suitable',
+    'Quality not as expected',
+    'Changed my mind',
+    'Other'
+  ];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -103,18 +115,41 @@ const ReturnOrderPage = () => {
         toast.success('OTP verified successfully');
         setOrderData(res.data);
         // Initialize selected products with all products
+        // Ensure product_id and variant_id are always strings
         setSelectedProducts(
-          res.data.order.products.map((p) => ({
-            product_id: p.product_id,
-            variant_id: p.variant_id,
-            product_name: p.product_name,
-            variant_name: p.variant_name,
-            quantity: p.quantity,
-            unit_price: p.unit_price,
-            image: p.image,
-            selected: true,
-            returnQuantity: p.quantity,
-          }))
+          res.data.order.products.map((p) => {
+            // Convert product_id to string
+            let productId = '';
+            if (p.product_id) {
+              if (typeof p.product_id === 'object' && p.product_id._id) {
+                productId = p.product_id._id.toString();
+              } else {
+                productId = p.product_id.toString();
+              }
+            }
+
+            // Convert variant_id to string (if exists)
+            let variantId = '';
+            if (p.variant_id) {
+              if (typeof p.variant_id === 'object' && p.variant_id._id) {
+                variantId = p.variant_id._id.toString();
+              } else {
+                variantId = p.variant_id.toString();
+              }
+            }
+
+            return {
+              product_id: productId,
+              variant_id: variantId,
+              product_name: p.product_name,
+              variant_name: p.variant_name,
+              quantity: p.quantity,
+              unit_price: p.unit_price,
+              image: p.image,
+              selected: true,
+              returnQuantity: p.quantity,
+            };
+          })
         );
         setStep(3);
       } else {
@@ -137,11 +172,12 @@ const ReturnOrderPage = () => {
       return;
     }
 
+    // Prepare products payload with proper string IDs
     const productsToReturn = selectedProducts
       .filter((p) => p.selected && p.returnQuantity > 0)
       .map((p) => ({
-        product_id: p.product_id,
-        variant_id: p.variant_id,
+        product_id: String(p.product_id), // Ensure it's always a string
+        variant_id: p.variant_id ? String(p.variant_id) : null,
         product_name: p.product_name,
         variant_name: p.variant_name,
         quantity: p.returnQuantity,
@@ -153,13 +189,30 @@ const ReturnOrderPage = () => {
       return;
     }
 
+    // Validate return reason
+    if (!selectedReason || selectedReason.trim() === '') {
+      setError('Please select a return reason');
+      return;
+    }
+
+    // If "Other" is selected, validate other reason text
+    if (selectedReason === 'Other' && (!otherReason || otherReason.trim() === '')) {
+      setError('Please provide a reason for return');
+      return;
+    }
+
     try {
       setLoading(true);
+      // Prepare reason text
+      const reasonText = selectedReason === 'Other' 
+        ? otherReason.trim() 
+        : selectedReason;
+
       const res = await createReturn({
         orderId: form.orderId.trim(),
         email: form.email.trim(),
         products: productsToReturn,
-        reason: returnReason.trim(),
+        reason: reasonText,
       });
 
       if (res.status) {
@@ -171,6 +224,8 @@ const ReturnOrderPage = () => {
         setOrderData(null);
         setSelectedProducts([]);
         setReturnReason('');
+        setSelectedReason('');
+        setOtherReason('');
       } else {
         setError(res.message || 'Failed to create return request');
       }
@@ -478,15 +533,45 @@ const ReturnOrderPage = () => {
               {/* Return Reason */}
               <div className="border-t border-gray-100 pt-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Return Reason (Optional)
+                  Return Reason <span className="text-red-500">*</span>
                 </label>
-                <textarea
-                  value={returnReason}
-                  onChange={(e) => setReturnReason(e.target.value)}
-                  placeholder="Please let us know why you're returning this order..."
-                  rows="3"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[rgb(72,29,111)] resize-none"
-                />
+                <select
+                  value={selectedReason}
+                  onChange={(e) => {
+                    setSelectedReason(e.target.value);
+                    setOtherReason(''); // Clear other reason when changing selection
+                    setError('');
+                  }}
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[rgb(72,29,111)] bg-white"
+                  required
+                >
+                  <option value="">Select a reason</option>
+                  {returnReasons.map((reason, index) => (
+                    <option key={index} value={reason}>
+                      {reason}
+                    </option>
+                  ))}
+                </select>
+
+                {/* Show textarea when "Other" is selected */}
+                {selectedReason === 'Other' && (
+                  <div className="mt-3">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Please specify the reason <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      value={otherReason}
+                      onChange={(e) => {
+                        setOtherReason(e.target.value);
+                        setError('');
+                      }}
+                      placeholder="Please let us know why you're returning this order..."
+                      rows="3"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[rgb(72,29,111)] resize-none"
+                      required
+                    />
+                  </div>
+                )}
               </div>
 
               {error && (
