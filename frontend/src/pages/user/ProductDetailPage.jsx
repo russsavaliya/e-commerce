@@ -6,7 +6,7 @@ import { getProductDetail } from '../../services/user/productService';
 import { addToCart } from '../../services/user/cartService';
 import { getReviews, addReview } from '../../services/user/reviewService';
 import { getAvailableCoupons } from '../../services/user/couponService';
-import { Loader2, ChevronLeft, IndianRupee, Package, X, ShoppingBag, Star, Truck, Box, Tag, Copy, CheckCircle2 } from 'lucide-react';
+import { Loader2, ChevronLeft, IndianRupee, Package, X, ShoppingBag, Star, Truck, Box, Tag, Copy, CheckCircle2, CreditCard, RotateCcw, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
 import paymentGroupSvg from '../../assets/images/payment-group.svg';
 
@@ -405,7 +405,7 @@ const ProductDetailPage = () => {
                   </h3>
                 </div>
                 <div className="px-6 py-5">
-                  <div 
+                  <div
                     className="text-base text-[#374151] leading-relaxed prose prose-sm max-w-none"
                     dangerouslySetInnerHTML={{ __html: product.description }}
                   />
@@ -496,13 +496,12 @@ const ProductDetailPage = () => {
                         key={variant._id}
                         onClick={() => !variantOutOfStock && handleVariantSelect(variant._id)}
                         disabled={variantOutOfStock}
-                        className={`flex-shrink-0 border-2 rounded-lg overflow-hidden transition-all relative ${
-                          variantOutOfStock
-                            ? 'opacity-60 cursor-not-allowed border-gray-200'
-                            : selectedVariantId === variant._id
+                        className={`flex-shrink-0 border-2 rounded-lg overflow-hidden transition-all relative ${variantOutOfStock
+                          ? 'opacity-60 cursor-not-allowed border-gray-200'
+                          : selectedVariantId === variant._id
                             ? 'border-[rgb(72,29,111)] bg-[rgba(72,29,111,0.06)] shadow-sm'
                             : 'border-[#E5E7EB] hover:border-[#D1D5DB]'
-                        }`}
+                          }`}
                       >
                         {variantOutOfStock && (
                           <div className="absolute inset-0 bg-gray-100/80 flex items-center justify-center z-10 rounded-lg">
@@ -581,6 +580,56 @@ const ProductDetailPage = () => {
               </button>
             </div>
 
+            {/* Product Features - COD, Easy Return, 7 Day Return */}
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {/* COD Available */}
+                <div className="flex items-center gap-2.5 p-2.5 bg-white rounded-lg border border-gray-200 hover:border-[rgb(72,29,111)] hover:shadow-sm transition-all duration-200">
+                  <div className="flex-shrink-0">
+                    <div className="w-10 h-10 rounded-lg bg-[rgba(72,29,111,0.1)] flex items-center justify-center">
+                      <CreditCard className="w-5 h-5 text-[rgb(72,29,111)]" />
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-semibold text-gray-900">COD Available</span>
+                    </div>
+                    {/* <p className="text-xs text-gray-500">Cash on delivery option available</p> */}
+                  </div>
+                </div>
+
+                {/* Easy Return */}
+                <div className="flex items-center gap-2.5 p-2.5 bg-white rounded-lg border border-gray-200 hover:border-[rgb(72,29,111)] hover:shadow-sm transition-all duration-200">
+                  <div className="flex-shrink-0">
+                    <div className="w-10 h-10 rounded-lg bg-[rgba(72,29,111,0.1)] flex items-center justify-center">
+                      <RotateCcw className="w-5 h-5 text-[rgb(72,29,111)]" />
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-semibold text-gray-900">Easy Return</span>
+                    </div>
+                    {/* <p className="text-xs text-gray-500">Hassle-free return process</p> */}
+                  </div>
+                </div>
+
+                {/* 7 Day Return */}
+                <div className="flex items-center gap-2.5 p-2.5 bg-white rounded-lg border border-gray-200 hover:border-[rgb(72,29,111)] hover:shadow-sm transition-all duration-200">
+                  <div className="flex-shrink-0">
+                    <div className="w-10 h-10 rounded-lg bg-[rgba(72,29,111,0.1)] flex items-center justify-center">
+                      <Calendar className="w-5 h-5 text-[rgb(72,29,111)]" />
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-semibold text-gray-900">7 Day Return</span>
+                    </div>
+                    {/* <p className="text-xs text-gray-500">Return within 7 days of delivery</p> */}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Available Coupons Section */}
             {availableCoupons.length > 0 && (
               <div className="pt-6 mt-6 border-t border-gray-200">
@@ -633,9 +682,9 @@ const ProductDetailPage = () => {
             <div className="pt-6 mt-6 border-t border-gray-200 space-y-4">
               {/* Payment Method Logos */}
               <div className="flex items-center">
-                <img 
-                  src={paymentGroupSvg} 
-                  alt="Payment Methods" 
+                <img
+                  src={paymentGroupSvg}
+                  alt="Payment Methods"
                   className="h-10 w-auto opacity-90 hover:opacity-100 transition-opacity"
                 />
               </div>
