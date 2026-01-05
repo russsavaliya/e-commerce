@@ -70,24 +70,26 @@ const AdminLogin = () => {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-4"
+      className="min-h-screen flex items-center justify-center p-4 relative"
       style={{
-        // backgroundImage: `url(${adminLoginImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        // backgroundColor: '#000',
-        background: 'linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7))',  
+        background: 'linear-gradient(135deg, rgba(72,29,111,0.95) 0%, rgba(72,29,111,0.85) 50%, rgba(57,14,96,0.95) 100%)',
       }}
     >
-      {/* Dark overlay for better readability */}
-      <div className="absolute inset-0 bg-black/50"></div>
+      {/* Decorative gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[rgba(72,29,111,0.3)] via-transparent to-[rgba(72,29,111,0.2)]"></div>
+      
+      {/* Subtle pattern overlay */}
+      <div className="absolute inset-0 opacity-10" style={{
+        backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)',
+        backgroundSize: '40px 40px',
+      }}></div>
 
       {/* Login Card */}
       <div className="relative w-full max-w-lg z-10">
 
         {/* Success Message */}
         {successMessage && (
-          <div className="mb-4 p-4 rounded-lg bg-green-500/20 text-green-200 text-base border border-green-400/50 flex items-center gap-2">
+          <div className="mb-4 p-4 rounded-lg bg-green-50 text-green-800 text-base border border-green-200 flex items-center gap-2">
             <AlertCircle className="w-5 h-5" />
             <span>{successMessage}</span>
           </div>
@@ -95,7 +97,7 @@ const AdminLogin = () => {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-4 p-4 rounded-lg bg-red-500/20 text-red-200 text-base border border-red-400/50 flex items-center gap-2">
+          <div className="mb-4 p-4 rounded-lg bg-red-50 text-red-800 text-base border border-red-200 flex items-center gap-2">
             <AlertCircle className="w-5 h-5" />
             <span>{error}</span>
           </div>
@@ -110,10 +112,10 @@ const AdminLogin = () => {
           </Link>
         </div>
         {/* Card */}
-        <div className="bg-black/40 backdrop-blur-xl rounded-3xl shadow-2xl p-10 border border-white/10">
+        <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-10 border border-[rgba(72,29,111,0.2)]">
 
           {/* Title */}
-          <h1 className="text-4xl font-bold text-white text-center mb-10">
+          <h1 className="text-4xl font-bold text-center mb-10" style={{ color: 'rgb(72,29,111)' }}>
             ADMIN LOGIN
           </h1>
 
@@ -122,16 +124,16 @@ const AdminLogin = () => {
 
             {/* Email Input */}
             <div>
-              <label className="block text-base font-medium text-white/80 mb-2">
+              <label className="block text-base font-medium mb-2" style={{ color: 'rgb(72,29,111)' }}>
                 EMAIL ADDRESS
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
+                <Mail className="absolute left-3 top-3.5 h-5 w-5" style={{ color: 'rgb(72,29,111)' }} />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-3 py-3.5 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                  className="w-full pl-10 pr-3 py-3.5 bg-white border border-gray-300 rounded-lg text-gray-900 text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[rgb(72,29,111)] focus:border-[rgb(72,29,111)]"
                   placeholder="admin@example.com"
                   disabled={loading}
                 />
@@ -140,23 +142,23 @@ const AdminLogin = () => {
 
             {/* Password Input */}
             <div>
-              <label className="block text-base font-medium text-white/80 mb-2">
+              <label className="block text-base font-medium mb-2" style={{ color: 'rgb(72,29,111)' }}>
                 PASSWORD
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
+                <Lock className="absolute left-3 top-3.5 h-5 w-5" style={{ color: 'rgb(72,29,111)' }} />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-10 py-3.5 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                  className="w-full pl-10 pr-10 py-3.5 bg-white border border-gray-300 rounded-lg text-gray-900 text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[rgb(72,29,111)] focus:border-[rgb(72,29,111)]"
                   placeholder="Enter your password"
                   disabled={loading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3.5 text-gray-400 hover:text-white"
+                  className="absolute right-3 top-3.5 text-gray-400 hover:text-[rgb(72,29,111)] transition-colors"
                   disabled={loading}
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -171,12 +173,12 @@ const AdminLogin = () => {
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 rounded"
+                  className="w-4 h-4 rounded border-gray-300 text-[rgb(72,29,111)] focus:ring-[rgb(72,29,111)]"
                   disabled={loading}
                 />
-                <span className="ml-2 text-base text-white/80">Keep me logged in</span>
+                <span className="ml-2 text-base text-gray-700">Keep me logged in</span>
               </label>
-              <Link to="#" className="text-base text-gray-400 hover:text-white">
+              <Link to="#" className="text-base text-gray-600 hover:text-[rgb(72,29,111)] transition-colors">
                 Forgot Password?
               </Link>
             </div>
@@ -185,7 +187,16 @@ const AdminLogin = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-cyan-500 to-fuchsia-600 text-white py-4 px-4 rounded-lg text-lg font-semibold uppercase hover:from-cyan-600 hover:to-fuchsia-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full text-white py-4 px-4 rounded-lg text-lg font-semibold uppercase disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+              style={{
+                background: 'linear-gradient(135deg, rgb(72,29,111) 0%, rgb(57,14,96) 100%)',
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = 'linear-gradient(135deg, rgb(57,14,96) 0%, rgb(72,29,111) 100%)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = 'linear-gradient(135deg, rgb(72,29,111) 0%, rgb(57,14,96) 100%)';
+              }}
             >
               {loading ? (
                 <>

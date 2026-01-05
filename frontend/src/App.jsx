@@ -103,6 +103,7 @@ import OrderTrackPage from './pages/user/OrderTrackPage';
 import OrderSuccessPage from './pages/user/OrderSuccessPage';
 import ReturnPolicyPage from './pages/user/ReturnPolicyPage';
 import ReturnOrderPage from './pages/user/ReturnOrderPage';
+import NotFoundPage from './pages/user/NotFoundPage';
 
 // ============================================
 // STEP 7: Import User Components
@@ -368,13 +369,13 @@ function App() {
 
 
             {/* 
-              Route 5: Catch All Route
-              If someone visits a URL that doesn't exist, redirect them to admin login
-              This is like a "404 page" but instead of showing error, we redirect
+              Route 5: 404 Page - Catch All Route
+              Show 404 page for any invalid URLs (user-side)
+              Admin routes are already protected above
             */}
             <Route
               path="*"
-              element={<Navigate to={ROUTES.ADMIN_LOGIN} replace />}
+              element={<NotFoundPage />}
             />
 
           </Routes>
