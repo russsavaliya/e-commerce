@@ -1,7 +1,8 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import Navbar from '../../components/user/Navbar';
 import Footer from '../../components/user/Footer';
-import { RefreshCw, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { RefreshCw, Clock, CheckCircle2, AlertCircle, ArrowRight } from 'lucide-react';
 
 const ReturnPolicyPage = () => {
   const returnPoints = [
@@ -30,8 +31,8 @@ const ReturnPolicyPage = () => {
   const steps = [
     {
       step: '1',
-      title: 'Contact Us',
-      description: 'Reach out to our customer support team within 7 days of delivery to request a return.',
+      title: 'Request Return Online',
+      description: 'Use our online return form to submit your return request. Simply enter your Order ID and email to get started.',
     },
     {
       step: '2',
@@ -65,9 +66,20 @@ const ReturnPolicyPage = () => {
               Return Policy
             </h1>
           </div>
-          <p className="text-[#374151] text-sm md:text-base max-w-2xl mx-auto">
+          <p className="text-[#374151] text-sm md:text-base max-w-2xl mx-auto mb-6">
             We want you to be completely satisfied with your purchase. Our return policy is designed to make the process simple and hassle-free.
           </p>
+          {/* Return Order CTA Button */}
+          <div className="flex justify-center">
+            <Link
+              to="/return-order"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-[rgb(72,29,111)] text-white rounded-full font-semibold hover:bg-[#390e60] transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+            >
+              <RefreshCw className="w-5 h-5" />
+              Request a Return
+              <ArrowRight className="w-5 h-5" />
+            </Link>
+          </div>
         </section>
 
         {/* Key Points */}
@@ -96,14 +108,23 @@ const ReturnPolicyPage = () => {
 
         {/* Return Process Steps */}
         <section className="bg-white border border-[#E5E7EB] rounded-2xl p-6 md:p-8 shadow-sm mb-12">
-          <h2 className="text-2xl font-bold text-[rgb(72,29,111)] mb-6">
-            How to Return an Item
-          </h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-[rgb(72,29,111)]">
+              How to Return an Item
+            </h2>
+            <Link
+              to="/return-order"
+              className="hidden md:inline-flex items-center gap-2 px-4 py-2 bg-[rgb(72,29,111)] text-white rounded-full text-sm font-semibold hover:bg-[#390e60] transition-all duration-200"
+            >
+              Start Return
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
           <div className="space-y-6">
             {steps.map((item, idx) => (
               <div key={idx} className="flex gap-4">
                 <div className="flex-shrink-0">
-                  <div className="w-10 h-10 rounded-full bg-[rgb(72,29,111)] text-white flex items-center justify-center font-bold text-lg">
+                  <div className="w-10 h-10 rounded-full bg-[rgba(72,29,111,0.1)] text-[rgb(72,29,111)] flex items-center justify-center font-bold text-lg">
                     {item.step}
                   </div>
                 </div>
@@ -117,6 +138,17 @@ const ReturnPolicyPage = () => {
                 </div>
               </div>
             ))}
+          </div>
+          {/* Mobile CTA Button */}
+          <div className="mt-6 md:hidden">
+            <Link
+              to="/return-order"
+              className="inline-flex items-center justify-center gap-2 w-full px-6 py-3 bg-[rgb(72,29,111)] text-white rounded-full font-semibold hover:bg-[#390e60] transition-all duration-200"
+            >
+              <RefreshCw className="w-5 h-5" />
+              Start Return Request
+              <ArrowRight className="w-5 h-5" />
+            </Link>
           </div>
         </section>
 
@@ -153,21 +185,33 @@ const ReturnPolicyPage = () => {
           </div>
         </section>
 
-        {/* Contact CTA */}
-        <section className="mt-12 text-center">
-          <div className="bg-white border border-[#E5E7EB] rounded-2xl p-8 shadow-sm">
-            <h3 className="text-xl font-semibold text-[rgb(72,29,111)] mb-3">
-              Need Help with a Return?
-            </h3>
-            <p className="text-sm text-[#6B7280] mb-6">
-              Our customer support team is here to assist you with any questions about returns or refunds.
-            </p>
-            <a
-              href="/contact"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-[rgb(72,29,111)] text-white rounded-full font-semibold hover:bg-[#390e60] transition-all duration-200"
-            >
-              Contact Support
-            </a>
+        {/* CTA Section */}
+        <section className="mt-12">
+          <div className="bg-gradient-to-r from-[rgba(72,29,111,0.05)] to-[rgba(72,29,111,0.1)] border border-[rgba(72,29,111,0.2)] rounded-2xl p-8 shadow-sm">
+            <div className="text-center mb-6">
+              <h3 className="text-xl font-semibold text-[rgb(72,29,111)] mb-3">
+                Ready to Return Your Order?
+              </h3>
+              <p className="text-sm text-[#6B7280] max-w-2xl mx-auto">
+                Start your return request online in just a few simple steps. Enter your Order ID and email to begin.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link
+                to="/return-order"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-[rgb(72,29,111)] text-white rounded-full font-semibold hover:bg-[#390e60] transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 w-full sm:w-auto justify-center"
+              >
+                <RefreshCw className="w-5 h-5" />
+                Request a Return
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+              <Link
+                to="/contact"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-white text-[rgb(72,29,111)] border-2 border-[rgb(72,29,111)] rounded-full font-semibold hover:bg-[rgba(72,29,111,0.05)] transition-all duration-200 w-full sm:w-auto justify-center"
+              >
+                Contact Support
+              </Link>
+            </div>
           </div>
         </section>
       </main>

@@ -16,8 +16,8 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const isHomePage = location.pathname === '/';
-  
-  // State for scroll-based navbar styling (for homepage)
+
+  // State for scroll-based navbar styling
   const [isScrolled, setIsScrolled] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [saleMenuOpen, setSaleMenuOpen] = useState(false);
@@ -48,20 +48,18 @@ const Navbar = () => {
     };
   }, [saleMenuTimeout]);
 
-  // Handle scroll for homepage navbar transparency
+  // Handle scroll for navbar shadow (all pages)
   useEffect(() => {
-    if (!isHomePage) {
-      setIsScrolled(true);
-      return;
-    }
-
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
     };
 
+    // Check initial scroll position
+    handleScroll();
+
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [isHomePage]);
+  }, []);
 
   // Fetch cart count - Commented out for now to prevent frequent API calls
   // TODO: Implement in future with better optimization (e.g., event-based updates)
@@ -95,7 +93,8 @@ const Navbar = () => {
   ];
 
   // Navbar styling - always light theme matching logo background
-  const navClasses = 'bg-[#faf9f5] shadow-md sticky top-0 z-50 border-b border-gray-100';
+  // Light shadow at top, stronger shadow when scrolled
+  const navClasses = `bg-[#faf9f5] sticky top-0 z-50 border-b border-gray-100 transition-shadow duration-300 ${isScrolled ? 'shadow-md' : 'shadow-sm'}`;
 
   // Base text color inspired by logo purple
   const textClasses = 'text-[rgb(72,29,111)]';
@@ -115,9 +114,9 @@ const Navbar = () => {
           <div className="flex items-center flex-shrink-0">
             <Link to="/" className="flex items-center group">
               <div className="relative">
-                <img 
-                  src={logoImage} 
-                  alt="Logo" 
+                <img
+                  src={logoImage}
+                  alt="Logo"
                   className="h-14 w-auto object-contain"
                   onError={(e) => {
                     // Fallback if logo image doesn't load
@@ -126,7 +125,7 @@ const Navbar = () => {
                     if (fallback) fallback.style.display = 'flex';
                   }}
                 />
-                <div 
+                <div
                   className="w-12 h-12 bg-gradient-to-br from-rose-500 to-pink-600 rounded-full hidden items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow absolute"
                   style={{ display: 'none' }}
                 >
@@ -156,9 +155,8 @@ const Navbar = () => {
                     >
                       <span>{item.name}</span>
                       <ChevronDown
-                        className={`w-3.5 h-3.5 transition-all duration-300 ${
-                          saleMenuOpen ? 'rotate-180 opacity-100' : 'rotate-0 opacity-70'
-                        }`}
+                        className={`w-3.5 h-3.5 transition-all duration-300 ${saleMenuOpen ? 'rotate-180 opacity-100' : 'rotate-0 opacity-70'
+                          }`}
                       />
                     </Link>
                     <CategoryMegaMenu
@@ -192,10 +190,10 @@ const Navbar = () => {
               >
                 <PackageSearch className="w-5 h-5" />
               </button>
-              <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-1.5 bg-[rgb(72,29,111)] text-white text-xs font-medium rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+              <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-1.5 bg-[rgba(72,29,111,0.1)] text-[rgb(72,29,111)] text-xs font-medium rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 border border-[rgba(72,29,111,0.2)]">
                 Track Order
                 <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 -mb-1">
-                  <div className="w-2 h-2 bg-[rgb(72,29,111)] rotate-45"></div>
+                  <div className="w-2 h-2 bg-[rgba(72,29,111,0.1)] border-l border-b border-[rgba(72,29,111,0.2)] rotate-45"></div>
                 </div>
               </div>
             </div>
@@ -209,10 +207,10 @@ const Navbar = () => {
               >
                 <RefreshCw className="w-5 h-5" />
               </button>
-              <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-1.5 bg-[rgb(72,29,111)] text-white text-xs font-medium rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                Return Policy
+              <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-1.5 bg-[rgba(72,29,111,0.1)] text-[rgb(72,29,111)] text-xs font-medium rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 border border-[rgba(72,29,111,0.2)]">
+                Return & Policy
                 <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 -mb-1">
-                  <div className="w-2 h-2 bg-[rgb(72,29,111)] rotate-45"></div>
+                  <div className="w-2 h-2 bg-[rgba(72,29,111,0.1)] border-l border-b border-[rgba(72,29,111,0.2)] rotate-45"></div>
                 </div>
               </div>
             </div>
@@ -238,10 +236,10 @@ const Navbar = () => {
                   </span>
                 )}
               </button>
-              <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-1.5 bg-[rgb(72,29,111)] text-white text-xs font-medium rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+              <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-1.5 bg-[rgba(72,29,111,0.1)] text-[rgb(72,29,111)] text-xs font-medium rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 border border-[rgba(72,29,111,0.2)]">
                 Cart
                 <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 -mb-1">
-                  <div className="w-2 h-2 bg-[rgb(72,29,111)] rotate-45"></div>
+                  <div className="w-2 h-2 bg-[rgba(72,29,111,0.1)] border-l border-b border-[rgba(72,29,111,0.2)] rotate-45"></div>
                 </div>
               </div>
             </div>
@@ -268,9 +266,9 @@ const Navbar = () => {
           <div className="flex-1 flex justify-center">
             <Link to="/" className="flex items-center group">
               <div className="relative">
-                <img 
-                  src={logoImage} 
-                  alt="Logo" 
+                <img
+                  src={logoImage}
+                  alt="Logo"
                   className="h-12 w-auto object-contain"
                   onError={(e) => {
                     // Fallback if logo image doesn't load
@@ -279,7 +277,7 @@ const Navbar = () => {
                     if (fallback) fallback.style.display = 'flex';
                   }}
                 />
-                <div 
+                <div
                   className="w-10 h-10 bg-gradient-to-br from-rose-500 to-pink-600 rounded-full hidden items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow absolute"
                   style={{ display: 'none' }}
                 >

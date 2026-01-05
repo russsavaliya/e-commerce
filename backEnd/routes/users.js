@@ -11,6 +11,7 @@ const user_payment_controller = require('../controllers/users/payment');
 const user_support_controller = require('../controllers/users/support');
 const user_review_controller = require('../controllers/users/review');
 const user_coupon_controller = require('../controllers/users/coupon');
+const user_return_order_controller = require('../controllers/users/returnOrder');
 
 // User routes - No authentication required
 
@@ -63,5 +64,10 @@ router.post('/reviews', user_review_controller.add_review);
 // Coupon routes (user)
 router.get('/coupons/available', user_coupon_controller.get_available_coupons);
 router.post('/coupons/apply', user_coupon_controller.apply_coupon);
+
+// Return order routes
+router.post('/return/send-otp', user_return_order_controller.send_otp);
+router.post('/return/verify-otp', user_return_order_controller.verify_otp);
+router.post('/return/create', user_return_order_controller.create_return);
 
 module.exports = router;
