@@ -268,10 +268,11 @@ exports.create_return = async (req, res) => {
         });
       }
 
-      if (returnProduct.quantity > orderProduct.quantity) {
+      // User must return all items - quantity must match order quantity exactly
+      if (returnProduct.quantity !== orderProduct.quantity) {
         return res.status(400).json({
           status: false,
-          message: `Return quantity for product ${returnProduct.product_name} exceeds order quantity`,
+          message: `Return quantity for product ${returnProduct.product_name} must match order quantity. All items must be returned.`,
         });
       }
     }

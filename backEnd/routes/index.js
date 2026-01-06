@@ -115,6 +115,8 @@ router.delete('/coupons/delete', authorization.authorization, permission.checkPe
 // return order routes (admin)
 router.get('/return-order/list', authorization.authorization, admin_returnOrder_controller.get_return_orders_list);
 router.get('/return-order/get-one', authorization.authorization, admin_returnOrder_controller.get_one_return_order);
+router.get('/return-order/get-shipment-details', authorization.authorization, admin_returnOrder_controller.get_shipment_details);
 router.patch('/return-order/update-status', authorization.authorization, permission.checkPermission('order_update'), admin_returnOrder_controller.update_return_status);
+router.post('/return-order/create-shiprocket-return', authorization.authorization, permission.checkPermission('order_update'), admin_returnOrder_controller.create_shiprocket_return);
 
 module.exports = router;

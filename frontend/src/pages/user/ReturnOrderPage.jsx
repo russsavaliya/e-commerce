@@ -173,14 +173,15 @@ const ReturnOrderPage = () => {
     }
 
     // Prepare products payload with proper string IDs
+    // Always return full quantity - user must return all items of selected products
     const productsToReturn = selectedProducts
-      .filter((p) => p.selected && p.returnQuantity > 0)
+      .filter((p) => p.selected)
       .map((p) => ({
         product_id: String(p.product_id), // Ensure it's always a string
         variant_id: p.variant_id ? String(p.variant_id) : null,
         product_name: p.product_name,
         variant_name: p.variant_name,
-        quantity: p.returnQuantity,
+        quantity: p.quantity, // Always use full order quantity
         unit_price: p.unit_price,
       }));
 
@@ -240,21 +241,12 @@ const ReturnOrderPage = () => {
     setSelectedProducts((prev) => {
       const updated = [...prev];
       updated[index].selected = !updated[index].selected;
-      if (!updated[index].selected) {
-        updated[index].returnQuantity = 0;
-      } else {
+      // When selected, always set returnQuantity to full quantity (all items must be returned)
+      if (updated[index].selected) {
         updated[index].returnQuantity = updated[index].quantity;
+      } else {
+        updated[index].returnQuantity = 0;
       }
-      return updated;
-    });
-  };
-
-  const handleQuantityChange = (index, value) => {
-    setSelectedProducts((prev) => {
-      const updated = [...prev];
-      const maxQty = updated[index].quantity;
-      const newQty = Math.max(0, Math.min(maxQty, parseInt(value) || 0));
-      updated[index].returnQuantity = newQty;
       return updated;
     });
   };
@@ -512,16 +504,9 @@ const ReturnOrderPage = () => {
                         )}
                         {item.selected && (
                           <div className="mt-2 flex items-center gap-2">
-                            <label className="text-xs text-gray-600">Return Qty:</label>
-                            <input
-                              type="number"
-                              min="1"
-                              max={item.quantity}
-                              value={item.returnQuantity || item.quantity}
-                              onChange={(e) => handleQuantityChange(idx, e.target.value)}
-                              className="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[rgb(72,29,111)]"
-                            />
-                            <span className="text-xs text-gray-500">/ {item.quantity}</span>
+                            <span className="text-xs text-gray-600">Quantity:</span>
+                            <span className="text-xs font-medium text-gray-900">{item.quantity} item{item.quantity > 1 ? 's' : ''}</span>
+                            <span className="text-xs text-gray-500">(All items will be returned)</span>
                           </div>
                         )}
                       </div>
@@ -594,7 +579,7 @@ const ReturnOrderPage = () => {
                 </button>
                 <button
                   type="submit"
-                  disabled={loading || !orderData.isEligible || selectedProducts.filter((p) => p.selected && p.returnQuantity > 0).length === 0}
+                  disabled={loading || !orderData.isEligible || selectedProducts.filter((p) => p.selected).length === 0}
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[rgb(72,29,111)] text-white text-sm font-semibold hover:bg-[#390e60] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? (

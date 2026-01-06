@@ -19,7 +19,7 @@ import {
     X,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { getReturnOrderOne, updateReturnOrderStatus } from '../../services/admin/returnOrderService';
+import { getReturnOrderOne, updateReturnOrderStatus, createShiprocketReturn, getShipmentDetails } from '../../services/admin/returnOrderService';
 import { API_BASE_URL } from '../../utils/constants';
 
 const getStatusColor = (status) => {
@@ -63,8 +63,19 @@ const ReturnOrderDetail = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [updatingStatus, setUpdatingStatus] = useState(false);
+    const [creatingShiprocketReturn, setCreatingShiprocketReturn] = useState(false);
     const [showStatusModal, setShowStatusModal] = useState(false);
+    const [showShiprocketModal, setShowShiprocketModal] = useState(false);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [selectedStatus, setSelectedStatus] = useState('');
+    const [shipmentDetails, setShipmentDetails] = useState({
+        length: '',
+        breadth: '',
+        height: '',
+        weight: '',
+    });
+    const [returnType, setReturnType] = useState('exchange');
+    const [loadingShipmentDetails, setLoadingShipmentDetails] = useState(false);
     const statusDropdownRef = useRef(null);
     const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
 
@@ -150,6 +161,92 @@ const ReturnOrderDetail = () => {
     const openStatusModal = (status) => {
         setSelectedStatus(status);
         setShowStatusModal(true);
+    };
+
+    /**
+     * Open Shiprocket return modal and fetch shipment details
+     */
+    const handleOpenShiprocketModal = async () => {
+        if (!returnOrder) return;
+
+        // Check if Shiprocket return already exists
+        if (returnOrder.return_details.shiprocket_return_id) {
+            toast.error('Shiprocket return order already exists for this return request');
+            return;
+        }
+
+        try {
+            setLoadingShipmentDetails(true);
+            const response = await getShipmentDetails(returnOrder._id);
+
+            if (response.status && response.data) {
+                setShipmentDetails({
+                    length: response.data.length || '',
+                    breadth: response.data.breadth || '',
+                    height: response.data.height || '',
+                    weight: response.data.weight || '',
+                });
+                setShowShiprocketModal(true);
+            }
+        } catch (err) {
+            console.error('Error fetching shipment details:', err);
+            toast.error(err.message || 'Failed to fetch shipment details');
+        } finally {
+            setLoadingShipmentDetails(false);
+        }
+    };
+
+    /**
+     * Handle form submission - show confirmation modal
+     */
+    const handleShiprocketFormSubmit = (e) => {
+        e.preventDefault();
+        setShowConfirmModal(true);
+    };
+
+    /**
+     * Handle Shiprocket return order creation after confirmation
+     */
+    const handleCreateShiprocketReturn = async () => {
+        if (!returnOrder || creatingShiprocketReturn) return;
+
+        try {
+            setCreatingShiprocketReturn(true);
+            setShowConfirmModal(false);
+            setShowShiprocketModal(false);
+
+            const response = await createShiprocketReturn({
+                returnOrderId: returnOrder._id,
+                length: shipmentDetails.length,
+                breadth: shipmentDetails.breadth,
+                height: shipmentDetails.height,
+                weight: shipmentDetails.weight,
+                return_type: returnType,
+            });
+
+            if (response.status) {
+                // Refresh return order data to get updated Shiprocket return ID
+                const updatedResponse = await getReturnOrderOne(returnOrderId);
+                if (updatedResponse.status && updatedResponse.data) {
+                    setReturnOrder(updatedResponse.data);
+                }
+
+                toast.success(
+                    response.message || 'Shiprocket return order created successfully. Pickup has been scheduled.'
+                );
+
+                // Reset form
+                setShipmentDetails({ length: '', breadth: '', height: '', weight: '' });
+                setReturnType('exchange');
+            }
+        } catch (err) {
+            console.error('Error creating Shiprocket return order:', err);
+            toast.error(err.message || 'Failed to create Shiprocket return order');
+            // Reopen modal on error
+            setShowShiprocketModal(true);
+        } finally {
+            setCreatingShiprocketReturn(false);
+        }
     };
 
     const getStatusOptions = () => {
@@ -455,15 +552,36 @@ const ReturnOrderDetail = () => {
                     <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
                         <h2 className="text-lg font-semibold text-gray-900 mb-4">Actions</h2>
                         <div className="space-y-3">
-                            <button
-                                onClick={() => {
-                                    toast.info('Shiprocket return creation will be implemented separately');
-                                }}
-                                className="w-full px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                            >
-                                <Truck className="w-4 h-4 inline mr-2" />
-                                Create Shiprocket Return
-                            </button>
+                            {/* Shiprocket Return Button */}
+                            {returnOrder.return_details.shiprocket_return_id ? (
+                                <div className="w-full px-4 py-2.5 bg-green-50 border border-green-200 rounded-lg">
+                                    <div className="flex items-center gap-2 text-sm">
+                                        <CheckCircle2 className="w-4 h-4 text-green-600" />
+                                        <span className="text-green-800 font-medium">Shiprocket Return Created</span>
+                                    </div>
+                                    <p className="text-xs text-green-700 mt-1">
+                                        Return ID: {returnOrder.return_details.shiprocket_return_id}
+                                    </p>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={handleOpenShiprocketModal}
+                                    disabled={loadingShipmentDetails || returnOrder.return_details.status === 'Refunded'}
+                                    className="w-full px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                >
+                                    {loadingShipmentDetails ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                            Loading...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Truck className="w-4 h-4" />
+                                            Create Shiprocket Return
+                                        </>
+                                    )}
+                                </button>
+                            )}
                             <button
                                 onClick={() => navigate(`/admin/orders/${returnOrder.order.order_id}`)}
                                 className="w-full px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
@@ -474,6 +592,184 @@ const ReturnOrderDetail = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Shiprocket Return Modal */}
+            {showShiprocketModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                        <div className="p-6">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-xl font-semibold text-gray-900">Create Shiprocket Return</h3>
+                                <button
+                                    onClick={() => {
+                                        setShowShiprocketModal(false);
+                                        setShipmentDetails({ length: '', breadth: '', height: '', weight: '' });
+                                        setReturnType('exchange');
+                                    }}
+                                    className="text-gray-400 hover:text-gray-600"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleShiprocketFormSubmit} className="space-y-4">
+                                {/* Return Type */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Return Type <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="relative">
+                                        <select
+                                            value={returnType}
+                                            onChange={(e) => setReturnType(e.target.value)}
+                                            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white cursor-pointer"
+                                            required
+                                        >
+                                            <option value="exchange">Exchange</option>
+                                            <option value="refund">Refund</option>
+                                        </select>
+                                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                                            <ChevronDown className="w-4 h-4 text-gray-400" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Dimensions Grid */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    {/* Length */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Length (cm) <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="number"
+                                            step="0.1"
+                                            min="0"
+                                            value={shipmentDetails.length}
+                                            onChange={(e) => setShipmentDetails(prev => ({ ...prev, length: e.target.value }))}
+                                            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            required
+                                        />
+                                    </div>
+
+                                    {/* Breadth */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Breadth (cm) <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="number"
+                                            step="0.1"
+                                            min="0"
+                                            value={shipmentDetails.breadth}
+                                            onChange={(e) => setShipmentDetails(prev => ({ ...prev, breadth: e.target.value }))}
+                                            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            required
+                                        />
+                                    </div>
+
+                                    {/* Height */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Height (cm) <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="number"
+                                            step="0.1"
+                                            min="0"
+                                            value={shipmentDetails.height}
+                                            onChange={(e) => setShipmentDetails(prev => ({ ...prev, height: e.target.value }))}
+                                            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            required
+                                        />
+                                    </div>
+
+                                    {/* Weight */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Weight (kg) <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            value={shipmentDetails.weight}
+                                            onChange={(e) => setShipmentDetails(prev => ({ ...prev, weight: e.target.value }))}
+                                            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className="flex items-center gap-3 pt-4 border-t border-gray-200">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setShowShiprocketModal(false);
+                                            setShipmentDetails({ length: '', breadth: '', height: '', weight: '' });
+                                            setReturnType('exchange');
+                                        }}
+                                        className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                                    >
+                                        Confirm
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Confirmation Modal */}
+            {showConfirmModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+                        <div className="p-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-semibold text-gray-900">Confirm Return Order</h3>
+                                <button
+                                    onClick={() => setShowConfirmModal(false)}
+                                    className="text-gray-400 hover:text-gray-600"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                            <p className="text-sm text-gray-600 mb-6">
+                                Are you sure you want to create a return order? This will schedule a pickup for the return items in Shiprocket.
+                            </p>
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={() => setShowConfirmModal(false)}
+                                    className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                                >
+                                    No
+                                </button>
+                                <button
+                                    onClick={handleCreateShiprocketReturn}
+                                    disabled={creatingShiprocketReturn}
+                                    className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {creatingShiprocketReturn ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 inline animate-spin mr-2" />
+                                            Creating...
+                                        </>
+                                    ) : (
+                                        'Yes'
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Status Update Modal */}
             {showStatusModal && (

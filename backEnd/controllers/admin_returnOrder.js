@@ -1,6 +1,146 @@
 const returnOrder_model = require('../model/returnOrder');
 const order_model = require('../model/order');
 const shipment_model = require('../model/shipment');
+const axios = require('axios');
+
+// Shiprocket API Configuration
+const SHIPROCKET_BASE_URL = 'https://apiv2.shiprocket.in/v1/external';
+let shiprocketToken = null;
+let tokenExpiry = null;
+
+/**
+ * Get Shiprocket authentication token
+ * Reuses token if still valid, otherwise fetches new token
+ */
+const getShiprocketToken = async () => {
+  try {
+    // Check if token exists and is still valid (refresh 5 minutes before expiry)
+    if (shiprocketToken && tokenExpiry && Date.now() < tokenExpiry - 5 * 60 * 1000) {
+      return shiprocketToken;
+    }
+
+    const email = process.env.SHIPROCKET_EMAIL;
+    const password = process.env.SHIPROCKET_PASSWORD;
+
+    if (!email || !password) {
+      throw new Error('Shiprocket credentials not configured');
+    }
+
+    const response = await axios.post(`${SHIPROCKET_BASE_URL}/auth/login`, {
+      email,
+      password,
+    });
+
+    if (response.data && response.data.token) {
+      shiprocketToken = response.data.token;
+      // Token expires in 24 hours, but we'll refresh after 23 hours
+      tokenExpiry = Date.now() + 23 * 60 * 60 * 1000;
+      return shiprocketToken;
+    }
+
+    throw new Error('Failed to get Shiprocket token');
+  } catch (error) {
+    console.error('Error getting Shiprocket token:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || 'Failed to authenticate with Shiprocket');
+  }
+};
+
+/**
+ * Create return order in Shiprocket
+ * This schedules a pickup for the return items
+ */
+const createShiprocketReturnOrder = async (order, returnOrder, shipment, returnDetails = {}) => {
+  try {
+    const token = await getShiprocketToken();
+
+    // Validate that shipment has Shiprocket shipment_id
+    if (!shipment || !shipment.shipment_id) {
+      throw new Error('Original shipment not found or missing Shiprocket shipment ID. Cannot create return order.');
+    }
+
+    // Prepare return order items for Shiprocket
+    const returnOrderItems = returnOrder.products.map((product) => ({
+      name: product.product_name || 'Product',
+      sku: product.product_id?.toString() || '',
+      units: product.quantity || 1,
+      selling_price: product.unit_price || 0,
+    }));
+
+    // Use provided dimensions or fallback to shipment dimensions or defaults
+    const length = returnDetails.length || shipment.length || 10;
+    const breadth = returnDetails.breadth || shipment.breadth || 10;
+    const height = returnDetails.height || shipment.height || 10;
+    const weight = returnDetails.weight || shipment.weight || (returnOrder.products.length * 0.5);
+    const returnType = returnDetails.return_type || 'exchange'; // Default to 'exchange'
+
+    // Validate return_type
+    if (!['exchange', 'refund'].includes(returnType)) {
+      throw new Error('Invalid return_type. Must be either "exchange" or "refund".');
+    }
+
+    // Prepare Shiprocket return order payload
+    // Note: Shiprocket return API typically requires the original shipment_id
+    const shiprocketReturnPayload = {
+      shipment_id: shipment.shipment_id, // Original shipment ID from Shiprocket
+      return_type: returnType,
+      return_items: returnOrderItems,
+      // Pickup address (customer's address where pickup will be scheduled)
+      pickup_customer_name: order.shipping_address.fullName,
+      pickup_last_name: '',
+      pickup_address: order.shipping_address.address,
+      pickup_address_2: order.shipping_address.landmark || '',
+      pickup_city: order.shipping_address.city,
+      pickup_pincode: order.shipping_address.pincode,
+      pickup_state: order.shipping_address.state,
+      pickup_country: 'India',
+      pickup_email: order.shipping_address.email,
+      pickup_phone: order.shipping_address.phone,
+      // Package dimensions (from form or shipment)
+      length: length,
+      breadth: breadth,
+      height: height,
+      weight: weight,
+      // Return reason
+      return_reason: returnOrder.reason || 'Customer return request',
+    };
+
+    // Call Shiprocket return order API
+    // Note: The endpoint might vary based on Shiprocket API version
+    // Common endpoints: /orders/create/return, /returns/create, /orders/{order_id}/return
+    // If this endpoint doesn't work, check Shiprocket API documentation and update accordingly
+    console.log("shiprocketReturnPayload==>", shiprocketReturnPayload);
+    const response = await axios.post(
+      `${SHIPROCKET_BASE_URL}/orders/create/return`,
+      shiprocketReturnPayload,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    // Check if response is successful
+    if (response.data && (response.data.return_id || response.data.order_id)) {
+      return {
+        shiprocket_return_id: response.data.return_id || response.data.order_id,
+        return_shipment_id: response.data.shipment_id || null,
+        return_awb_code: response.data.awb_code || null,
+        pickup_scheduled_date: response.data.pickup_scheduled_date || null,
+        tracking_url: response.data.tracking_url || null,
+      };
+    } else {
+      throw new Error(response.data?.message || 'Failed to create return order in Shiprocket');
+    }
+  } catch (error) {
+    console.error('Error creating Shiprocket return order:', error.response?.data || error.message);
+    throw new Error(
+      error.response?.data?.message ||
+      error.response?.data?.errors?.[0]?.message ||
+      'Failed to create return order in Shiprocket'
+    );
+  }
+};
 
 /**
  * Get all return orders with pagination and filters
@@ -225,7 +365,7 @@ exports.get_one_return_order = async (req, res) => {
     ];
 
     const result = await returnOrder_model.aggregate(pipeline);
-    
+
     if (!result || result.length === 0) {
       return res.status(404).json({
         status: false,
@@ -348,6 +488,185 @@ exports.update_return_status = async (req, res) => {
   }
 };
 
+/**
+ * Create Shiprocket return order
+ * POST /return-order/create-shiprocket-return
+ * 
+ * This endpoint creates a return order in Shiprocket and schedules a pickup
+ */
+exports.create_shiprocket_return = async (req, res) => {
+  try {
+    const {
+      returnOrderId,
+      length,
+      breadth,
+      height,
+      weight,
+      return_type
+    } = req.body || {};
+
+    if (!returnOrderId) {
+      return res.status(400).json({
+        status: false,
+        message: 'Return order ID is required',
+      });
+    }
+
+    // Validate return_type if provided
+    if (return_type && !['exchange', 'refund'].includes(return_type)) {
+      return res.status(400).json({
+        status: false,
+        message: 'Invalid return_type. Must be either "exchange" or "refund".',
+      });
+    }
+
+    // Find return order with populated order details
+    const returnOrder = await returnOrder_model
+      .findById(returnOrderId)
+      .populate('order_id')
+      .lean();
+
+    if (!returnOrder) {
+      return res.status(404).json({
+        status: false,
+        message: 'Return order not found',
+      });
+    }
+
+    // Check if Shiprocket return already exists
+    if (returnOrder.shiprocket_return_id) {
+      return res.status(400).json({
+        status: false,
+        message: 'Shiprocket return order already exists for this return request',
+        data: {
+          shiprocket_return_id: returnOrder.shiprocket_return_id,
+        },
+      });
+    }
+
+    // Find the original shipment for this order
+    const shipment = await shipment_model.findOne({
+      order_id: returnOrder.order_id._id,
+    });
+
+    if (!shipment || !shipment.shipment_id) {
+      return res.status(400).json({
+        status: false,
+        message: 'Original shipment not found or missing Shiprocket shipment ID. Please create shipment first.',
+      });
+    }
+
+    // Prepare return details from request body
+    const returnDetails = {
+      length: length ? parseFloat(length) : undefined,
+      breadth: breadth ? parseFloat(breadth) : undefined,
+      height: height ? parseFloat(height) : undefined,
+      weight: weight ? parseFloat(weight) : undefined,
+      return_type: return_type || 'exchange',
+    };
+
+    // Create return order in Shiprocket
+    const shiprocketReturnData = await createShiprocketReturnOrder(
+      returnOrder.order_id,
+      returnOrder,
+      shipment,
+      returnDetails
+    );
+
+    // Update return order with Shiprocket return ID and status
+    const updatedReturnOrder = await returnOrder_model.findByIdAndUpdate(
+      returnOrderId,
+      {
+        $set: {
+          shiprocket_return_id: shiprocketReturnData.shiprocket_return_id,
+          status: 'Pickup Scheduled', // Update status to Pickup Scheduled
+        },
+      },
+      { new: true }
+    );
+
+    return res.status(200).json({
+      status: true,
+      message: 'Shiprocket return order created successfully. Pickup has been scheduled.',
+      data: {
+        returnOrderId: updatedReturnOrder._id,
+        shiprocket_return_id: shiprocketReturnData.shiprocket_return_id,
+        return_shipment_id: shiprocketReturnData.return_shipment_id,
+        return_awb_code: shiprocketReturnData.return_awb_code,
+        pickup_scheduled_date: shiprocketReturnData.pickup_scheduled_date,
+        tracking_url: shiprocketReturnData.tracking_url,
+        status: updatedReturnOrder.status,
+      },
+    });
+  } catch (error) {
+    console.error('Error creating Shiprocket return order:', error);
+    return res.status(500).json({
+      status: false,
+      message: error.message || 'Failed to create Shiprocket return order',
+    });
+  }
+};
+
+/**
+ * Get shipment details for return order
+ * GET /return-order/get-shipment-details?returnOrderId=xxx
+ * 
+ * This endpoint fetches the original shipment details for a return order
+ */
+exports.get_shipment_details = async (req, res) => {
+  try {
+    const { returnOrderId } = req.query;
+
+    if (!returnOrderId) {
+      return res.status(400).json({
+        status: false,
+        message: 'Return order ID is required',
+      });
+    }
+
+    // Find return order
+    const returnOrder = await returnOrder_model
+      .findById(returnOrderId)
+      .populate('order_id')
+      .lean();
+
+    if (!returnOrder) {
+      return res.status(404).json({
+        status: false,
+        message: 'Return order not found',
+      });
+    }
+
+    // Find the original shipment for this order
+    const shipment = await shipment_model.findOne({
+      order_id: returnOrder.order_id._id,
+    });
+
+    if (!shipment) {
+      return res.status(404).json({
+        status: false,
+        message: 'Original shipment not found for this order',
+      });
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: 'Shipment details fetched successfully',
+      data: {
+        length: shipment.length || 10,
+        breadth: shipment.breadth || 10,
+        height: shipment.height || 10,
+        weight: shipment.weight || (returnOrder.products.length * 0.5),
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching shipment details:', error);
+    return res.status(500).json({
+      status: false,
+      message: error.message || 'Failed to fetch shipment details',
+    });
+  }
+};
 /**
  * Helper: Get delivery date for an order
  */

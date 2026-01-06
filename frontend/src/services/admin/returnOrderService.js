@@ -69,9 +69,47 @@ export const updateReturnOrderStatus = async ({ returnOrderId, status }) => {
   }
 };
 
+/**
+ * Get shipment details for return order
+ * Fetches original shipment dimensions and weight
+ */
+export const getShipmentDetails = async (returnOrderId) => {
+  try {
+    const response = await api.get(`/return-order/get-shipment-details?returnOrderId=${returnOrderId}`);
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || 'Failed to fetch shipment details'
+    );
+  }
+};
+
+/**
+ * Create Shiprocket return order
+ * This schedules a pickup for the return items in Shiprocket
+ */
+export const createShiprocketReturn = async ({ returnOrderId, length, breadth, height, weight, return_type }) => {
+  try {
+    const response = await api.post('/return-order/create-shiprocket-return', {
+      returnOrderId,
+      length,
+      breadth,
+      height,
+      weight,
+      return_type,
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || 'Failed to create Shiprocket return order'
+    );
+  }
+};
+
 export default {
   getReturnOrdersList,
   getReturnOrderOne,
   updateReturnOrderStatus,
+  createShiprocketReturn,
 };
 
