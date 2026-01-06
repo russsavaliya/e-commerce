@@ -38,32 +38,6 @@ export const VALIDATION_MESSAGES = {
   TERMS_REQUIRED: 'You must accept the terms and conditions',
 };
 
-// Success Messages
-export const SUCCESS_MESSAGES = {
-  LOGIN_SUCCESS: 'Login successful! Redirecting...',
-  SIGNUP_SUCCESS: 'Account created successfully! Please login.',
-  LOGOUT_SUCCESS: 'Logged out successfully',
-  PASSWORD_RESET_SENT: 'Password reset link sent to your email',
-};
-
-// Error Messages
-export const ERROR_MESSAGES = {
-  NETWORK_ERROR: 'Network error. Please check your connection.',
-  INVALID_CREDENTIALS: 'Invalid email or password',
-  USER_EXISTS: 'User with this email already exists',
-  TOKEN_EXPIRED: 'Your session has expired. Please login again.',
-  UNAUTHORIZED: 'You are not authorized to access this resource',
-  SERVER_ERROR: 'Server error. Please try again later.',
-  UNKNOWN_ERROR: 'An unexpected error occurred',
-};
-
-// Password Strength Levels
-export const PASSWORD_STRENGTH = {
-  WEAK: 'weak',
-  MEDIUM: 'medium',
-  STRONG: 'strong',
-};
-
 // Routes
 export const ROUTES = {
   ADMIN_LOGIN: '/admin/login',
