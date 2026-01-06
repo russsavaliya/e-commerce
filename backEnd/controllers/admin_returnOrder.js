@@ -46,6 +46,63 @@ const getShiprocketToken = async () => {
 };
 
 /**
+ * Get warehouse/seller address from Shiprocket pickup location
+ * This is where returns will be shipped back to
+ */
+const getWarehouseAddress = async () => {
+  try {
+    const token = await getShiprocketToken();
+    const pickupLocationName = process.env.SHIPROCKET_PICKUP_LOCATION_NAME;
+
+    const response = await axios.get(
+      `${SHIPROCKET_BASE_URL}/settings/company/pickup`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const addresses = response.data?.data?.shipping_address || [];
+
+    if (!addresses.length) {
+      throw new Error("No pickup locations found in Shiprocket");
+    }
+
+    let pickupLocation = null;
+
+    // Find by pickup location name if provided
+    if (pickupLocationName) {
+      pickupLocation = addresses.find(
+        (loc) => loc.pickup_location === pickupLocationName
+      );
+    }
+
+    // Otherwise use primary location
+    if (!pickupLocation) {
+      pickupLocation = addresses.find(loc => loc.is_primary_location === 1) || addresses[0];
+    }
+
+    return {
+      name: pickupLocation.name || pickupLocation.pickup_location || 'Home',
+      address: pickupLocation.address || '',
+      address_2: pickupLocation.address_2 || '',
+      city: pickupLocation.city || '',
+      state: pickupLocation.state || '',
+      pincode: pickupLocation.pin_code || '',
+      country: pickupLocation.country || 'India',
+      phone: pickupLocation.phone || '',
+      email: pickupLocation.email || '',
+    };
+
+  } catch (error) {
+    console.error('Error getting warehouse address:', error.message);
+    throw new Error(error.message);
+  }
+};
+
+/**
  * Create return order in Shiprocket
  * This schedules a pickup for the return items
  */
@@ -58,7 +115,18 @@ const createShiprocketReturnOrder = async (order, returnOrder, shipment, returnD
       throw new Error('Original shipment not found or missing Shiprocket shipment ID. Cannot create return order.');
     }
 
-    // Prepare return order items for Shiprocket
+    // Get warehouse address (where return will be shipped back to)
+    const warehouseAddress = await getWarehouseAddress();
+
+    // Prepare original order items for Shiprocket (from the original order)
+    const originalOrderItems = order.products.map((product) => ({
+      name: product.product_name || 'Product',
+      sku: product.product_id?.toString() || '',
+      units: product.quantity || 1,
+      selling_price: product.unit_price || 0,
+    }));
+
+    // Prepare return order items for Shiprocket (items being returned)
     const returnOrderItems = returnOrder.products.map((product) => ({
       name: product.product_name || 'Product',
       sku: product.product_id?.toString() || '',
@@ -79,8 +147,28 @@ const createShiprocketReturnOrder = async (order, returnOrder, shipment, returnD
     }
 
     // Prepare Shiprocket return order payload
-    // Note: Shiprocket return API typically requires the original shipment_id
+    const shiprocketOrderId = shipment.shiprocket_order_id || order.order_id;
+
     const shiprocketReturnPayload = {
+      // Original order details (required by API)
+      order_id: shiprocketOrderId, // Shiprocket order ID (preferred) or our order ID
+      order_date: new Date(order.createdAt || Date.now()).toISOString().split('T')[0], // Original order date
+      payment_method: order.payment_method === 'cod' ? 'COD' : 'Prepaid',
+      // Shipping address (WAREHOUSE/SELLER address - where return will be shipped back to)
+      shipping_customer_name: warehouseAddress.name,
+      shipping_last_name: '',
+      shipping_address: warehouseAddress.address,
+      shipping_address_2: warehouseAddress.address_2 || '',
+      shipping_city: warehouseAddress.city,
+      shipping_pincode: warehouseAddress.pincode,
+      shipping_state: warehouseAddress.state,
+      shipping_country: warehouseAddress.country,
+      shipping_email: warehouseAddress.email,
+      shipping_phone: warehouseAddress.phone,
+      // Original order items (required - from original order)
+      order_items: originalOrderItems,
+      sub_total: order.sub_total || 0,
+      // Return-specific fields
       shipment_id: shipment.shipment_id, // Original shipment ID from Shiprocket
       return_type: returnType,
       return_items: returnOrderItems,
@@ -101,14 +189,11 @@ const createShiprocketReturnOrder = async (order, returnOrder, shipment, returnD
       height: height,
       weight: weight,
       // Return reason
-      return_reason: returnOrder.reason || 'Customer return request',
+      return_reason: "bought by mistake",
     };
 
     // Call Shiprocket return order API
-    // Note: The endpoint might vary based on Shiprocket API version
-    // Common endpoints: /orders/create/return, /returns/create, /orders/{order_id}/return
-    // If this endpoint doesn't work, check Shiprocket API documentation and update accordingly
-    console.log("shiprocketReturnPayload==>", shiprocketReturnPayload);
+    // console.log("shiprocketReturnPayload==>", shiprocketReturnPayload);
     const response = await axios.post(
       `${SHIPROCKET_BASE_URL}/orders/create/return`,
       shiprocketReturnPayload,

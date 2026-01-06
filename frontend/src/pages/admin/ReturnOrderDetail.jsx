@@ -212,8 +212,7 @@ const ReturnOrderDetail = () => {
 
         try {
             setCreatingShiprocketReturn(true);
-            setShowConfirmModal(false);
-            setShowShiprocketModal(false);
+            // Keep confirmation modal open to show loading state
 
             const response = await createShiprocketReturn({
                 returnOrderId: returnOrder._id,
@@ -225,6 +224,10 @@ const ReturnOrderDetail = () => {
             });
 
             if (response.status) {
+                // Close modals after successful API call
+                setShowConfirmModal(false);
+                setShowShiprocketModal(false);
+
                 // Refresh return order data to get updated Shiprocket return ID
                 const updatedResponse = await getReturnOrderOne(returnOrderId);
                 if (updatedResponse.status && updatedResponse.data) {
@@ -242,8 +245,8 @@ const ReturnOrderDetail = () => {
         } catch (err) {
             console.error('Error creating Shiprocket return order:', err);
             toast.error(err.message || 'Failed to create Shiprocket return order');
-            // Reopen modal on error
-            setShowShiprocketModal(true);
+            // Keep confirmation modal open on error so user can try again
+            // Don't close modals on error
         } finally {
             setCreatingShiprocketReturn(false);
         }
@@ -735,8 +738,13 @@ const ReturnOrderDetail = () => {
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-lg font-semibold text-gray-900">Confirm Return Order</h3>
                                 <button
-                                    onClick={() => setShowConfirmModal(false)}
-                                    className="text-gray-400 hover:text-gray-600"
+                                    onClick={() => {
+                                        if (!creatingShiprocketReturn) {
+                                            setShowConfirmModal(false);
+                                        }
+                                    }}
+                                    disabled={creatingShiprocketReturn}
+                                    className="text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <X className="w-5 h-5" />
                                 </button>
@@ -744,21 +752,32 @@ const ReturnOrderDetail = () => {
                             <p className="text-sm text-gray-600 mb-6">
                                 Are you sure you want to create a return order? This will schedule a pickup for the return items in Shiprocket.
                             </p>
+                            {creatingShiprocketReturn && (
+                                <div className="mb-4 p-3 bg-blue-50 rounded-lg flex items-center gap-2 text-sm text-blue-700">
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    <span>Creating return order in Shiprocket...</span>
+                                </div>
+                            )}
                             <div className="flex items-center gap-3">
                                 <button
-                                    onClick={() => setShowConfirmModal(false)}
-                                    className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                                    onClick={() => {
+                                        if (!creatingShiprocketReturn) {
+                                            setShowConfirmModal(false);
+                                        }
+                                    }}
+                                    disabled={creatingShiprocketReturn}
+                                    className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     No
                                 </button>
                                 <button
                                     onClick={handleCreateShiprocketReturn}
                                     disabled={creatingShiprocketReturn}
-                                    className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                                 >
                                     {creatingShiprocketReturn ? (
                                         <>
-                                            <Loader2 className="w-4 h-4 inline animate-spin mr-2" />
+                                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
                                             Creating...
                                         </>
                                     ) : (
