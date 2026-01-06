@@ -36,7 +36,6 @@ const AdminLayout = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [productsOpen, setProductsOpen] = useState(false);
   const [ordersOpen, setOrdersOpen] = useState(false);
-  const [returnOrdersOpen, setReturnOrdersOpen] = useState(false);
   const [customersOpen, setCustomersOpen] = useState(false);
   const [reviewsOpen, setReviewsOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -52,11 +51,8 @@ const AdminLayout = () => {
     if (location.pathname.startsWith(ROUTES.ADMIN_PRODUCTS)) {
       setProductsOpen(true);
     }
-    if (location.pathname.startsWith(ROUTES.ADMIN_ORDERS) || location.pathname.startsWith('/admin/shipments')) {
+    if (location.pathname.startsWith(ROUTES.ADMIN_ORDERS) || location.pathname.startsWith('/admin/shipments') || location.pathname.startsWith('/admin/return-orders')) {
       setOrdersOpen(true);
-    }
-    if (location.pathname.startsWith('/admin/return-orders')) {
-      setReturnOrdersOpen(true);
     }
     if (location.pathname.startsWith(ROUTES.ADMIN_CUSTOMERS)) {
       setCustomersOpen(true);
@@ -78,8 +74,7 @@ const AdminLayout = () => {
   const isActive = (path) => location.pathname === path;
   const isSettingsActive = location.pathname.startsWith(ROUTES.ADMIN_SETTINGS);
   const isProductsActive = location.pathname.startsWith(ROUTES.ADMIN_PRODUCTS);
-  const isOrdersActive = location.pathname.startsWith(ROUTES.ADMIN_ORDERS) || location.pathname.startsWith('/admin/shipments');
-  const isReturnOrdersActive = location.pathname.startsWith('/admin/return-orders');
+  const isOrdersActive = location.pathname.startsWith(ROUTES.ADMIN_ORDERS) || location.pathname.startsWith('/admin/shipments') || location.pathname.startsWith('/admin/return-orders');
   const isCustomersActive = location.pathname.startsWith(ROUTES.ADMIN_CUSTOMERS);
   const isReviewsActive = location.pathname.startsWith(ROUTES.ADMIN_REVIEWS);
 
@@ -131,12 +126,12 @@ const AdminLayout = () => {
           icon: Truck,
           path: ROUTES.ADMIN_SHIPMENTS_LIST,
         },
+        {
+          name: 'Return Orders',
+          icon: RefreshCw,
+          path: '/admin/return-orders',
+        },
       ],
-    },
-    {
-      name: 'Return Orders',
-      icon: RefreshCw,
-      path: '/admin/return-orders',
     },
     {
       name: 'Customers',
@@ -266,13 +261,11 @@ const AdminLayout = () => {
                   ? isProductsActive
                   : item.name === 'Orders'
                     ? isOrdersActive
-                    : item.name === 'Return Orders'
-                      ? isReturnOrdersActive
-                      : item.name === 'Customers'
-                        ? isCustomersActive
-                        : item.name === 'Reviews'
-                          ? isReviewsActive
-                          : isActive(item.path);
+                    : item.name === 'Customers'
+                      ? isCustomersActive
+                      : item.name === 'Reviews'
+                        ? isReviewsActive
+                        : isActive(item.path);
               // Only mark as active if this specific item is active, not if any submenu is active
               const active = isItemActive;
 

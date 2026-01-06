@@ -89,21 +89,154 @@ exports.get_one_return_order = async (req, res) => {
       });
     }
 
-    // Fetch return order with populated order details
-    const returnOrder = await returnOrder_model
-      .findById(returnOrderId)
-      .populate('order_id')
-      .lean();
+    const mongoose = require('mongoose');
+    const ObjectId = mongoose.Types.ObjectId;
 
-    if (!returnOrder) {
+    // Aggregation pipeline to fetch return order with order details and product images
+    const pipeline = [
+      // Match return order by ID
+      {
+        $match: {
+          _id: new ObjectId(returnOrderId),
+        },
+      },
+      // Lookup order details
+      {
+        $lookup: {
+          from: 'orders',
+          localField: 'order_id',
+          foreignField: '_id',
+          as: 'orderDetails',
+        },
+      },
+      // Unwind order details (should be single order)
+      {
+        $unwind: {
+          path: '$orderDetails',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      // Add products with images by matching with order products
+      {
+        $addFields: {
+          products: {
+            $map: {
+              input: '$products',
+              as: 'returnProduct',
+              in: {
+                $let: {
+                  vars: {
+                    matchedOrderProduct: {
+                      $arrayElemAt: [
+                        {
+                          $filter: {
+                            input: '$orderDetails.products',
+                            as: 'orderProduct',
+                            cond: {
+                              $and: [
+                                {
+                                  $eq: [
+                                    { $toString: '$$returnProduct.product_id' },
+                                    { $toString: '$$orderProduct.product_id' },
+                                  ],
+                                },
+                                {
+                                  $or: [
+                                    {
+                                      $and: [
+                                        { $ifNull: ['$$returnProduct.variant_id', false] },
+                                        { $ifNull: ['$$orderProduct.variant_id', false] },
+                                        {
+                                          $eq: [
+                                            { $toString: '$$returnProduct.variant_id' },
+                                            { $toString: '$$orderProduct.variant_id' },
+                                          ],
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      $and: [
+                                        { $not: { $ifNull: ['$$returnProduct.variant_id', false] } },
+                                        { $not: { $ifNull: ['$$orderProduct.variant_id', false] } },
+                                      ],
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          },
+                        },
+                        0,
+                      ],
+                    },
+                  },
+                  in: {
+                    product_id: '$$returnProduct.product_id',
+                    variant_id: '$$returnProduct.variant_id',
+                    product_name: '$$returnProduct.product_name',
+                    variant_name: '$$returnProduct.variant_name',
+                    quantity: '$$returnProduct.quantity',
+                    unit_price: '$$returnProduct.unit_price',
+                    image: {
+                      $ifNull: ['$$matchedOrderProduct.image', null],
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      // Project final formatted response
+      {
+        $project: {
+          _id: 1,
+          order: {
+            order_id: '$orderDetails.order_id',
+            total_amount: '$orderDetails.total_amount',
+            sub_total: '$orderDetails.sub_total',
+            shipping_amount: '$orderDetails.shipping_amount',
+            payment_method: '$orderDetails.payment_method',
+            payment_status: '$orderDetails.payment_status',
+            order_status: '$orderDetails.order_status',
+            created_at: '$orderDetails.createdAt',
+          },
+          customer: {
+            fullName: '$orderDetails.shipping_address.fullName',
+            email: '$orderDetails.shipping_address.email',
+            phone: '$orderDetails.shipping_address.phone',
+            address: '$orderDetails.shipping_address.address',
+            city: '$orderDetails.shipping_address.city',
+            state: '$orderDetails.shipping_address.state',
+            pincode: '$orderDetails.shipping_address.pincode',
+          },
+          products: 1,
+          return_details: {
+            status: '$status',
+            reason: { $ifNull: ['$reason', ''] },
+            requestedAt: '$requestedAt',
+            shiprocket_return_id: '$shiprocket_return_id',
+            createdAt: '$createdAt',
+            updatedAt: '$updatedAt',
+          },
+          order_id_for_delivery: '$orderDetails._id',
+        },
+      },
+    ];
+
+    const result = await returnOrder_model.aggregate(pipeline);
+    
+    if (!result || result.length === 0) {
       return res.status(404).json({
         status: false,
         message: 'Return order not found',
       });
     }
 
+    const returnOrder = result[0];
+
     // Get delivery date
-    const deliveryDate = await getDeliveryDate(returnOrder.order_id._id);
+    const deliveryDate = await getDeliveryDate(returnOrder.order_id_for_delivery);
 
     // Calculate return window
     let returnWindowEnd = null;
@@ -116,50 +249,18 @@ exports.get_one_return_order = async (req, res) => {
       isEligible = today <= returnWindowEnd;
     }
 
-    // Format response
+    // Add delivery info to response
     const response = {
-      _id: returnOrder._id,
-      order: {
-        order_id: returnOrder.order_id.order_id,
-        total_amount: returnOrder.order_id.total_amount,
-        sub_total: returnOrder.order_id.sub_total,
-        shipping_amount: returnOrder.order_id.shipping_amount,
-        payment_method: returnOrder.order_id.payment_method,
-        payment_status: returnOrder.order_id.payment_status,
-        order_status: returnOrder.order_id.order_status,
-        created_at: returnOrder.order_id.createdAt,
-      },
-      customer: {
-        fullName: returnOrder.order_id.shipping_address.fullName,
-        email: returnOrder.order_id.shipping_address.email,
-        phone: returnOrder.order_id.shipping_address.phone,
-        address: returnOrder.order_id.shipping_address.address,
-        city: returnOrder.order_id.shipping_address.city,
-        state: returnOrder.order_id.shipping_address.state,
-        pincode: returnOrder.order_id.shipping_address.pincode,
-      },
-      products: returnOrder.products.map((p) => ({
-        product_id: p.product_id,
-        variant_id: p.variant_id,
-        product_name: p.product_name,
-        variant_name: p.variant_name,
-        quantity: p.quantity,
-        unit_price: p.unit_price,
-      })),
-      return_details: {
-        status: returnOrder.status,
-        reason: returnOrder.reason || '',
-        requestedAt: returnOrder.requestedAt,
-        shiprocket_return_id: returnOrder.shiprocket_return_id || null,
-        createdAt: returnOrder.createdAt,
-        updatedAt: returnOrder.updatedAt,
-      },
+      ...returnOrder,
       delivery_info: {
         delivery_date: deliveryDate,
         return_window_end: returnWindowEnd,
         is_eligible: isEligible,
       },
     };
+
+    // Remove temporary field
+    delete response.order_id_for_delivery;
 
     return res.status(200).json({
       status: true,

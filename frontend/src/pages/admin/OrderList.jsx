@@ -58,6 +58,12 @@ const OrderList = () => {
   const searchTimeoutRef = useRef(null);
   const isMounted = useRef(true);
   const downloadMenuRef = useRef(null);
+  const hasInitialized = useRef(false);
+  const prevSearchTerm = useRef(searchTerm);
+  const prevOrderStatusFilter = useRef(orderStatusFilter);
+  const prevPaymentStatusFilter = useRef(paymentStatusFilter);
+  const isFilterChanging = useRef(false);
+  const isInitialPaginationUpdate = useRef(false);
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
   const [downloadingFormat, setDownloadingFormat] = useState(null); // 'csv' | 'pdf' | null
 
@@ -94,27 +100,64 @@ const OrderList = () => {
     };
   }, [isDownloadOpen]);
 
-  // Initial fetch on mount
+  // Initial fetch on mount only
   useEffect(() => {
-    fetchOrders(1);
+    if (!hasInitialized.current) {
+      hasInitialized.current = true;
+      isInitialPaginationUpdate.current = true;
+      prevSearchTerm.current = searchTerm;
+      prevOrderStatusFilter.current = orderStatusFilter;
+      prevPaymentStatusFilter.current = paymentStatusFilter;
+      fetchOrders(1);
+    }
   }, []);
 
-  // Fetch orders when filters change
+  // Fetch orders when filters change (skip initial mount)
   useEffect(() => {
+    if (!hasInitialized.current) {
+      // Store initial values on first mount
+      prevSearchTerm.current = searchTerm;
+      prevOrderStatusFilter.current = orderStatusFilter;
+      prevPaymentStatusFilter.current = paymentStatusFilter;
+      return;
+    }
+
+    // Check if any filter actually changed
+    const searchChanged = prevSearchTerm.current !== searchTerm;
+    const orderStatusChanged = prevOrderStatusFilter.current !== orderStatusFilter;
+    const paymentStatusChanged = prevPaymentStatusFilter.current !== paymentStatusFilter;
+
+    if (!searchChanged && !orderStatusChanged && !paymentStatusChanged) {
+      return;
+    }
+
+    // Update previous values
+    prevSearchTerm.current = searchTerm;
+    prevOrderStatusFilter.current = orderStatusFilter;
+    prevPaymentStatusFilter.current = paymentStatusFilter;
+
     // Clear existing timeout
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
+
+    isFilterChanging.current = true;
 
     // Debounce search
     if (searchTerm) {
       searchTimeoutRef.current = setTimeout(() => {
         setPagination(prev => ({ ...prev, page: 1 }));
         fetchOrders(1); // Reset to page 1 on search
+        setTimeout(() => {
+          isFilterChanging.current = false;
+        }, 100);
       }, 500);
     } else {
       setPagination(prev => ({ ...prev, page: 1 }));
       fetchOrders(1);
+      setTimeout(() => {
+        isFilterChanging.current = false;
+      }, 100);
     }
 
     return () => {
@@ -124,8 +167,14 @@ const OrderList = () => {
     };
   }, [searchTerm, orderStatusFilter, paymentStatusFilter]);
 
-  // Fetch orders when page or limit changes
+  // Fetch orders when page or limit changes (skip if filter change or initial pagination update triggered it)
   useEffect(() => {
+    if (!hasInitialized.current) return;
+    if (isFilterChanging.current) return;
+    if (isInitialPaginationUpdate.current) {
+      isInitialPaginationUpdate.current = false;
+      return;
+    }
     fetchOrders(pagination.page);
   }, [pagination.page, pagination.limit]);
 

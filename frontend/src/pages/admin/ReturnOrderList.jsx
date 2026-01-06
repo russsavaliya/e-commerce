@@ -41,6 +41,10 @@ const ReturnOrderList = () => {
   // Refs
   const isMounted = useRef(true);
   const statusFilterRef = useRef(null);
+  const hasInitialized = useRef(false);
+  const isFilterChanging = useRef(false);
+  const isInitialPaginationUpdate = useRef(false);
+  const prevStatusFilter = useRef(statusFilter);
   const [statusFilterOpen, setStatusFilterOpen] = useState(false);
 
   // Close status filter dropdown on click outside
@@ -73,19 +77,48 @@ const ReturnOrderList = () => {
     };
   }, []);
 
-  // Initial fetch on mount
+  // Initial fetch on mount only
   useEffect(() => {
-    fetchReturnOrders(1);
+    if (!hasInitialized.current) {
+      hasInitialized.current = true;
+      isInitialPaginationUpdate.current = true;
+      fetchReturnOrders(1);
+    }
   }, []);
 
-  // Fetch when filters change
+  // Fetch when status filter changes (skip initial mount)
   useEffect(() => {
+    if (!hasInitialized.current) {
+      // Store initial value on first mount
+      prevStatusFilter.current = statusFilter;
+      return;
+    }
+
+    // Only run if filter actually changed
+    if (prevStatusFilter.current === statusFilter) {
+      return;
+    }
+
+    // Update previous value
+    prevStatusFilter.current = statusFilter;
+
+    isFilterChanging.current = true;
     setPagination(prev => ({ ...prev, page: 1 }));
     fetchReturnOrders(1);
+    // Clear flag after state update completes
+    setTimeout(() => {
+      isFilterChanging.current = false;
+    }, 100);
   }, [statusFilter]);
 
-  // Fetch when page or limit changes
+  // Fetch when page or limit changes (skip if filter change or initial pagination update triggered it)
   useEffect(() => {
+    if (!hasInitialized.current) return;
+    if (isFilterChanging.current) return;
+    if (isInitialPaginationUpdate.current) {
+      isInitialPaginationUpdate.current = false;
+      return;
+    }
     fetchReturnOrders(pagination.page);
   }, [pagination.page, pagination.limit]);
 
@@ -147,7 +180,6 @@ const ReturnOrderList = () => {
   const handleLimitChange = (e) => {
     const newLimit = Number(e.target.value);
     setPagination(prev => ({ ...prev, limit: newLimit, page: 1 }));
-    fetchReturnOrders(1);
   };
 
   const handleStatusFilterChange = (status) => {
@@ -333,57 +365,95 @@ const ReturnOrderList = () => {
             </tbody>
           </table>
         </div>
+      </div>
 
-        {/* Pagination */}
-        {pagination.total_pages > 0 && (
-          <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-700">Items per page:</span>
-                <div className="relative z-10">
-                  <select
-                    value={pagination.limit}
-                    onChange={handleLimitChange}
-                    className="appearance-none bg-white border border-gray-300 rounded-lg px-3 py-1.5 pr-8 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 min-w-[80px]"
-                  >
-                    <option value={10}>10</option>
-                    <option value={25}>25</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                  </select>
-                  <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+      {/* Pagination */}
+      {pagination.total_pages > 1 && !loading && (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            {/* Items per page selector */}
+            <div className="flex items-center gap-2 relative z-10">
+              <label className="text-sm text-gray-700">Items per page:</label>
+              <div className="relative">
+                <select
+                  value={pagination.limit}
+                  onChange={handleLimitChange}
+                  className="appearance-none bg-white border border-gray-300 rounded px-2 py-1 pr-8 text-sm text-gray-700 cursor-pointer hover:border-gray-400 transition-all"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
                 </div>
               </div>
+            </div>
 
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-700">
-                  Showing {((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total_count)} of {pagination.total_count} return orders
-                </span>
+            {/* Page info */}
+            <div className="text-sm text-gray-700">
+              Showing <span className="font-medium">{(pagination.page - 1) * pagination.limit + 1}</span> to{' '}
+              <span className="font-medium">
+                {Math.min(pagination.page * pagination.limit, pagination.total_count)}
+              </span>{' '}
+              of <span className="font-medium">{pagination.total_count}</span> return orders
+            </div>
+
+            {/* Pagination buttons */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handlePageChange(pagination.page - 1)}
+                disabled={pagination.page === 1}
+                className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label="Previous page"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+
+              {/* Page numbers */}
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, pagination.total_pages) }, (_, i) => {
+                  let pageNum;
+                  if (pagination.total_pages <= 5) {
+                    pageNum = i + 1;
+                  } else if (pagination.page <= 3) {
+                    pageNum = i + 1;
+                  } else if (pagination.page >= pagination.total_pages - 2) {
+                    pageNum = pagination.total_pages - 4 + i;
+                  } else {
+                    pageNum = pagination.page - 2 + i;
+                  }
+
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${pagination.page === pageNum
+                        ? 'bg-green-600 text-white'
+                        : 'border border-gray-300 hover:bg-gray-50'
+                        }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
               </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handlePageChange(pagination.page - 1)}
-                  disabled={pagination.page === 1}
-                  className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <span className="text-sm text-gray-700">
-                  Page {pagination.page} of {pagination.total_pages}
-                </span>
-                <button
-                  onClick={() => handlePageChange(pagination.page + 1)}
-                  disabled={pagination.page === pagination.total_pages}
-                  className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              </div>
+              <button
+                onClick={() => handlePageChange(pagination.page + 1)}
+                disabled={pagination.page === pagination.total_pages}
+                className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label="Next page"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

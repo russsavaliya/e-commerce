@@ -374,8 +374,21 @@ const ReturnOrderDetail = () => {
                         <div className="space-y-4">
                             {returnOrder.products.map((product, index) => (
                                 <div key={index} className="flex items-start gap-4 p-4 border border-gray-200 rounded-lg">
-                                    <div className="w-20 h-24 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center flex-shrink-0">
-                                        <Package className="w-8 h-8 text-gray-400" />
+                                    <div className="w-20 h-24 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center flex-shrink-0 border border-gray-200">
+                                        {product.image ? (
+                                            <img
+                                                src={normalizeImagePath(product.image)}
+                                                alt={product.product_name}
+                                                className="w-full h-full object-cover"
+                                                onError={(e) => {
+                                                    e.target.style.display = 'none';
+                                                    e.target.nextSibling.style.display = 'flex';
+                                                }}
+                                            />
+                                        ) : null}
+                                        <div className={`w-full h-full flex items-center justify-center ${product.image ? 'hidden' : ''}`}>
+                                            <Package className="w-8 h-8 text-gray-400" />
+                                        </div>
                                     </div>
                                     <div className="flex-1">
                                         <p className="text-sm font-medium text-gray-900">{product.product_name}</p>
