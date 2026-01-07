@@ -24,7 +24,7 @@ const buildCartItems = async (cart = []) => {
     const categoryId = product.category || null;
 
     if (item.variantId) {
-      const variant = product.variants?.find(v => v._id.toString() === item.variantId);
+      const variant = product.variants?.find(v => v._id.toString() == item.variantId.toString());
       if (!variant) {
         throw new Error('A selected variant is no longer available.');
       }

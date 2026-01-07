@@ -347,10 +347,14 @@ const CheckoutPage = () => {
               navigate(`/order-success/${verifyResponse.data.order_id}`);
             } else {
               toast.error(verifyResponse.message || 'Payment verification failed');
+              // Stop loading state if verification failed
+              setIsSubmitting(false);
             }
           } catch (error) {
             console.error('Payment verification error:', error);
             toast.error(error.message || 'Payment verification failed');
+            // Stop loading state on error
+            setIsSubmitting(false);
           }
         },
         prefill: {
