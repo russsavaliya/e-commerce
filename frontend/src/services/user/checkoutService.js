@@ -36,10 +36,11 @@ export const initOrder = async (shippingData) => {
   }
 };
 
-// Step 2: Save payment selection / finalize placeholder payment
-export const updatePayment = async (orderId, payment_method) => {
+// Step 2: Save payment selection / finalize COD payment
+export const updatePayment = async (draftOrderId, payment_method) => {
   try {
-    const response = await userApi.patch(`/users/orders/${orderId}/payment`, {
+    const response = await userApi.patch('/users/orders/payment', {
+      draftOrderId,
       payment_method,
     });
     return response.data;
@@ -49,9 +50,10 @@ export const updatePayment = async (orderId, payment_method) => {
 };
 
 // Razorpay Payment APIs
-export const createRazorpayOrder = async (orderId, amount) => {
+export const createRazorpayOrder = async (draftOrderId, amount) => {
   try {
-    const response = await userApi.post(`/users/payments/razorpay/create/${orderId}`, {
+    const response = await userApi.post('/users/payments/razorpay/create', {
+      draftOrderId,
       amount,
       currency: 'INR',
     });
@@ -61,9 +63,12 @@ export const createRazorpayOrder = async (orderId, amount) => {
   }
 };
 
-export const verifyRazorpayPayment = async (orderId, paymentData) => {
+export const verifyRazorpayPayment = async (draftOrderId, paymentData) => {
   try {
-    const response = await userApi.post(`/users/payments/razorpay/verify/${orderId}`, paymentData);
+    const response = await userApi.post('/users/payments/razorpay/verify', {
+      draftOrderId,
+      ...paymentData,
+    });
     return response.data;
   } catch (error) {
     throw error.response?.data || error;

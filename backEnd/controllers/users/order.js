@@ -1,5 +1,6 @@
 const product_model = require('../../model/product');
 const order_model = require('../../model/order');
+const draftOrder_model = require('../../model/draftOrder');
 const coupon_model = require('../../model/coupon');
 const customer_controller = require('./customer');
 const { sendOrderSuccessEmail } = require('../../helper/emailHelper');
@@ -54,7 +55,8 @@ const buildCartItems = async (cart = []) => {
 };
 
 /**
- * Step 1: Create order + customer right after shipping details (before payment).
+ * Step 1: Create DraftOrder (NOT Order) after shipping details (before payment).
+ * Order and Customer will be created only after payment success or COD confirmation.
  */
 exports.init_order = async (req, res) => {
   try {
@@ -94,20 +96,22 @@ exports.init_order = async (req, res) => {
     const coupon_discount = discount_amount ? Number(discount_amount) : 0;
     const total_amount = Math.max(0, subtotal + shipping_amount + total_tax - coupon_discount);
 
-    // Get next sequence number for order
-    const number_id = await getNextSequence('order');
+    // Prepare cart items for DraftOrder
+    const cartItems = cart.map((item) => ({
+      productId: item.productId,
+      variantId: item.variantId || null,
+      quantity: item.quantity,
+    }));
 
-    const orderPayload = {
-      number_id,
-      order_id: `ORD-${Date.now()}`,
-      products: items,
-      sub_total: subtotal,
-      shipping_amount,
-      total_tax,
-      total_amount,
-      payment_method: 'cod', // default; will be updated in payment step
-      payment_status: 'pending',
-      order_status: 'pending',
+    // Check if DraftOrder already exists for this email (in_progress)
+    // If exists, update it; otherwise create new
+    const existingDraftOrder = await draftOrder_model.findOne({
+      email: email.toLowerCase(),
+      status: 'in_progress',
+    });
+
+    const draftOrderPayload = {
+      email: email.toLowerCase(),
       shipping_address: {
         fullName,
         phone,
@@ -118,44 +122,105 @@ exports.init_order = async (req, res) => {
         pincode,
         landmark,
       },
-      coupon: coupon_id && coupon_code ? {
-        coupon_id,
-        coupon_code,
-        discount_amount: coupon_discount,
-      } : null,
+      cart_items: cartItems,
+      step: 'address',
+      status: 'in_progress',
+      sub_total: subtotal,
+      shipping_amount,
+      total_tax,
+      total_amount
     };
 
-    const order = await order_model.create(orderPayload);
-
-    // Create/Update customer and attach order_id
-    await customer_controller.upsert_from_shipping(order.shipping_address, order.order_id);
+    let draftOrder;
+    if (existingDraftOrder) {
+      // Update existing DraftOrder
+      draftOrder = await draftOrder_model.findByIdAndUpdate(
+        existingDraftOrder._id,
+        { $set: draftOrderPayload },
+        { new: true }
+      );
+    } else {
+      // Create new DraftOrder
+      draftOrder = await draftOrder_model.create(draftOrderPayload);
+    }
 
     return res.status(201).json({
       status: true,
-      message: 'Order created. Proceed to payment step.',
+      message: 'Address saved. Proceed to payment step.',
       data: {
-        order_id: order.order_id,
-        total_amount: order.total_amount,
-        order_status: order.order_status,
+        draft_order_id: draftOrder._id,
+        total_amount: draftOrder.total_amount,
       },
     });
   } catch (error) {
-    console.error('Error creating order:', error);
+    console.error('Error creating draft order:', error);
     return res.status(500).json({
       status: false,
-      message: error.message || 'Failed to create order',
+      message: error.message || 'Failed to save address',
     });
   }
 };
 
 /**
- * Step 2: Payment selection / status update (no real gateway for now).
- * COD order confirmation.
+ * Helper: Create Order from DraftOrder
+ * This is used by both COD and Online Payment flows
+ */
+const createOrderFromDraftOrder = async (draftOrder, paymentMethod, paymentStatus, orderStatus) => {
+  // Build cart items from DraftOrder
+  const cart = draftOrder.cart_items || [];
+  const { items, subtotal } = await buildCartItems(
+    cart.map((item) => ({
+      productId: item.productId,
+      variantId: item.variantId,
+      quantity: item.quantity,
+    }))
+  );
+
+  // Get next sequence number for order
+  const number_id = await getNextSequence('order');
+
+  // Create Order
+  const orderPayload = {
+    number_id,
+    order_id: `ORD-${Date.now()}`,
+    products: items,
+    sub_total: draftOrder.sub_total || subtotal,
+    shipping_amount: draftOrder.shipping_amount || 0,
+    total_tax: draftOrder.total_tax || 0,
+    total_amount: draftOrder.total_amount,
+    payment_method: paymentMethod,
+    payment_status: paymentStatus,
+    order_status: orderStatus,
+    shipping_address: draftOrder.shipping_address,
+    coupon: draftOrder.coupon || null,
+  };
+
+  const order = await order_model.create(orderPayload);
+
+  // Create/Update customer and attach order_id
+  await customer_controller.upsert_from_shipping(order.shipping_address, order.order_id);
+
+  // Delete DraftOrder after successful Order creation
+  // await draftOrder_model.findByIdAndDelete(draftOrder._id);
+
+  return order;
+};
+
+/**
+ * Step 2: COD Payment confirmation.
+ * Creates Order from DraftOrder and deletes DraftOrder.
  */
 exports.update_payment = async (req, res) => {
   try {
-    const { orderId } = req.params;
+    const { draftOrderId } = req.body || {};
     const { payment_method = 'cod' } = req.body || {};
+
+    if (!draftOrderId) {
+      return res.status(400).json({
+        status: false,
+        message: 'Draft Order ID is required.',
+      });
+    }
 
     if (!allowedPaymentMethods.includes(payment_method)) {
       return res.status(400).json({
@@ -164,25 +229,33 @@ exports.update_payment = async (req, res) => {
       });
     }
 
-    const order = await order_model.findOneAndUpdate(
-      { order_id: orderId },
-      {
-        $set: {
-          payment_method,
-          payment_status: 'pending',
-          // Keep order_status as 'pending' - admin will update it step by step
-          order_status: 'confirmed',
-        },
-      },
-      { new: true }
-    ).populate('coupon.coupon_id');
-
-    if (!order) {
+    // Find DraftOrder
+    const draftOrder = await draftOrder_model.findById(draftOrderId);
+    if (!draftOrder) {
       return res.status(404).json({
         status: false,
-        message: 'Order not found.',
+        message: 'Draft order not found.',
       });
     }
+
+    // Check if DraftOrder is already converted
+    if (draftOrder.status === 'converted') {
+      return res.status(400).json({
+        status: false,
+        message: 'This draft order has already been converted to an order.',
+      });
+    }
+
+    // Create Order from DraftOrder
+    const order = await createOrderFromDraftOrder(
+      draftOrder,
+      payment_method,
+      'pending',
+      'confirmed'
+    );
+
+    // Populate coupon for email
+    await order.populate('coupon.coupon_id');
 
     // Increment coupon usedCount only after successful order confirmation
     if (order.coupon && order.coupon.coupon_id) {
@@ -212,7 +285,7 @@ exports.update_payment = async (req, res) => {
 
     return res.status(200).json({
       status: true,
-      message: 'Payment option saved for order.',
+      message: 'Order confirmed successfully.',
       data: {
         order_id: order.order_id,
         order_status: order.order_status,
@@ -221,10 +294,10 @@ exports.update_payment = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Error updating payment:', error);
+    console.error('Error creating order from draft:', error);
     return res.status(500).json({
       status: false,
-      message: error.message || 'Failed to update payment',
+      message: error.message || 'Failed to create order',
     });
   }
 };
@@ -306,3 +379,4 @@ exports.track_order = async (req, res) => {
     });
   }
 };
+

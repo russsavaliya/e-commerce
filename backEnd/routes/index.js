@@ -19,6 +19,7 @@ const shipment_controller = require('../controllers/shipment');
 const note_controller = require('../controllers/note');
 const coupon_controller = require('../controllers/coupon');
 const admin_returnOrder_controller = require('../controllers/admin_returnOrder');
+const admin_draftOrder_controller = require('../controllers/admin_draftOrder');
 /* GET home page. */
 router.post('/admin/auth/signup', authorization.authorization, permission.checkPermission('admin_create'), admin_controller.signup);
 router.post('/admin/auth/login', admin_controller.login);
@@ -118,5 +119,8 @@ router.get('/return-order/get-one', authorization.authorization, admin_returnOrd
 router.get('/return-order/get-shipment-details', authorization.authorization, admin_returnOrder_controller.get_shipment_details);
 router.patch('/return-order/update-status', authorization.authorization, permission.checkPermission('order_update'), admin_returnOrder_controller.update_return_status);
 router.post('/return-order/create-shiprocket-return', authorization.authorization, permission.checkPermission('order_update'), admin_returnOrder_controller.create_shiprocket_return);
+
+// draft order routes (admin)
+router.get('/draft-orders/list', authorization.authorization, admin_draftOrder_controller.get_draft_orders_list);
 
 module.exports = router;
