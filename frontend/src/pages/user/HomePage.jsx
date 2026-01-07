@@ -117,18 +117,22 @@ const HomePage = () => {
     <div className="min-h-screen animate-fade-in">
       {/* Navbar */}
       <Navbar />
-      {/* Hero Banner Section - Responsive height maintaining 16:9 aspect ratio */}
+      {/* Hero Banner Section - Optimized for 1500×700 banner images (15:7 aspect ratio) */}
       {banners.length > 0 && (
         <section
-          className="relative w-full overflow-hidden bg-gray-900 -mt-20"
+          className="relative w-full overflow-hidden bg-transparent"
           style={{
-            height: 'calc((100vw - 0px) * 9 / 16 + 20px)',
-            minHeight: '420px',
-            maxHeight: '920px'
+            // 1500×700 = 15:7 aspect ratio = 2.143:1
+            // Using aspect-ratio for better browser support and flexibility
+            aspectRatio: '15 / 7',
+            minHeight: '280px', // Minimum for mobile (approx 600px width * 7/15)
+            // No maxHeight to allow full image display on all screen sizes
+            // Fallback for older browsers
+            height: 'calc((100vw - 0px) * 7 / 15)',
           }}
         >
-          {/* Banner Images - Start below navbar, fill remaining space */}
-          <div className="absolute top-20 left-0 right-0 bottom-0 w-full" style={{ height: 'calc(100% - 0px)' }}>
+          {/* Banner Images Container - Full width and height */}
+          <div className="absolute inset-0 w-full h-full">
             {banners.map((banner, index) => (
               <div
                 key={banner._id}
@@ -141,12 +145,13 @@ const HomePage = () => {
                     alt={banner.title || 'Banner'}
                     className="w-full h-full"
                     style={{
-                      objectFit: 'cover',
-                      objectPosition: 'center 45%',
+                      // Use 'contain' to ensure full image is visible without any cropping
+                      // Container aspect ratio (15:7) matches image (1500×700), so image will fill most of the space
+                      objectFit: 'contain',
+                      objectPosition: 'center center',
                       width: '100%',
                       height: '100%',
                       display: 'block',
-                      minHeight: '100%'
                     }}
                     onError={() => {
                       setBannerImageErrors((prev) => new Set([...prev, banner._id]));
@@ -321,37 +326,48 @@ const HomePage = () => {
         textColor="text-[rgb(72,29,111)]"
       />
 
-      {/* Bottom Banner Section (homepage_bottom) - full width, large banner */}
+      {/* Bottom Banner Section (homepage_bottom) - Optimized for 1500×700 banner images (15:7 aspect ratio) */}
       {bottomBanners.length > 0 && (
         <section className="w-full pt-10 pb-6 px-0 animate-fade-in-up">
           <div className="w-full">
             {bottomBanners.map((banner, index) => (
               <div
                 key={banner._id || index}
-                className="relative w-full overflow-hidden group cursor-pointer"
+                className="relative w-full overflow-hidden group cursor-pointer bg-transparent"
                 style={{
                   animationDelay: `${index * 150}ms`,
-                  animation: 'fadeInUp 0.8s ease-out forwards'
+                  animation: 'fadeInUp 0.8s ease-out forwards',
+                  // 1500×700 = 15:7 aspect ratio = 2.143:1
+                  aspectRatio: '15 / 7',
+                  minHeight: '280px', // Minimum for mobile
+                  // Fallback for older browsers
+                  height: 'calc((100vw - 0px) * 7 / 15)',
                 }}
               >
-                {/* 16:9 full-width banner */}
-                <div className="relative w-full pb-[40%]">
-                  <img
-                    src={banner.image_url}
-                    alt={banner.title || 'Banner'}
-                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                    onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/1600x640?text=Banner';
-                    }}
-                  />
-                  {banner.title && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-all duration-500">
-                      <h3 className="text-2xl md:text-3xl font-bold text-white text-center px-4 transform group-hover:scale-110 transition-transform duration-500">
-                        {banner.title}
-                      </h3>
-                    </div>
-                  )}
-                </div>
+                <img
+                  src={banner.image_url}
+                  alt={banner.title || 'Banner'}
+                  className="w-full h-full"
+                  style={{
+                    // Use 'contain' to ensure full image is visible without any cropping
+                    // Container aspect ratio (15:7) matches image (1500×700), so image will fill most of the space
+                    objectFit: 'contain',
+                    objectPosition: 'center center',
+                    width: '100%',
+                    height: '100%',
+                    display: 'block',
+                  }}
+                  onError={(e) => {
+                    e.target.src = 'https://via.placeholder.com/1500x700?text=Banner';
+                  }}
+                />
+                {banner.title && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-all duration-500 pointer-events-none">
+                    <h3 className="text-2xl md:text-3xl font-bold text-white text-center px-4 transform group-hover:scale-110 transition-transform duration-500">
+                      {banner.title}
+                    </h3>
+                  </div>
+                )}
               </div>
             ))}
           </div>

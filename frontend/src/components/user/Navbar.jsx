@@ -94,7 +94,7 @@ const Navbar = () => {
 
   // Navbar styling - always light theme matching logo background
   // Light shadow at top, stronger shadow when scrolled
-  const navClasses = `bg-[#faf9f5] sticky top-0 z-50 border-b border-gray-100 transition-shadow duration-300 ${isScrolled ? 'shadow-md' : 'shadow-sm'}`;
+  const navClasses = `bg-[#faf9f5] sticky top-0 z-50 transition-shadow duration-300 ${isScrolled ? 'shadow-md' : 'shadow-sm'}`;
 
   // Base text color inspired by logo purple
   const textClasses = 'text-[rgb(72,29,111)]';
