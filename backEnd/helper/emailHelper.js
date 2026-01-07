@@ -143,7 +143,7 @@ const sendOrderSuccessEmailToCustomer = async (orderData) => {
 
 const sendOrderNotificationEmailToAdmin = async (orderData) => {
     try {
-        const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL;
+        const adminEmail = process.env.ADMIN_EMAIL;
         if (!adminEmail) {
             throw new Error('Admin email is not configured');
         }

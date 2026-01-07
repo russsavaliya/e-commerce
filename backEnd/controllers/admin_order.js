@@ -249,8 +249,8 @@ exports.update_order_status = async (req, res) => {
     const { orderId } = req.params;
     const { order_status } = req.body;
 
-    const allowedStatuses = ['pending', 'accepted', 'shipment', 'shipped', 'missing', 'failed', 'cancelled', 'delivered'];
-    
+    const allowedStatuses = ['pending', 'accepted', 'shipment', 'missing', 'failed', 'cancelled', 'delivered'];
+
     if (!allowedStatuses.includes(order_status)) {
       return res.status(400).json({
         status: false,
@@ -267,7 +267,7 @@ exports.update_order_status = async (req, res) => {
       });
     }
 
-  
+
 
     // Update order status
     const updatedOrder = await order_model.findOneAndUpdate(
@@ -299,7 +299,7 @@ exports.update_payment_status = async (req, res) => {
     const { payment_status } = req.body;
 
     const allowedStatuses = ['pending', 'paid', 'failed', 'refunded'];
-    
+
     if (!allowedStatuses.includes(payment_status)) {
       return res.status(400).json({
         status: false,
@@ -575,11 +575,10 @@ exports.export_order_one = async (req, res) => {
             <td>${index + 1}</td>
             <td>
               <div class="prod-name">${name}${variant}</div>
-              ${
-                category
-                  ? `<div class="prod-meta">Category: ${category}</div>`
-                  : ''
-              }
+              ${category
+            ? `<div class="prod-meta">Category: ${category}</div>`
+            : ''
+          }
             </td>
             <td>${p.quantity || 0}</td>
             <td>₹${(p.unit_price || 0).toLocaleString('en-IN')}</td>
@@ -604,9 +603,8 @@ exports.export_order_one = async (req, res) => {
       .replace(
         /{{CUSTOMER_ADDRESS}}/g,
         safe(
-          `${addr.address || ''}${
-            addr.landmark ? `, ${addr.landmark}` : ''
-          }`.trim()
+          `${addr.address || ''}${addr.landmark ? `, ${addr.landmark}` : ''
+            }`.trim()
         )
       )
       .replace(

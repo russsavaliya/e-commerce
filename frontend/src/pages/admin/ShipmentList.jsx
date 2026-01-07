@@ -64,6 +64,11 @@ const ShipmentList = () => {
   // Refs
   const searchTimeoutRef = useRef(null);
   const orderDropdownRef = useRef(null);
+  const hasInitialized = useRef(false);
+  const prevSearchTerm = useRef(searchTerm);
+  const prevShipmentStatusFilter = useRef(shipmentStatusFilter);
+  const isFilterChanging = useRef(false);
+  const isInitialPaginationUpdate = useRef(false);
 
   const fetchShipments = async () => {
     try {
@@ -92,9 +97,51 @@ const ShipmentList = () => {
     }
   };
 
+  // Initial fetch on mount only
   useEffect(() => {
+    if (!hasInitialized.current) {
+      hasInitialized.current = true;
+      isInitialPaginationUpdate.current = true;
+      prevSearchTerm.current = searchTerm;
+      prevShipmentStatusFilter.current = shipmentStatusFilter;
+      fetchShipments();
+    }
+  }, []);
+
+  // Fetch when shipment status filter changes (skip initial mount)
+  useEffect(() => {
+    if (!hasInitialized.current) {
+      // Store initial value on first mount
+      prevShipmentStatusFilter.current = shipmentStatusFilter;
+      return;
+    }
+
+    // Only run if filter actually changed
+    if (prevShipmentStatusFilter.current === shipmentStatusFilter) {
+      return;
+    }
+
+    // Update previous value
+    prevShipmentStatusFilter.current = shipmentStatusFilter;
+
+    isFilterChanging.current = true;
+    setPagination((prev) => ({ ...prev, page: 1 }));
     fetchShipments();
-  }, [pagination.page, shipmentStatusFilter]);
+    setTimeout(() => {
+      isFilterChanging.current = false;
+    }, 100);
+  }, [shipmentStatusFilter]);
+
+  // Fetch when page changes (skip if filter change or initial pagination update triggered it)
+  useEffect(() => {
+    if (!hasInitialized.current) return;
+    if (isFilterChanging.current) return;
+    if (isInitialPaginationUpdate.current) {
+      isInitialPaginationUpdate.current = false;
+      return;
+    }
+    fetchShipments();
+  }, [pagination.page]);
 
   // Close order dropdown when clicking outside
   useEffect(() => {
@@ -114,18 +161,36 @@ const ShipmentList = () => {
     };
   }, [orderDropdownOpen]);
 
-  // Debounced search
+  // Debounced search (skip initial mount)
   useEffect(() => {
+    if (!hasInitialized.current) {
+      // Store initial value on first mount
+      prevSearchTerm.current = searchTerm;
+      return;
+    }
+
+    // Only run if search term actually changed
+    if (prevSearchTerm.current === searchTerm) {
+      return;
+    }
+
+    // Update previous value
+    prevSearchTerm.current = searchTerm;
+
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
 
+    isFilterChanging.current = true;
     searchTimeoutRef.current = setTimeout(() => {
       if (pagination.page === 1) {
         fetchShipments();
       } else {
         setPagination((prev) => ({ ...prev, page: 1 }));
       }
+      setTimeout(() => {
+        isFilterChanging.current = false;
+      }, 100);
     }, 500);
 
     return () => {

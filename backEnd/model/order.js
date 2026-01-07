@@ -67,7 +67,7 @@ const orderSchema = new schema({
   },
   order_status: {
     type: String,
-    enum: ['pending', 'confirmed', 'accepted', 'shipment', 'shipped', 'missing', 'failed', 'cancelled', 'delivered'],
+    enum: ['pending', 'confirmed', 'accepted', 'shipment', 'missing', 'failed', 'cancelled', 'delivered'],
     default: 'pending',
   },
   payment_method: {

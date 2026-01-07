@@ -1,15 +1,6 @@
-/**
- * Validation Utilities
- * Reusable validation functions for form fields
- */
 
 import { VALIDATION_MESSAGES } from './constants';
 
-/**
- * Validates email format
- * @param {string} email - Email to validate
- * @returns {object} - { isValid: boolean, message: string }
- */
 export const validateEmail = (email) => {
   if (!email || email.trim() === '') {
     return { isValid: false, message: VALIDATION_MESSAGES.EMAIL_REQUIRED };
@@ -23,11 +14,6 @@ export const validateEmail = (email) => {
   return { isValid: true, message: '' };
 };
 
-/**
- * Validates password (only checks if not empty - no complexity requirements)
- * @param {string} password - Password to validate
- * @returns {object} - { isValid: boolean, message: string, strength: string }
- */
 export const validatePassword = (password) => {
   if (!password || password.trim() === '') {
     return {
@@ -56,11 +42,6 @@ export const validatePassword = (password) => {
   return { isValid: true, message: '', strength };
 };
 
-/**
- * Validates name
- * @param {string} name - Name to validate
- * @returns {object} - { isValid: boolean, message: string }
- */
 export const validateName = (name) => {
   if (!name || name.trim() === '') {
     return { isValid: false, message: VALIDATION_MESSAGES.NAME_REQUIRED };
@@ -73,11 +54,6 @@ export const validateName = (name) => {
   return { isValid: true, message: '' };
 };
 
-/**
- * Validates phone number (Indian format - 10 digits)
- * @param {string} phone - Phone number to validate
- * @returns {object} - { isValid: boolean, message: string }
- */
 export const validatePhone = (phone) => {
   // Phone is optional, so empty is valid
   if (!phone || phone.trim() === '') {
@@ -96,12 +72,6 @@ export const validatePhone = (phone) => {
   return { isValid: true, message: '' };
 };
 
-/**
- * Validates if passwords match
- * @param {string} password - Original password
- * @param {string} confirmPassword - Confirmation password
- * @returns {object} - { isValid: boolean, message: string }
- */
 export const validatePasswordMatch = (password, confirmPassword) => {
   if (!confirmPassword || confirmPassword.trim() === '') {
     return { isValid: false, message: VALIDATION_MESSAGES.PASSWORD_REQUIRED };
@@ -114,11 +84,6 @@ export const validatePasswordMatch = (password, confirmPassword) => {
   return { isValid: true, message: '' };
 };
 
-/**
- * Validates login form
- * @param {object} formData - { email, password }
- * @returns {object} - { isValid: boolean, errors: object }
- */
 export const validateLoginForm = (formData) => {
   const errors = {};
   let isValid = true;
@@ -138,11 +103,6 @@ export const validateLoginForm = (formData) => {
   return { isValid, errors };
 };
 
-/**
- * Validates signup form
- * @param {object} formData - { name, email, phone, password, confirmPassword, terms }
- * @returns {object} - { isValid: boolean, errors: object }
- */
 export const validateSignupForm = (formData) => {
   const errors = {};
   let isValid = true;

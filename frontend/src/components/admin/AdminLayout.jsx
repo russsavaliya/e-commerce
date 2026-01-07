@@ -27,6 +27,7 @@ import {
   Star,
   Truck,
   FileText,
+  RefreshCw,
 } from 'lucide-react';
 import { ROUTES } from '../../utils/constants';
 
@@ -50,7 +51,7 @@ const AdminLayout = () => {
     if (location.pathname.startsWith(ROUTES.ADMIN_PRODUCTS)) {
       setProductsOpen(true);
     }
-    if (location.pathname.startsWith(ROUTES.ADMIN_ORDERS) || location.pathname.startsWith('/admin/shipments')) {
+    if (location.pathname.startsWith(ROUTES.ADMIN_ORDERS) || location.pathname.startsWith('/admin/shipments') || location.pathname.startsWith('/admin/return-orders')) {
       setOrdersOpen(true);
     }
     if (location.pathname.startsWith(ROUTES.ADMIN_CUSTOMERS)) {
@@ -73,7 +74,7 @@ const AdminLayout = () => {
   const isActive = (path) => location.pathname === path;
   const isSettingsActive = location.pathname.startsWith(ROUTES.ADMIN_SETTINGS);
   const isProductsActive = location.pathname.startsWith(ROUTES.ADMIN_PRODUCTS);
-  const isOrdersActive = location.pathname.startsWith(ROUTES.ADMIN_ORDERS) || location.pathname.startsWith('/admin/shipments');
+  const isOrdersActive = location.pathname.startsWith(ROUTES.ADMIN_ORDERS) || location.pathname.startsWith('/admin/shipments') || location.pathname.startsWith('/admin/return-orders');
   const isCustomersActive = location.pathname.startsWith(ROUTES.ADMIN_CUSTOMERS);
   const isReviewsActive = location.pathname.startsWith(ROUTES.ADMIN_REVIEWS);
 
@@ -124,6 +125,11 @@ const AdminLayout = () => {
           name: 'Shipment List',
           icon: Truck,
           path: ROUTES.ADMIN_SHIPMENTS_LIST,
+        },
+        {
+          name: 'Return Orders',
+          icon: RefreshCw,
+          path: '/admin/return-orders',
         },
       ],
     },

@@ -18,6 +18,7 @@ const utils_controller = require('../controllers/utils')
 const shipment_controller = require('../controllers/shipment');
 const note_controller = require('../controllers/note');
 const coupon_controller = require('../controllers/coupon');
+const admin_returnOrder_controller = require('../controllers/admin_returnOrder');
 /* GET home page. */
 router.post('/admin/auth/signup', authorization.authorization, permission.checkPermission('admin_create'), admin_controller.signup);
 router.post('/admin/auth/login', admin_controller.login);
@@ -110,5 +111,12 @@ router.get('/coupons/list', authorization.authorization, coupon_controller.get_c
 router.get('/coupons/get-one', authorization.authorization, coupon_controller.get_coupon_one);
 router.put('/coupons/update', authorization.authorization, permission.checkPermission('coupon_update'), coupon_controller.update_coupon);
 router.delete('/coupons/delete', authorization.authorization, permission.checkPermission('coupon_delete'), coupon_controller.delete_coupon);
+
+// return order routes (admin)
+router.get('/return-order/list', authorization.authorization, admin_returnOrder_controller.get_return_orders_list);
+router.get('/return-order/get-one', authorization.authorization, admin_returnOrder_controller.get_one_return_order);
+router.get('/return-order/get-shipment-details', authorization.authorization, admin_returnOrder_controller.get_shipment_details);
+router.patch('/return-order/update-status', authorization.authorization, permission.checkPermission('order_update'), admin_returnOrder_controller.update_return_status);
+router.post('/return-order/create-shiprocket-return', authorization.authorization, permission.checkPermission('order_update'), admin_returnOrder_controller.create_shiprocket_return);
 
 module.exports = router;

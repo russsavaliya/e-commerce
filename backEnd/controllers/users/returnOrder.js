@@ -173,7 +173,7 @@ exports.verify_otp = async (req, res) => {
 exports.create_return = async (req, res) => {
   try {
     const { orderId, email, products, reason } = req.body || {};
-
+    console.log("req.body==>", req.body);
     if (!orderId || !email) {
       return res.status(400).json({
         status: false,
@@ -193,7 +193,7 @@ exports.create_return = async (req, res) => {
       order_id: orderId,
       'shipping_address.email': email.toLowerCase(),
     });
-
+    console.log("order==>", order);
     if (!order) {
       return res.status(404).json({
         status: false,
@@ -205,7 +205,7 @@ exports.create_return = async (req, res) => {
     const existingReturn = await returnOrder_model.findOne({
       order_id: order._id,
     });
-
+    console.log("existingReturn==>", existingReturn);
     if (existingReturn) {
       return res.status(400).json({
         status: false,
@@ -235,35 +235,55 @@ exports.create_return = async (req, res) => {
     }
 
     // Validate products - ensure they exist in the order
-    const orderProductIds = order.products.map((p) => p.product_id.toString());
-    const returnProductIds = products.map((p) => p.product_id.toString());
-
+    // Frontend sends product_id and variant_id as strings, so we validate using string comparison
     for (const returnProduct of products) {
-      const orderProduct = order.products.find(
-        (p) => p.product_id.toString() === returnProduct.product_id.toString()
-      );
+      // Validate required fields
+      if (!returnProduct.product_id) {
+        return res.status(400).json({
+          status: false,
+          message: 'Product ID is required for all return items',
+        });
+      }
+
+      const returnProductId = String(returnProduct.product_id);
+      const returnVariantId = returnProduct.variant_id ? String(returnProduct.variant_id) : null;
+
+      // Find matching product in order
+      const orderProduct = order.products.find((p) => {
+        const orderProductId = String(p.product_id);
+        const orderVariantId = p.variant_id ? String(p.variant_id) : null;
+        
+        // Match by product_id and variant_id (if variant exists)
+        if (returnVariantId && orderVariantId) {
+          return orderProductId === returnProductId && orderVariantId === returnVariantId;
+        }
+        // If no variant, match by product_id only
+        return orderProductId === returnProductId;
+      });
 
       if (!orderProduct) {
         return res.status(400).json({
           status: false,
-          message: `Product ${returnProduct.product_id} not found in order`,
+          message: `Product ${returnProduct.product_name || returnProductId} not found in order`,
         });
       }
 
-      if (returnProduct.quantity > orderProduct.quantity) {
+      // User must return all items - quantity must match order quantity exactly
+      if (returnProduct.quantity !== orderProduct.quantity) {
         return res.status(400).json({
           status: false,
-          message: `Return quantity for product ${returnProduct.product_name} exceeds order quantity`,
+          message: `Return quantity for product ${returnProduct.product_name} must match order quantity. All items must be returned.`,
         });
       }
     }
 
     // Create return order
+    // Use product data as received from frontend (already in correct format)
     const returnOrder = await returnOrder_model.create({
       order_id: order._id,
       products: products.map((p) => ({
         product_id: p.product_id,
-        variant_id: p.variant_id,
+        variant_id: p.variant_id || null,
         product_name: p.product_name,
         variant_name: p.variant_name,
         quantity: p.quantity,
@@ -340,7 +360,7 @@ const getDeliveryDate = async (orderId) => {
  */
 const sendReturnRequestEmails = async (order, returnOrder) => {
   const customerEmail = order.shipping_address.email;
-  const adminEmail = process.env.EMAIL || process.env.ADMIN_EMAIL;
+  const adminEmail = process.env.ADMIN_EMAIL;
 
   // Email to customer
   const customerSubject = 'Return Request Submitted - Order ' + order.order_id;
@@ -377,7 +397,7 @@ const sendReturnRequestEmails = async (order, returnOrder) => {
       `- Return Status: ${returnOrder.status}\n` +
       `- Requested At: ${returnOrder.requestedAt.toLocaleString('en-IN')}\n\n` +
       `Products to Return:\n` +
-      returnOrder.products.map((p, idx) => 
+      returnOrder.products.map((p, idx) =>
         `${idx + 1}. ${p.product_name}${p.variant_name ? ` (${p.variant_name})` : ''} - Qty: ${p.quantity}`
       ).join('\n') +
       (returnOrder.reason ? `\n\nReason: ${returnOrder.reason}` : '') +

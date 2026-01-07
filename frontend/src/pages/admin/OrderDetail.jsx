@@ -156,7 +156,7 @@ const OrderDetail = () => {
 
   // Fetch shipment when order status is 'shipment' or order loads
   useEffect(() => {
-    if (order && (order.order_status === 'shipment' || order.order_status === 'shipped' || order.order_status === 'delivered')) {
+    if (order && (order.order_status === 'shipment' || order.order_status === 'delivered')) {
       fetchShipmentDetails();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -186,7 +186,7 @@ const OrderDetail = () => {
   };
 
   const getAllStatusOptions = () => {
-    return ['pending', 'accepted', 'shipment', 'shipped', 'delivered', 'cancelled', 'missing', 'failed'];
+    return ['pending', 'accepted', 'shipment', 'delivered', 'cancelled', 'missing', 'failed'];
   };
 
   const handleDownloadPdf = async () => {
@@ -504,7 +504,7 @@ const OrderDetail = () => {
               </div>
 
               {/* Shipment Information */}
-              {(order.order_status === 'shipment' || order.order_status === 'shipped' || order.order_status === 'delivered' || shipment) && (
+              {(order.order_status === 'shipment' || order.order_status === 'delivered' || shipment) && (
                 <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
                   <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                     <Truck className="w-5 h-5 text-indigo-600" />
