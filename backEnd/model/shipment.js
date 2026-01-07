@@ -1,5 +1,11 @@
 const mongoose = require('mongoose');
 const shipmentSchema = new mongoose.Schema({
+    number_id: {
+      type: Number,
+      unique: true,
+      sparse: true, // Allow null values for existing records
+      index: true,
+    },
     order_id: {
       type: mongoose.Types.ObjectId,
       ref: 'order',

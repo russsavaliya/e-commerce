@@ -2,6 +2,12 @@ const mongoose = require('mongoose');
 const schema = mongoose.Schema;
 
 const returnOrderSchema = new schema({
+  number_id: {
+    type: Number,
+    unique: true,
+    sparse: true, // Allow null values for existing records
+    index: true,
+  },
   order_id: {
     type: mongoose.Types.ObjectId,
     ref: 'order',

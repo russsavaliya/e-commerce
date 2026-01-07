@@ -3,6 +3,7 @@ const order_model = require('../../model/order');
 const coupon_model = require('../../model/coupon');
 const customer_controller = require('./customer');
 const { sendOrderSuccessEmail } = require('../../helper/emailHelper');
+const { getNextSequence } = require('../../helper/sequenceHelper');
 
 const allowedPaymentMethods = ['cod', 'online'];
 
@@ -93,7 +94,11 @@ exports.init_order = async (req, res) => {
     const coupon_discount = discount_amount ? Number(discount_amount) : 0;
     const total_amount = Math.max(0, subtotal + shipping_amount + total_tax - coupon_discount);
 
+    // Get next sequence number for order
+    const number_id = await getNextSequence('order');
+
     const orderPayload = {
+      number_id,
       order_id: `ORD-${Date.now()}`,
       products: items,
       sub_total: subtotal,
