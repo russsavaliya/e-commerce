@@ -436,6 +436,9 @@ const OrderList = () => {
                 <thead className="bg-gradient-to-r from-green-50 to-emerald-50/50">
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      #
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                       Order ID
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
@@ -465,6 +468,11 @@ const OrderList = () => {
                       className="hover:bg-green-50/30 transition-all duration-200 cursor-pointer group"
                       onClick={() => navigate(`/admin/orders/${order.order_id}`)}
                     >
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-semibold text-gray-600">
+                          {order.number_id || '-'}
+                        </div>
+                      </td>
                       <td className="px-6 py-4">
                         <div className="text-sm font-semibold text-gray-900 font-mono group-hover:text-green-700 transition-colors">
                           {order.order_id || 'N/A'}

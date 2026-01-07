@@ -298,6 +298,9 @@ const ReturnOrderList = () => {
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  #
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                   Order ID
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
@@ -320,7 +323,7 @@ const ReturnOrderList = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {returnOrders.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="px-6 py-12 text-center">
+                  <td colSpan="7" className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center justify-center">
                       <RefreshCw className="w-12 h-12 text-gray-400 mb-4" />
                       <p className="text-sm font-medium text-gray-900">No return orders found</p>
@@ -333,6 +336,9 @@ const ReturnOrderList = () => {
               ) : (
                 returnOrders.map((returnOrder) => (
                   <tr key={returnOrder._id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-sm font-semibold text-gray-600">{returnOrder.number_id || '-'}</span>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="text-sm font-medium text-gray-900">{returnOrder.order_id}</span>
                     </td>

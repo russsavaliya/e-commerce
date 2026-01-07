@@ -1,6 +1,7 @@
 const shipment_model = require('../model/shipment');
 const order_model = require('../model/order');
 const axios = require('axios');
+const { getNextSequence } = require('../helper/sequenceHelper');
 
 // Shiprocket API Configuration
 const SHIPROCKET_BASE_URL = 'https://apiv2.shiprocket.in/v1/external';
@@ -159,8 +160,12 @@ const createShipmentForOrder = async (orderId, shipmentData = {}) => {
   // Create order in Shiprocket
   const shiprocketData = await createShiprocketOrder(order, finalShipmentData);
 
+  // Get next sequence number for shipment
+  const number_id = await getNextSequence('shipment');
+
   // Create shipment record in database
   const shipment = new shipment_model({
+    number_id,
     order_id: order._id,
     shiprocket_order_id: shiprocketData.shiprocket_order_id,
     shipment_id: shiprocketData.shipment_id,

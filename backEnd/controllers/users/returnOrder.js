@@ -3,6 +3,7 @@ const returnOrder_model = require('../../model/returnOrder');
 const shipment_model = require('../../model/shipment');
 const { send_email, send_html_email } = require('../../helper/mailer');
 const { generateOTP, storeOTP, verifyOTP } = require('../../helper/otpHelper');
+const { getNextSequence } = require('../../helper/sequenceHelper');
 
 /**
  * Send OTP for return order verification
@@ -277,9 +278,13 @@ exports.create_return = async (req, res) => {
       }
     }
 
+    // Get next sequence number for return order
+    const number_id = await getNextSequence('returnOrder');
+
     // Create return order
     // Use product data as received from frontend (already in correct format)
     const returnOrder = await returnOrder_model.create({
+      number_id,
       order_id: order._id,
       products: products.map((p) => ({
         product_id: p.product_id,

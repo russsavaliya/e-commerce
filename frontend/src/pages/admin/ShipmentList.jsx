@@ -470,6 +470,9 @@ const ShipmentList = () => {
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      #
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       Shipment ID
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
@@ -501,6 +504,11 @@ const ShipmentList = () => {
                       key={shipment._id}
                       className="hover:bg-gray-50 transition-colors"
                     >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-semibold text-gray-600">
+                          {shipment.number_id || '-'}
+                        </div>
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div 
                           className="text-sm font-medium text-indigo-600 hover:text-indigo-800 cursor-pointer"
