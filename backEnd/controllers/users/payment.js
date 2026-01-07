@@ -6,8 +6,12 @@
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const order_model = require('../../model/order');
+const draftOrder_model = require('../../model/draftOrder');
 const coupon_model = require('../../model/coupon');
+const customer_controller = require('./customer');
 const { sendOrderSuccessEmail } = require('../../helper/emailHelper');
+const { getNextSequence } = require('../../helper/sequenceHelper');
+const product_model = require('../../model/product');
 
 // Initialize Razorpay instance
 const razorpay = new Razorpay({
@@ -16,18 +20,108 @@ const razorpay = new Razorpay({
 });
 
 /**
+ * Helper: Build cart items from DraftOrder cart_items
+ */
+const buildCartItems = async (cart = []) => {
+  const items = [];
+  let subtotal = 0;
+
+  for (const item of cart) {
+    const product = await product_model.findById(item.productId).select('name selling_price original_price discount_percentage variants images category');
+    if (!product) {
+      throw new Error('One of the products in your cart is no longer available.');
+    }
+
+    let price = product.selling_price;
+    let variantName = null;
+    let image = product.images?.[0] || null;
+    const categoryId = product.category || null;
+
+    if (item.variantId) {
+      const variant = product.variants?.find(v => v._id.toString() == item.variantId.toString());
+      if (!variant) {
+        throw new Error('A selected variant is no longer available.');
+      }
+      price = variant.variant_price || price;
+      variantName = variant.variant_name || variantName;
+      if (variant.variant_image) {
+        image = variant.variant_image;
+      }
+    }
+
+    const lineTotal = price * item.quantity;
+    subtotal += lineTotal;
+
+    items.push({
+      product_id: item.productId,
+      category_id: categoryId,
+      variant_id: item.variantId || null,
+      product_name: product.name,
+      variant_name: variantName,
+      unit_price: price,
+      quantity: item.quantity,
+      total: lineTotal,
+      image,
+    });
+  }
+
+  return { items, subtotal };
+};
+
+/**
+ * Helper: Create Order from DraftOrder
+ */
+const createOrderFromDraftOrder = async (draftOrder, paymentMethod, paymentStatus, orderStatus, razorpayOrderId = null, razorpayPaymentId = null) => {
+  // Build cart items from DraftOrder
+  const cart = draftOrder.cart_items || [];
+  const { items, subtotal } = await buildCartItems(cart);
+
+  // Get next sequence number for order
+  const number_id = await getNextSequence('order');
+
+  // Create Order
+  const orderPayload = {
+    number_id,
+    order_id: `ORD-${Date.now()}`,
+    products: items,
+    sub_total: draftOrder.sub_total || subtotal,
+    shipping_amount: draftOrder.shipping_amount || 0,
+    total_tax: draftOrder.total_tax || 0,
+    total_amount: draftOrder.total_amount,
+    payment_method: paymentMethod,
+    payment_status: paymentStatus,
+    order_status: orderStatus,
+    shipping_address: draftOrder.shipping_address,
+    coupon: draftOrder.coupon || null,
+    razorpay_order_id: razorpayOrderId,
+    razorpay_payment_id: razorpayPaymentId,
+    paid_at: paymentStatus === 'paid' ? new Date() : null,
+  };
+
+  const order = await order_model.create(orderPayload);
+
+  // Create/Update customer and attach order_id
+  await customer_controller.upsert_from_shipping(order.shipping_address, order.order_id);
+
+  // Delete DraftOrder after successful Order creation
+  await draftOrder_model.findByIdAndDelete(draftOrder._id);
+
+  return order;
+};
+
+/**
  * Create Razorpay Order
- * This creates an order in Razorpay and returns order details for frontend
+ * This creates an order in Razorpay from DraftOrder and returns order details for frontend
  */
 exports.create_razorpay_order = async (req, res) => {
   try {
-    const { orderId } = req.params;
-    const { amount, currency = 'INR' } = req.body;
+    const { draftOrderId } = req.body || {};
+    const { amount, currency = 'INR' } = req.body || {};
 
-    if (!orderId) {
+    if (!draftOrderId) {
       return res.status(400).json({
         status: false,
-        message: 'Order ID is required',
+        message: 'Draft Order ID is required',
       });
     }
 
@@ -38,22 +132,27 @@ exports.create_razorpay_order = async (req, res) => {
       });
     }
 
-    // Verify order exists in database
-    const order = await order_model.findOne({ order_id: orderId });
-    if (!order) {
+    // Verify DraftOrder exists in database
+    const draftOrder = await draftOrder_model.findById(draftOrderId);
+    if (!draftOrder) {
       return res.status(404).json({
         status: false,
-        message: 'Order not found',
+        message: 'Draft order not found',
       });
     }
 
-    // Check if order is already paid
-    if (order.payment_status === 'paid') {
+    // Check if DraftOrder is already converted
+    if (draftOrder.status === 'converted') {
       return res.status(400).json({
         status: false,
-        message: 'Order is already paid',
+        message: 'This draft order has already been converted to an order.',
       });
     }
+
+    // Update DraftOrder step to 'payment'
+    await draftOrder_model.findByIdAndUpdate(draftOrderId, {
+      $set: { step: 'payment' },
+    });
 
     // Convert amount to paise (Razorpay expects amount in smallest currency unit)
     const amountInPaise = Math.round(amount * 100);
@@ -62,23 +161,12 @@ exports.create_razorpay_order = async (req, res) => {
     const razorpayOrder = await razorpay.orders.create({
       amount: amountInPaise,
       currency: currency,
-      receipt: orderId,
+      receipt: draftOrderId.toString(),
       notes: {
-        order_id: orderId,
-        customer_email: order.shipping_address?.email || '',
+        draft_order_id: draftOrderId.toString(),
+        customer_email: draftOrder.shipping_address?.email || '',
       },
     });
-
-    // Update order with Razorpay order ID
-    await order_model.findOneAndUpdate(
-      { order_id: orderId },
-      {
-        $set: {
-          razorpay_order_id: razorpayOrder.id,
-          payment_method: 'online',
-        },
-      }
-    );
 
     return res.status(200).json({
       status: true,
@@ -88,7 +176,7 @@ exports.create_razorpay_order = async (req, res) => {
         amount: razorpayOrder.amount,
         currency: razorpayOrder.currency,
         key_id: process.env.RAZORPAY_KEY_ID,
-        orderId: orderId, // Our internal order ID
+        draft_order_id: draftOrderId, // Our internal draft order ID
       },
     });
   } catch (error) {
@@ -102,26 +190,34 @@ exports.create_razorpay_order = async (req, res) => {
 
 /**
  * Verify Razorpay Payment
- * This verifies the payment signature and updates order status
+ * This verifies the payment signature, creates Order from DraftOrder, and deletes DraftOrder
  */
 exports.verify_payment = async (req, res) => {
   try {
-    const { orderId } = req.params;
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+    const { draftOrderId } = req.body || {};
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body || {};
 
-    if (!orderId || !razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+    if (!draftOrderId || !razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return res.status(400).json({
         status: false,
         message: 'Missing required payment verification data',
       });
     }
 
-    // Find order in database
-    const order = await order_model.findOne({ order_id: orderId });
-    if (!order) {
+    // Find DraftOrder in database
+    const draftOrder = await draftOrder_model.findById(draftOrderId);
+    if (!draftOrder) {
       return res.status(404).json({
         status: false,
-        message: 'Order not found',
+        message: 'Draft order not found',
+      });
+    }
+
+    // Check if DraftOrder is already converted
+    if (draftOrder.status === 'converted') {
+      return res.status(400).json({
+        status: false,
+        message: 'This draft order has already been converted to an order.',
       });
     }
 
@@ -150,27 +246,24 @@ exports.verify_payment = async (req, res) => {
         });
       }
 
-      // Update order with payment details
-      const updatedOrder = await order_model.findOneAndUpdate(
-        { order_id: orderId },
-        {
-          $set: {
-            razorpay_payment_id: razorpay_payment_id,
-            razorpay_order_id: razorpay_order_id,
-            payment_status: 'paid',
-            payment_method: 'online',
-            order_status: 'confirmed',
-            paid_at: new Date(),
-          },
-        },
-        { new: true }
-      ).populate('coupon.coupon_id');
+      // Create Order from DraftOrder
+      const order = await createOrderFromDraftOrder(
+        draftOrder,
+        'online',
+        'paid',
+        'confirmed',
+        razorpay_order_id,
+        razorpay_payment_id
+      );
+
+      // Populate coupon for email
+      await order.populate('coupon.coupon_id');
 
       // Increment coupon usedCount only after successful payment
-      if (updatedOrder.coupon && updatedOrder.coupon.coupon_id) {
+      if (order.coupon && order.coupon.coupon_id) {
         try {
           await coupon_model.findByIdAndUpdate(
-            updatedOrder.coupon.coupon_id,
+            order.coupon.coupon_id,
             { $inc: { usedCount: 1 } },
             { new: true }
           );
@@ -188,7 +281,7 @@ exports.verify_payment = async (req, res) => {
       // Send order confirmation emails (customer + admin)
       // Note: Email sending is non-blocking - errors won't affect order creation
       try {
-        await sendOrderSuccessEmail(updatedOrder.toObject());
+        await sendOrderSuccessEmail(order.toObject());
       } catch (err) {
         console.error('Failed to send order confirmation emails:', err);
         // Don't throw - order is already created successfully
@@ -198,9 +291,9 @@ exports.verify_payment = async (req, res) => {
         status: true,
         message: 'Payment verified and order confirmed successfully',
         data: {
-          order_id: updatedOrder.order_id,
-          payment_status: updatedOrder.payment_status,
-          order_status: updatedOrder.order_status,
+          order_id: order.order_id,
+          payment_status: order.payment_status,
+          order_status: order.order_status,
           payment_id: razorpay_payment_id,
         },
       });

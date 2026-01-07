@@ -46,12 +46,12 @@ router.get('/checkout/pincode/validate', user_checkout_controller.validate_pinco
 
 // Order routes
 router.post('/orders/init', user_order_controller.init_order);
-router.patch('/orders/:orderId/payment', user_order_controller.update_payment);
+router.patch('/orders/payment', user_order_controller.update_payment);
 router.get('/orders/track', user_order_controller.track_order);
 
 // Payment routes (Razorpay)
-router.post('/payments/razorpay/create/:orderId', user_payment_controller.create_razorpay_order);
-router.post('/payments/razorpay/verify/:orderId', user_payment_controller.verify_payment);
+router.post('/payments/razorpay/create', user_payment_controller.create_razorpay_order);
+router.post('/payments/razorpay/verify', user_payment_controller.verify_payment);
 router.get('/payments/status/:orderId', user_payment_controller.get_payment_status);
 
 // Support / contact routes

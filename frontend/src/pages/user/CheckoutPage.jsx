@@ -37,7 +37,7 @@ const CheckoutPage = () => {
   const [pincodeValidationTimeout, setPincodeValidationTimeout] = useState(null);
   const [currentStep, setCurrentStep] = useState('shipping'); // 'shipping' | 'payment'
   const [selectedPayment, setSelectedPayment] = useState('cod');
-  const [orderId, setOrderId] = useState(null);
+  const [draftOrderId, setDraftOrderId] = useState(null);
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [applyingCoupon, setApplyingCoupon] = useState(false);
@@ -252,8 +252,8 @@ const CheckoutPage = () => {
       return;
     }
 
-    // If order already created, just move to payment step
-    if (orderId) {
+    // If draft order already created, just move to payment step
+    if (draftOrderId) {
       setCurrentStep('payment');
       return;
     }
@@ -270,12 +270,12 @@ const CheckoutPage = () => {
       };
       const response = await initOrder(orderData);
       if (response.status) {
-        setOrderId(response.data.order_id);
+        setDraftOrderId(response.data.draft_order_id);
         toast.success('Address saved. Proceed to payment.');
         setCurrentStep('payment');
       }
     } catch (error) {
-      console.error('Error creating order:', error);
+      console.error('Error creating draft order:', error);
       toast.error(error.message || 'Failed to save address');
     } finally {
       setIsSubmitting(false);
@@ -301,8 +301,8 @@ const CheckoutPage = () => {
   }, [selectedPayment, currentStep]);
 
   const handleRazorpayPayment = async () => {
-    if (!orderId || !cart) {
-      toast.error('Order information missing');
+    if (!draftOrderId || !cart) {
+      toast.error('Draft order information missing');
       return;
     }
 
@@ -316,7 +316,7 @@ const CheckoutPage = () => {
       const totalAmount = Math.max(0, subtotal + shipping - discount);
 
       // Create Razorpay order
-      const razorpayResponse = await createRazorpayOrder(orderId, totalAmount);
+      const razorpayResponse = await createRazorpayOrder(draftOrderId, totalAmount);
 
       if (!razorpayResponse.status) {
         throw new Error(razorpayResponse.message || 'Failed to create payment order');
@@ -330,12 +330,12 @@ const CheckoutPage = () => {
         amount: data.amount,
         currency: data.currency,
         name: 'SIYARA',
-        description: `Order ${data.orderId}`,
+        description: `Draft Order ${data.draft_order_id}`,
         order_id: data.order_id,
         handler: async function (response) {
           try {
             // Verify payment on backend
-            const verifyResponse = await verifyRazorpayPayment(data.orderId, {
+            const verifyResponse = await verifyRazorpayPayment(data.draft_order_id, {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
@@ -344,13 +344,17 @@ const CheckoutPage = () => {
             if (verifyResponse.status) {
               toast.success('Payment successful!', { icon: '🎉' });
               setCart(null);
-              navigate(`/order-success/${data.orderId}`);
+              navigate(`/order-success/${verifyResponse.data.order_id}`);
             } else {
               toast.error(verifyResponse.message || 'Payment verification failed');
+              // Stop loading state if verification failed
+              setIsSubmitting(false);
             }
           } catch (error) {
             console.error('Payment verification error:', error);
             toast.error(error.message || 'Payment verification failed');
+            // Stop loading state on error
+            setIsSubmitting(false);
           }
         },
         prefill: {
@@ -433,7 +437,7 @@ const CheckoutPage = () => {
       return;
     }
 
-    if (!orderId) {
+    if (!draftOrderId) {
       toast.error('Please save address first');
       setCurrentStep('shipping');
       return;
@@ -448,7 +452,7 @@ const CheckoutPage = () => {
     // Handle COD payment
     try {
       setIsSubmitting(true);
-      const response = await updatePayment(orderId, selectedPayment);
+      const response = await updatePayment(draftOrderId, selectedPayment);
 
       if (response.status) {
         toast.success(`Order ${response.data.order_id} confirmed!`, {
