@@ -104,7 +104,7 @@ const createOrderFromDraftOrder = async (draftOrder, paymentMethod, paymentStatu
   await customer_controller.upsert_from_shipping(order.shipping_address, order.order_id);
 
   // Delete DraftOrder after successful Order creation
-  // await draftOrder_model.findByIdAndDelete(draftOrder._id);
+  await draftOrder_model.findByIdAndDelete(draftOrder._id);
 
   return order;
 };
