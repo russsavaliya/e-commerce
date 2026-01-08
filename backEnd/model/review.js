@@ -28,6 +28,11 @@ const reviewSchema = new schema(
       trim: true,
       maxlength: 1000,
     },
+    added_by: {
+      type: String,
+      enum: ['user', 'admin'],
+      default: 'user',
+    },
   },
   {
     timestamps: true,

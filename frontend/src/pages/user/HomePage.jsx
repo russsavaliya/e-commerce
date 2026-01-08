@@ -106,8 +106,8 @@ const HomePage = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-green-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading...</p>
+          <Loader2 className="w-12 h-12 animate-spin text-[rgb(72,29,111)] mx-auto mb-4" />
+          <p className="text-[rgb(72,29,111)]">Loading...</p>
         </div>
       </div>
     );

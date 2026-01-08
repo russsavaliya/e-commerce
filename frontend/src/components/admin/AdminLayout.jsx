@@ -84,33 +84,7 @@ const AdminLayout = () => {
       icon: LayoutDashboard,
       path: ROUTES.ADMIN_DASHBOARD,
     },
-    {
-      name: 'Products',
-      icon: Package,
-      path: ROUTES.ADMIN_PRODUCTS,
-      submenu: [
-        {
-          name: 'Product List',
-          icon: List,
-          path: ROUTES.ADMIN_PRODUCTS_LIST,
-        },
-        {
-          name: 'Add Product',
-          icon: Plus,
-          path: ROUTES.ADMIN_PRODUCTS_ADD,
-        },
-      ],
-    },
-    {
-      name: 'Marketing Spend',
-      icon: IndianRupee,
-      path: ROUTES.ADMIN_MARKETING_SPEND,
-    },
-    {
-      name: 'Banner Management',
-      icon: Image,
-      path: ROUTES.ADMIN_BANNERS,
-    },
+
     {
       name: 'Orders',
       icon: ShoppingBag,
@@ -137,6 +111,32 @@ const AdminLayout = () => {
           path: '/admin/draft-orders',
         },
       ],
+    }, {
+      name: 'Products',
+      icon: Package,
+      path: ROUTES.ADMIN_PRODUCTS,
+      submenu: [
+        {
+          name: 'Product List',
+          icon: List,
+          path: ROUTES.ADMIN_PRODUCTS_LIST,
+        },
+        {
+          name: 'Add Product',
+          icon: Plus,
+          path: ROUTES.ADMIN_PRODUCTS_ADD,
+        },
+      ],
+    },
+    {
+      name: 'Marketing Spend',
+      icon: IndianRupee,
+      path: ROUTES.ADMIN_MARKETING_SPEND,
+    },
+    {
+      name: 'Banner Management',
+      icon: Image,
+      path: ROUTES.ADMIN_BANNERS,
     },
     {
       name: 'Customers',
@@ -275,8 +275,8 @@ const AdminLayout = () => {
               const active = isItemActive;
 
               if (item.submenu) {
-                const isOpen = item.name === 'Settings' 
-                  ? settingsOpen 
+                const isOpen = item.name === 'Settings'
+                  ? settingsOpen
                   : item.name === 'Products'
                     ? productsOpen
                     : item.name === 'Orders'
@@ -296,7 +296,7 @@ const AdminLayout = () => {
                         ? () => setCustomersOpen(!customersOpen)
                         : item.name === 'Reviews'
                           ? () => setReviewsOpen(!reviewsOpen)
-                          : () => {};
+                          : () => { };
 
                 return (
                   <div key={item.name}>

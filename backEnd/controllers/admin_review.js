@@ -167,6 +167,7 @@ exports.add_review = async (req, res) => {
       email: email?.trim() || undefined,
       rating: numericRating,
       comment: comment?.trim() || '',
+      added_by: 'admin',
     });
 
     return res.status(201).json({
@@ -234,7 +235,7 @@ exports.update_review = async (req, res) => {
 
     const review = await review_model.findByIdAndUpdate(
       reviewId,
-      { $set: updateFields },
+      { $set: { ...updateFields, added_by: 'admin' } },
       { new: true }
     );
 

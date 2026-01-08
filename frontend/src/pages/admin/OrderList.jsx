@@ -6,26 +6,26 @@ import { getAllOrders, downloadOrders } from '../../services/admin/orderService'
 
 const getStatusColor = (status) => {
   const colors = {
-    pending: 'bg-yellow-100 text-yellow-800',
-    accepted: 'bg-blue-100 text-blue-800',
-    shipment: 'bg-indigo-100 text-indigo-800',
-    shipped: 'bg-purple-100 text-purple-800',
-    delivered: 'bg-green-100 text-green-800',
-    cancelled: 'bg-red-100 text-red-800',
-    missing: 'bg-orange-100 text-orange-800',
-    failed: 'bg-red-100 text-red-800',
+    pending: 'bg-amber-50 text-amber-700 border-amber-200',
+    confirmed: 'bg-blue-50 text-blue-700 border-blue-200',
+    accepted: 'bg-green-50 text-green-700 border-green-200',
+    shipment: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+    delivered: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    cancelled: 'bg-red-50 text-red-700 border-red-200',
+    missing: 'bg-orange-50 text-orange-700 border-orange-200',
+    failed: 'bg-rose-50 text-rose-700 border-rose-200',
   };
-  return colors[status] || 'bg-gray-100 text-gray-800';
+  return colors[status] || 'bg-gray-50 text-gray-700 border-gray-200';
 };
 
 const getPaymentStatusColor = (status) => {
   const colors = {
-    pending: 'bg-yellow-100 text-yellow-800',
-    paid: 'bg-green-100 text-green-800',
-    failed: 'bg-red-100 text-red-800',
-    refunded: 'bg-orange-100 text-orange-800',
+    pending: 'bg-amber-50 text-amber-700 border-amber-200',
+    paid: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    failed: 'bg-rose-50 text-rose-700 border-rose-200',
+    refunded: 'bg-orange-50 text-orange-700 border-orange-200',
   };
-  return colors[status] || 'bg-gray-100 text-gray-800';
+  return colors[status] || 'bg-gray-50 text-gray-700 border-gray-200';
 };
 
 const formatDate = (dateString) => {
@@ -371,9 +371,9 @@ const OrderList = () => {
               >
                 <option value="">All Order Status</option>
                 <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
                 <option value="accepted">Accepted</option>
                 <option value="shipment">Shipment</option>
-                <option value="shipped">Shipped</option>
                 <option value="delivered">Delivered</option>
                 <option value="cancelled">Cancelled</option>
                 <option value="missing">Missing</option>
@@ -457,6 +457,9 @@ const OrderList = () => {
                       Payment Status
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      Payment Method
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                       Date
                     </th>
                   </tr>
@@ -499,13 +502,24 @@ const OrderList = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.order_status)}`}>
+                        <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full border ${getStatusColor(order.order_status)}`}>
                           {order.order_status || 'N/A'}
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full ${getPaymentStatusColor(order.payment_status)}`}>
+                        <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full border ${getPaymentStatusColor(order.payment_status)}`}>
                           {order.payment_status || 'N/A'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full border ${
+                          order.payment_method?.toLowerCase() === 'cod' 
+                            ? 'bg-orange-50 text-orange-700 border-orange-200' 
+                            : order.payment_method?.toLowerCase() === 'online'
+                            ? 'bg-blue-50 text-blue-700 border-blue-200'
+                            : 'bg-gray-50 text-gray-700 border-gray-200'
+                        }`}>
+                          {order.payment_method ? (order.payment_method.toUpperCase() === 'COD' ? 'COD' : 'Online') : 'N/A'}
                         </span>
                       </td>
                       <td className="px-6 py-4">

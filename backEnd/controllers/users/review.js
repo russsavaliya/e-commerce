@@ -50,6 +50,7 @@ exports.add_review = async (req, res) => {
       email: email?.trim() || undefined,
       rating: numericRating,
       comment: comment?.trim() || '',
+      added_by: 'user',
     });
 
     return res.status(201).json({

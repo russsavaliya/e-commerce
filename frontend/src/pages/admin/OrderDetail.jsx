@@ -15,7 +15,9 @@ import {
   FileText,
   IndianRupee,
   Truck,
-  ExternalLink
+  ExternalLink,
+  MoreVertical,
+  X
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getOrderById, updateOrderStatus, updatePaymentStatus, downloadOrderPdf } from '../../services/admin/orderService';
@@ -24,26 +26,26 @@ import { API_BASE_URL } from '../../utils/constants';
 
 const getStatusColor = (status) => {
   const colors = {
-    pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    accepted: 'bg-blue-100 text-blue-800 border-blue-200',
-    shipment: 'bg-indigo-100 text-indigo-800 border-indigo-200',
-    shipped: 'bg-purple-100 text-purple-800 border-purple-200',
-    delivered: 'bg-green-100 text-green-800 border-green-200',
-    cancelled: 'bg-red-100 text-red-800 border-red-200',
-    missing: 'bg-orange-100 text-orange-800 border-orange-200',
-    failed: 'bg-red-100 text-red-800 border-red-200',
+    pending: 'bg-amber-50 text-amber-700 border-amber-200',
+    confirmed: 'bg-blue-50 text-blue-700 border-blue-200',
+    accepted: 'bg-green-50 text-green-700 border-green-200',
+    shipment: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+    delivered: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    cancelled: 'bg-red-50 text-red-700 border-red-200',
+    missing: 'bg-orange-50 text-orange-700 border-orange-200',
+    failed: 'bg-rose-50 text-rose-700 border-rose-200',
   };
-  return colors[status] || 'bg-gray-100 text-gray-800 border-gray-200';
+  return colors[status] || 'bg-gray-50 text-gray-700 border-gray-200';
 };
 
 const getPaymentStatusColor = (status) => {
   const colors = {
-    pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    paid: 'bg-green-100 text-green-800 border-green-200',
-    failed: 'bg-red-100 text-red-800 border-red-200',
-    refunded: 'bg-orange-100 text-orange-800 border-orange-200',
+    pending: 'bg-amber-50 text-amber-700 border-amber-200',
+    paid: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    failed: 'bg-rose-50 text-rose-700 border-rose-200',
+    refunded: 'bg-orange-50 text-orange-700 border-orange-200',
   };
-  return colors[status] || 'bg-gray-100 text-gray-800 border-gray-200';
+  return colors[status] || 'bg-gray-50 text-gray-700 border-gray-200';
 };
 
 const formatDate = (dateString) => {
@@ -81,6 +83,8 @@ const OrderDetail = () => {
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [shipment, setShipment] = useState(null);
   const [loadingShipment, setLoadingShipment] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchOrderDetail = async () => {
@@ -117,7 +121,7 @@ const OrderDetail = () => {
 
       if (response.status) {
         setOrder(prev => ({ ...prev, order_status: newStatus }));
-       
+
         // Show success message (handle warning if shipment creation failed)
         if (response.warning) {
           toast.success(`Order status updated to ${newStatus}`, {
@@ -138,7 +142,7 @@ const OrderDetail = () => {
 
   const fetchShipmentDetails = async () => {
     if (!orderId) return;
-    
+
     try {
       setLoadingShipment(true);
       const response = await getShipmentByOrder(orderId);
@@ -250,25 +254,63 @@ const OrderDetail = () => {
           <ChevronLeft className="w-4 h-4" /> Back to Orders List
         </button>
 
-        {/* Download PDF button (page header right side) */}
-        <button
-          type="button"
-          onClick={handleDownloadPdf}
-          disabled={downloadingPdf}
-          className="inline-flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-full border border-gray-300 bg-white text-gray-800 hover:bg-gray-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-        >
-          {downloadingPdf ? (
-            <>
-              <Loader2 className="w-3 h-3 animate-spin" />
-              Generating PDF...
-            </>
-          ) : (
-            <>
-              <FileText className="w-3 h-3" />
-              Download PDF
-            </>
-          )}
-        </button>
+        {/* Download PDF and Menu */}
+        <div className="flex items-center gap-2">
+          {/* Download PDF button */}
+          <button
+            type="button"
+            onClick={handleDownloadPdf}
+            disabled={downloadingPdf}
+            className="inline-flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-full border border-gray-300 bg-white text-gray-800 hover:bg-gray-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {downloadingPdf ? (
+              <>
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Generating PDF...
+              </>
+            ) : (
+              <>
+                <FileText className="w-3 h-3" />
+                Download PDF
+              </>
+            )}
+          </button>
+
+          {/* 3-dot Menu */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="inline-flex items-center justify-center w-8 h-8 rounded-full border border-gray-300 bg-white text-gray-800 hover:bg-gray-100 transition-colors"
+            >
+              <MoreVertical className="w-4 h-4" />
+            </button>
+
+            {/* Dropdown Menu */}
+            {menuOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setMenuOpen(false)}
+                />
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-20">
+                  <div className="py-1">
+                    <button
+                      onClick={() => {
+                        setPaymentModalOpen(true);
+                        setMenuOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
+                    >
+                      <CreditCard className="w-4 h-4 text-[rgb(72,29,111)]" />
+                      Manage Payment
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Order Header Card */}
@@ -295,31 +337,6 @@ const OrderDetail = () => {
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              {/* Manage Payment Status Dropdown - pill style */}
-              <div className="bg-blue-50 rounded-full border border-blue-300 shadow-sm hover:shadow-md transition-all relative">
-                <select
-                  defaultValue=""
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      handlePaymentStatusChange(e.target.value);
-                      e.target.value = '';
-                    }
-                  }}
-                  disabled={updatingPaymentStatus}
-                  className="appearance-none pl-4 pr-9 py-2 text-sm font-semibold text-blue-900 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-400 rounded-full cursor-pointer w-full"
-                >
-                  <option value="" disabled>
-                    Manage Payment
-                  </option>
-                  {getPaymentStatusOptions().map((status) => (
-                    <option key={status} value={status}>
-                      {status.charAt(0).toUpperCase() + status.slice(1)}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="w-4 h-4 text-blue-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
-
               {/* Manage Status Dropdown - pill style */}
               <div className="bg-amber-50 rounded-full border border-amber-300 shadow-sm hover:shadow-md transition-all relative">
                 <select
@@ -595,6 +612,54 @@ const OrderDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* Payment Status Modal */}
+      {paymentModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">Manage Payment Status</h3>
+              <button
+                onClick={() => setPaymentModalOpen(false)}
+                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            <div className="p-4">
+              <div className="space-y-2">
+                {getPaymentStatusOptions().map((status) => (
+                  <button
+                    key={status}
+                    onClick={() => {
+                      handlePaymentStatusChange(status);
+                      setPaymentModalOpen(false);
+                    }}
+                    disabled={updatingPaymentStatus || order.payment_status === status}
+                    className={`w-full text-left px-4 py-3 rounded-lg border transition-colors ${order.payment_status === status
+                      ? 'bg-blue-50 border-blue-300 text-blue-900 cursor-not-allowed'
+                      : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                      } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium capitalize">{status}</span>
+                      {order.payment_status === status && (
+                        <span className="text-xs text-blue-600 font-semibold">Current</span>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+              {updatingPaymentStatus && (
+                <div className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-600">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Updating payment status...
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
