@@ -621,19 +621,18 @@ const CheckoutPage = () => {
                           const discountText = coupon.discountType === 'percentage'
                             ? `${coupon.discountValue}% OFF`
                             : `₹${coupon.discountValue} OFF`;
-                          
-                          const isCompatibleWithSelected = selectedPayment === 'cod' 
-                            ? coupon.applicableToCOD 
+
+                          const isCompatibleWithSelected = selectedPayment === 'cod'
+                            ? coupon.applicableToCOD
                             : coupon.applicableToOnline;
-                          
+
                           return (
                             <div
                               key={coupon._id}
-                              className={`p-4 border-2 rounded-lg transition-all ${
-                                isCompatibleWithSelected
+                              className={`p-4 border-2 rounded-lg transition-all ${isCompatibleWithSelected
                                   ? 'border-green-300 bg-green-50/30 hover:border-green-400'
                                   : 'border-gray-200 bg-gray-50/50 hover:border-gray-300 opacity-75'
-                              }`}
+                                }`}
                             >
                               <div className="flex items-start justify-between gap-3">
                                 <div className="flex-1">
@@ -643,20 +642,18 @@ const CheckoutPage = () => {
                                     <span className="font-bold text-gray-900 text-base">{coupon.code}</span>
                                     {/* Payment Method Badges - Next to coupon name */}
                                     {coupon.applicableToCOD && (
-                                      <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
-                                        selectedPayment === 'cod' && isCompatibleWithSelected
+                                      <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${selectedPayment === 'cod' && isCompatibleWithSelected
                                           ? 'bg-blue-100 text-blue-700 border border-blue-300'
                                           : 'bg-gray-100 text-gray-600 border border-gray-300'
-                                      }`}>
+                                        }`}>
                                         💵 COD
                                       </span>
                                     )}
                                     {coupon.applicableToOnline && (
-                                      <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
-                                        selectedPayment === 'online' && isCompatibleWithSelected
+                                      <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${selectedPayment === 'online' && isCompatibleWithSelected
                                           ? 'bg-purple-100 text-purple-700 border border-purple-300'
                                           : 'bg-gray-100 text-gray-600 border border-gray-300'
-                                      }`}>
+                                        }`}>
                                         💳 Online
                                       </span>
                                     )}
@@ -664,34 +661,33 @@ const CheckoutPage = () => {
                                       {discountText}
                                     </span>
                                   </div>
-                                  
+
                                   {/* Description */}
                                   {coupon.description && (
                                     <p className="text-sm text-gray-700 mb-2">{coupon.description}</p>
                                   )}
-                                  
+
                                   {/* Min Order Value */}
                                   <p className="text-xs text-gray-500">
                                     Minimum order: ₹{coupon.minOrderValue.toLocaleString('en-IN')}
                                   </p>
                                 </div>
-                                
+
                                 {/* Copy Button */}
                                 <button
                                   onClick={() => {
                                     navigator.clipboard.writeText(coupon.code);
                                     toast.success(`Coupon code "${coupon.code}" copied!`);
                                   }}
-                                  className={`px-4 py-2 text-xs font-semibold rounded-lg transition-colors flex-shrink-0 ${
-                                    isCompatibleWithSelected
+                                  className={`px-4 py-2 text-xs font-semibold rounded-lg transition-colors flex-shrink-0 ${isCompatibleWithSelected
                                       ? 'bg-green-600 text-white hover:bg-green-700'
                                       : 'bg-gray-300 text-gray-600 hover:bg-gray-400'
-                                  }`}
+                                    }`}
                                 >
                                   Copy
                                 </button>
                               </div>
-                              
+
                               {/* Compatibility Notice */}
                               {!isCompatibleWithSelected && (
                                 <div className="mt-2 pt-2 border-t border-gray-200">

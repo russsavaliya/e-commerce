@@ -128,7 +128,7 @@ const HomePage = () => {
             minHeight: '280px', // Minimum for mobile (approx 600px width * 7/15)
             // No maxHeight to allow full image display on all screen sizes
             // Fallback for older browsers
-            height: 'calc((100vw - 0px) * 7 / 15)',
+            // height: 'calc((100vw - 0px) * 7 / 15)',
           }}
         >
           {/* Banner Images Container - Full width and height */}
@@ -226,6 +226,7 @@ const HomePage = () => {
             {/* Section heading (small, elegant) */}
             <div className="mb-8 text-center">
               <h2 className="text-xs tracking-[0.35em] text-[rgb(72,29,111)] uppercase animate-fade-in">
+                {/* <h2 className="text-sm tracking-[0.35em] text-[rgb(72,29,111)] uppercase animate-fade-in" style={{ fontFamily: '"GeorgiaBallpark Serif", serif' }}> */}
                 Where Tradition Meets Elegance
               </h2>
             </div>
@@ -262,7 +263,8 @@ const HomePage = () => {
             </div>
           </div>
         </section>
-      )}
+      )
+      }
 
       {/* Featured Products Section - Bestsellers */}
       <ProductSection
@@ -277,43 +279,45 @@ const HomePage = () => {
       {/* Hero Section with Interactive Image Gallery */}
       {/* <HeroSection /> */}
       {/* Middle Banner Section */}
-      {middleBanners.length > 0 && (
-        // Slightly smaller vertical padding so gap with Trending section is tighter
-        <section className="w-full pt-10 pb-8 px-4 md:px-8 animate-fade-in-up">
-          <div className="max-w-7xl mx-auto">
-            {middleBanners.map((banner, index) => (
-              <div
-                key={banner._id || index}
-                className="relative w-full overflow-hidden rounded-lg group cursor-pointer hover:shadow-2xl transition-all duration-500"
-                style={{
-                  animationDelay: `${index * 150}ms`,
-                  animation: 'fadeInUp 0.8s ease-out forwards'
-                }}
-              >
-                <img
-                  src={banner.image_url}
-                  alt={banner.title || 'Banner'}
-                  className="w-full h-auto object-contain group-hover:scale-105 transition-transform duration-700 ease-out"
+      {
+        middleBanners.length > 0 && (
+          // Slightly smaller vertical padding so gap with Trending section is tighter
+          <section className="w-full pt-10 pb-8 px-4 md:px-8 animate-fade-in-up">
+            <div className="max-w-7xl mx-auto">
+              {middleBanners.map((banner, index) => (
+                <div
+                  key={banner._id || index}
+                  className="relative w-full overflow-hidden rounded-lg group cursor-pointer hover:shadow-2xl transition-all duration-500"
                   style={{
-                    display: 'block',
-                    maxHeight: '600px'
+                    animationDelay: `${index * 150}ms`,
+                    animation: 'fadeInUp 0.8s ease-out forwards'
                   }}
-                  onError={(e) => {
-                    e.target.src = 'https://via.placeholder.com/1200x675?text=Banner';
-                  }}
-                />
-                {banner.title && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-all duration-500">
-                    <h3 className="text-2xl md:text-3xl font-bold text-white text-center px-4 transform group-hover:scale-110 transition-transform duration-500">
-                      {banner.title}
-                    </h3>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+                >
+                  <img
+                    src={banner.image_url}
+                    alt={banner.title || 'Banner'}
+                    className="w-full h-auto object-contain group-hover:scale-105 transition-transform duration-700 ease-out"
+                    style={{
+                      display: 'block',
+                      maxHeight: '600px'
+                    }}
+                    onError={(e) => {
+                      e.target.src = 'https://via.placeholder.com/1200x675?text=Banner';
+                    }}
+                  />
+                  {banner.title && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-all duration-500">
+                      <h3 className="text-2xl md:text-3xl font-bold text-white text-center px-4 transform group-hover:scale-110 transition-transform duration-500">
+                        {banner.title}
+                      </h3>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        )
+      }
 
       {/* Featured Products Section - Trending */}
       <ProductSection
@@ -327,66 +331,70 @@ const HomePage = () => {
       />
 
       {/* Bottom Banner Section (homepage_bottom) - Optimized for 1500×700 banner images (15:7 aspect ratio) */}
-      {bottomBanners.length > 0 && (
-        <section className="w-full pt-10 pb-6 px-0 animate-fade-in-up">
-          <div className="w-full">
-            {bottomBanners.map((banner, index) => (
-              <div
-                key={banner._id || index}
-                className="relative w-full overflow-hidden group cursor-pointer bg-transparent"
-                style={{
-                  animationDelay: `${index * 150}ms`,
-                  animation: 'fadeInUp 0.8s ease-out forwards',
-                  // 1500×700 = 15:7 aspect ratio = 2.143:1
-                  aspectRatio: '15 / 7',
-                  minHeight: '280px', // Minimum for mobile
-                  // Fallback for older browsers
-                  height: 'calc((100vw - 0px) * 7 / 15)',
-                }}
-              >
-                <img
-                  src={banner.image_url}
-                  alt={banner.title || 'Banner'}
-                  className="w-full h-full"
+      {
+        bottomBanners.length > 0 && (
+          <section className="w-full pt-10 pb-6 px-0 animate-fade-in-up">
+            <div className="w-full">
+              {bottomBanners.map((banner, index) => (
+                <div
+                  key={banner._id || index}
+                  className="relative w-full overflow-hidden group cursor-pointer bg-transparent"
                   style={{
-                    // Use 'contain' to ensure full image is visible without any cropping
-                    // Container aspect ratio (15:7) matches image (1500×700), so image will fill most of the space
-                    objectFit: 'contain',
-                    objectPosition: 'center center',
-                    width: '100%',
-                    height: '100%',
-                    display: 'block',
+                    animationDelay: `${index * 150}ms`,
+                    animation: 'fadeInUp 0.8s ease-out forwards',
+                    // 1500×700 = 15:7 aspect ratio = 2.143:1
+                    aspectRatio: '15 / 7',
+                    minHeight: '280px', // Minimum for mobile
+                    // Fallback for older browsers
+                    height: 'calc((100vw - 0px) * 7 / 15)',
                   }}
-                  onError={(e) => {
-                    e.target.src = 'https://via.placeholder.com/1500x700?text=Banner';
-                  }}
-                />
-                {banner.title && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-all duration-500 pointer-events-none">
-                    <h3 className="text-2xl md:text-3xl font-bold text-white text-center px-4 transform group-hover:scale-110 transition-transform duration-500">
-                      {banner.title}
-                    </h3>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+                >
+                  <img
+                    src={banner.image_url}
+                    alt={banner.title || 'Banner'}
+                    className="w-full h-full"
+                    style={{
+                      // Use 'contain' to ensure full image is visible without any cropping
+                      // Container aspect ratio (15:7) matches image (1500×700), so image will fill most of the space
+                      objectFit: 'contain',
+                      objectPosition: 'center center',
+                      width: '100%',
+                      height: '100%',
+                      display: 'block',
+                    }}
+                    onError={(e) => {
+                      e.target.src = 'https://via.placeholder.com/1500x700?text=Banner';
+                    }}
+                  />
+                  {banner.title && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-all duration-500 pointer-events-none">
+                      <h3 className="text-2xl md:text-3xl font-bold text-white text-center px-4 transform group-hover:scale-110 transition-transform duration-500">
+                        {banner.title}
+                      </h3>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        )
+      }
 
       {/* Empty State */}
-      {banners.length === 0 && bestsellerProducts.length === 0 && trendingProducts.length === 0 && (
-        <div className="min-h-[60vh] flex items-center justify-center px-4">
-          <div className="text-center">
-            <p className="text-2xl font-semibold text-gray-900 mb-2">Welcome</p>
-            <p className="text-gray-600">Content coming soon...</p>
+      {
+        banners.length === 0 && bestsellerProducts.length === 0 && trendingProducts.length === 0 && (
+          <div className="min-h-[60vh] flex items-center justify-center px-4">
+            <div className="text-center">
+              <p className="text-2xl font-semibold text-gray-900 mb-2">Welcome</p>
+              <p className="text-gray-600">Content coming soon...</p>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Footer */}
       <Footer />
-    </div>
+    </div >
   );
 };
 

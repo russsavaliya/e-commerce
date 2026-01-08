@@ -34,7 +34,8 @@ const ProductSection = ({
               />
             )}
             <h2
-              className={`text-base tracking-wide font-medium ${textColor} uppercase transition-all duration-300 hover:tracking-wider`}
+              className={`text-2xl md:text-3xl font-bold ${textColor} leading-tight transition-all duration-300`}
+              style={{ fontFamily: '"GeorgiaBallpark Serif", serif' }}
             >
               {title}
             </h2>

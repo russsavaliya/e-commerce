@@ -25,14 +25,14 @@ const OrderSuccessPage = () => {
       setLoading(true);
       // Get full order details (API returns full details if payment is paid OR COD order is confirmed)
       const response = await getPaymentStatus(orderId);
-      
+
       // Check if order is paid (online payment) OR confirmed COD order
       const isPaid = response.status && response.data.payment_status === 'paid';
-      const isCODConfirmed = response.status && 
-        response.data.payment_method === 'cod' && 
+      const isCODConfirmed = response.status &&
+        response.data.payment_method === 'cod' &&
         response.data.order_status === 'confirmed' &&
         response.data.sub_total !== undefined; // Full details are present
-      
+
       if (isPaid || isCODConfirmed) {
         // API now returns full order details including amounts and shipping address
         setOrderData(response.data);

@@ -376,7 +376,10 @@ const NewArrivalPage = () => {
 
           <div className="flex-1 min-w-0">
             <div className="mb-10 text-center">
-              <h1 className="text-base font-medium tracking-wide text-[#481d6f] uppercase">
+              <h1 
+                className="text-2xl md:text-3xl font-bold text-[rgb(72,29,111)] leading-tight"
+                style={{ fontFamily: '"GeorgiaBallpark Serif", serif' }}
+              >
                 Best Sellers
               </h1>
             </div>

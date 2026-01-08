@@ -418,7 +418,7 @@ const ProductDetailPage = () => {
           <div className="space-y-6">
             <div>
               <div className="flex items-start justify-between gap-3 mb-2">
-                <h1 
+                <h1
                   className="text-3xl md:text-4xl font-bold text-[rgb(72,29,111)] leading-tight flex-1"
                   style={{ fontFamily: '"GeorgiaBallpark Serif", serif' }}
                 >

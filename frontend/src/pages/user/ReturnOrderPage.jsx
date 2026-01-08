@@ -205,8 +205,8 @@ const ReturnOrderPage = () => {
     try {
       setLoading(true);
       // Prepare reason text
-      const reasonText = selectedReason === 'Other' 
-        ? otherReason.trim() 
+      const reasonText = selectedReason === 'Other'
+        ? otherReason.trim()
         : selectedReason;
 
       const res = await createReturn({
@@ -471,9 +471,8 @@ const ReturnOrderPage = () => {
                   {selectedProducts.map((item, idx) => (
                     <div
                       key={idx}
-                      className={`flex items-start gap-3 p-3 rounded-lg border ${
-                        item.selected ? 'border-[rgb(72,29,111)] bg-purple-50' : 'border-gray-200'
-                      }`}
+                      className={`flex items-start gap-3 p-3 rounded-lg border ${item.selected ? 'border-[rgb(72,29,111)] bg-purple-50' : 'border-gray-200'
+                        }`}
                     >
                       <input
                         type="checkbox"
