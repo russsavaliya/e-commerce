@@ -169,7 +169,7 @@ const ReviewList = () => {
           </div>
 
           <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <Filter className="w-4 h-4 text-gray-500 flex-shrink-0" />
               <label className="text-sm text-gray-700 font-semibold">Filters:</label>
             </div>
@@ -191,7 +191,7 @@ const ReviewList = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </div>
-            </div>
+            </div> */}
             <div className="relative z-10">
               <select
                 value={rating}
@@ -252,6 +252,9 @@ const ReviewList = () => {
                     Rating
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    Added By
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Date
                   </th>
                   <th className="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
@@ -280,6 +283,16 @@ const ReviewList = () => {
                       <div className="flex items-center">
                         {renderStars(review.rating)}
                       </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${review.added_by === 'admin'
+                          ? 'bg-blue-100 text-blue-800'
+                          : 'bg-green-100 text-green-800'
+                          }`}
+                      >
+                        {review.added_by === 'admin' ? 'Admin' : 'User'}
+                      </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
                       {formatDate(review.createdAt)}

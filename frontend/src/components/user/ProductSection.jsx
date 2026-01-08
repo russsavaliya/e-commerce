@@ -15,7 +15,8 @@ const ProductSection = ({
   products = [],
   backgroundClass = 'bg-white',
   showIfEmpty = false,
-  textColor = 'text-gray-500'
+  textColor = 'text-gray-500',
+  topPadding = 'pt-12' // Custom top padding prop
 }) => {
   // Don't render if no products and showIfEmpty is false
   if (products.length === 0 && !showIfEmpty) {
@@ -23,7 +24,7 @@ const ProductSection = ({
   }
 
   return (
-    <section className={`pt-12 pb-16 px-4 md:px-8 ${backgroundClass} animate-fade-in-up`}>
+    <section className={`${topPadding} pb-16 px-4 md:px-8 ${backgroundClass} animate-fade-in-up`}>
       <div className="max-w-7xl mx-auto">
         {/* Section Header - match "Your Shaadi Wardrobe" style */}
         <div className="mb-8 text-center animate-fade-in">

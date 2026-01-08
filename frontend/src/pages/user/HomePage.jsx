@@ -163,7 +163,7 @@ const HomePage = () => {
                   </div>
                 )}
                 {/* Overlay Gradient */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                <div className="absolute inset-0 bg-white-to-t from-black/60 via-black/20 to-transparent" />
               </div>
             ))}
           </div>
@@ -275,6 +275,7 @@ const HomePage = () => {
         products={bestsellerProducts}
         backgroundClass=""
         textColor="text-[rgb(72,29,111)]"
+        topPadding="pt-6"
       />
       {/* Hero Section with Interactive Image Gallery */}
       {/* <HeroSection /> */}
