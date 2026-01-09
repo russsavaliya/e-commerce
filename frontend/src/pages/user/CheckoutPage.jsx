@@ -334,12 +334,20 @@ const CheckoutPage = () => {
         order_id: data.order_id,
         handler: async function (response) {
           try {
-            // Verify payment on backend
-            const verifyResponse = await verifyRazorpayPayment(data.draft_order_id, {
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-            });
+            // Verify payment on backend with coupon details
+            const verifyResponse = await verifyRazorpayPayment(
+              data.draft_order_id,
+              {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              },
+              appliedCoupon ? {
+                couponId: appliedCoupon.couponId,
+                couponCode: appliedCoupon.couponCode,
+                discountAmount: appliedCoupon.discountAmount,
+              } : null
+            );
 
             if (verifyResponse.status) {
               toast.success('Payment successful!', { icon: '🎉' });
@@ -452,7 +460,15 @@ const CheckoutPage = () => {
     // Handle COD payment
     try {
       setIsSubmitting(true);
-      const response = await updatePayment(draftOrderId, selectedPayment);
+      const response = await updatePayment(
+        draftOrderId,
+        selectedPayment,
+        appliedCoupon ? {
+          couponId: appliedCoupon.couponId,
+          couponCode: appliedCoupon.couponCode,
+          discountAmount: appliedCoupon.discountAmount,
+        } : null
+      );
 
       if (response.status) {
         toast.success(`Order ${response.data.order_id} confirmed!`, {

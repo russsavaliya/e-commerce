@@ -118,6 +118,16 @@ const OrderSuccessPage = () => {
                   </span>
                 </div>
               )}
+              {orderData.coupon && orderData.coupon.discount_amount > 0 && (
+                <div className="flex justify-between items-center py-2 border-b border-[#E5E7EB]">
+                  <span className="text-[#6B7280]">
+                    Discount {orderData.coupon.coupon_code && `(${orderData.coupon.coupon_code})`}
+                  </span>
+                  <span className="font-semibold text-green-600">
+                    - ₹ {orderData.coupon.discount_amount.toLocaleString('en-IN')}
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between items-center py-2">
                 <span className="text-lg font-semibold text-[rgb(72,29,111)]">Total</span>
                 <span className="text-lg font-bold text-[rgb(72,29,111)]">

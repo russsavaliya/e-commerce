@@ -37,12 +37,21 @@ export const initOrder = async (shippingData) => {
 };
 
 // Step 2: Save payment selection / finalize COD payment
-export const updatePayment = async (draftOrderId, payment_method) => {
+export const updatePayment = async (draftOrderId, payment_method, couponDetails = null) => {
   try {
-    const response = await userApi.patch('/users/orders/payment', {
+    const payload = {
       draftOrderId,
       payment_method,
-    });
+    };
+
+    // Add coupon details if provided
+    if (couponDetails) {
+      payload.coupon_id = couponDetails.couponId;
+      payload.coupon_code = couponDetails.couponCode;
+      payload.discount_amount = couponDetails.discountAmount;
+    }
+
+    const response = await userApi.patch('/users/orders/payment', payload);
     return response.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -63,12 +72,21 @@ export const createRazorpayOrder = async (draftOrderId, amount) => {
   }
 };
 
-export const verifyRazorpayPayment = async (draftOrderId, paymentData) => {
+export const verifyRazorpayPayment = async (draftOrderId, paymentData, couponDetails = null) => {
   try {
-    const response = await userApi.post('/users/payments/razorpay/verify', {
+    const payload = {
       draftOrderId,
       ...paymentData,
-    });
+    };
+
+    // Add coupon details if provided
+    if (couponDetails) {
+      payload.coupon_id = couponDetails.couponId;
+      payload.coupon_code = couponDetails.couponCode;
+      payload.discount_amount = couponDetails.discountAmount;
+    }
+
+    const response = await userApi.post('/users/payments/razorpay/verify', payload);
     return response.data;
   } catch (error) {
     throw error.response?.data || error;

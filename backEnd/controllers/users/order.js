@@ -6,6 +6,63 @@ const customer_controller = require('./customer');
 const { sendOrderSuccessEmail } = require('../../helper/emailHelper');
 const { getNextSequence } = require('../../helper/sequenceHelper');
 
+/**
+ * Helper: Decrement product and variant quantities after order creation
+ */
+const decrementProductQuantities = async (orderProducts) => {
+  try {
+    console.log("orderProducts==>", orderProducts);
+    for (const orderProduct of orderProducts) {
+      const productId = orderProduct.product_id;
+      const variantId = orderProduct.variant_id;
+      const quantity = orderProduct.quantity;
+
+      // Find the product
+      const product = await product_model.findById(productId);
+      if (!product) {
+        console.error(`Product not found: ${productId}`);
+        continue;
+      }
+
+      // If variant_id exists, decrement both base product and variant quantities
+      if (variantId) {
+        // Decrement base product quantity
+        await product_model.findByIdAndUpdate(
+          productId,
+          { $inc: { quantity: -quantity } },
+          { new: true }
+        );
+
+        // Find and decrement variant quantity
+        const variantIndex = product.variants.findIndex(
+          v => v._id.toString() === variantId.toString()
+        );
+
+        if (variantIndex !== -1) {
+          const updateField = `variants.${variantIndex}.quantity`;
+          await product_model.findByIdAndUpdate(
+            productId,
+            { $inc: { [updateField]: -quantity } },
+            { new: true }
+          );
+        } else {
+          console.error(`Variant not found: ${variantId} in product ${productId}`);
+        }
+      } else {
+        // If no variant_id, only decrement base product quantity
+        await product_model.findByIdAndUpdate(
+          productId,
+          { $inc: { quantity: -quantity } },
+          { new: true }
+        );
+      }
+    }
+  } catch (error) {
+    console.error('Error decrementing product quantities:', error);
+    // Don't throw - order is already created, just log the error
+  }
+};
+
 const allowedPaymentMethods = ['cod', 'online'];
 
 const buildCartItems = async (cart = []) => {
@@ -164,8 +221,13 @@ exports.init_order = async (req, res) => {
 /**
  * Helper: Create Order from DraftOrder
  * This is used by both COD and Online Payment flows
+ * @param {Object} draftOrder - The draft order object
+ * @param {String} paymentMethod - Payment method ('cod' or 'online')
+ * @param {String} paymentStatus - Payment status ('pending' or 'paid')
+ * @param {String} orderStatus - Order status
+ * @param {Object} couponDetails - Coupon details { coupon_id, coupon_code, discount_amount }
  */
-const createOrderFromDraftOrder = async (draftOrder, paymentMethod, paymentStatus, orderStatus) => {
+const createOrderFromDraftOrder = async (draftOrder, paymentMethod, paymentStatus, orderStatus, couponDetails = null) => {
   // Build cart items from DraftOrder
   const cart = draftOrder.cart_items || [];
   const { items, subtotal } = await buildCartItems(
@@ -179,23 +241,40 @@ const createOrderFromDraftOrder = async (draftOrder, paymentMethod, paymentStatu
   // Get next sequence number for order
   const number_id = await getNextSequence('order');
 
+  // Calculate amounts with coupon discount
+  const sub_total = draftOrder.sub_total || subtotal;
+  const shipping_amount = draftOrder.shipping_amount || 0;
+  const total_tax = draftOrder.total_tax || 0;
+  const discount_amount = couponDetails?.discount_amount ? Number(couponDetails.discount_amount) : 0;
+  const total_amount = Math.max(0, sub_total + shipping_amount + total_tax - discount_amount);
+
+  // Prepare coupon object for Order model
+  const coupon = couponDetails && couponDetails.coupon_id ? {
+    coupon_id: couponDetails.coupon_id,
+    coupon_code: couponDetails.coupon_code || null,
+    discount_amount: discount_amount,
+  } : null;
+
   // Create Order
   const orderPayload = {
     number_id,
     order_id: `ORD-${Date.now()}`,
     products: items,
-    sub_total: draftOrder.sub_total || subtotal,
-    shipping_amount: draftOrder.shipping_amount || 0,
-    total_tax: draftOrder.total_tax || 0,
-    total_amount: draftOrder.total_amount,
+    sub_total: sub_total,
+    shipping_amount: shipping_amount,
+    total_tax: total_tax,
+    total_amount: total_amount, // This includes the discount
     payment_method: paymentMethod,
     payment_status: paymentStatus,
     order_status: orderStatus,
     shipping_address: draftOrder.shipping_address,
-    coupon: draftOrder.coupon || null,
+    coupon: coupon,
   };
 
   const order = await order_model.create(orderPayload);
+
+  // Decrement product and variant quantities
+  await decrementProductQuantities(order.products);
 
   // Create/Update customer and attach order_id
   await customer_controller.upsert_from_shipping(order.shipping_address, order.order_id);
@@ -214,6 +293,7 @@ exports.update_payment = async (req, res) => {
   try {
     const { draftOrderId } = req.body || {};
     const { payment_method = 'cod' } = req.body || {};
+    const { coupon_id, coupon_code, discount_amount } = req.body || {};
 
     if (!draftOrderId) {
       return res.status(400).json({
@@ -246,12 +326,20 @@ exports.update_payment = async (req, res) => {
       });
     }
 
-    // Create Order from DraftOrder
+    // Prepare coupon details if provided
+    const couponDetails = coupon_id ? {
+      coupon_id: coupon_id,
+      coupon_code: coupon_code || null,
+      discount_amount: discount_amount ? Number(discount_amount) : 0,
+    } : null;
+
+    // Create Order from DraftOrder with coupon details
     const order = await createOrderFromDraftOrder(
       draftOrder,
       payment_method,
       'pending',
-      'confirmed'
+      'confirmed',
+      couponDetails
     );
 
     // Populate coupon for email

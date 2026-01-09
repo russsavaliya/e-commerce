@@ -110,6 +110,9 @@ const sendOrderSuccessEmailToCustomer = async (orderData) => {
             TAX_ROW: (orderData.total_tax && orderData.total_tax > 0)
                 ? `<tr><td style="color: #6b7280; font-size: 14px;">Tax</td><td align="right" style="color: #374151; font-size: 14px; font-weight: 600;">₹ ${formatCurrency(orderData.total_tax)}</td></tr>`
                 : '',
+            COUPON_ROW: (orderData.coupon && orderData.coupon.discount_amount && orderData.coupon.discount_amount > 0)
+                ? `<tr><td style="color: #6b7280; font-size: 14px;">Discount${orderData.coupon.coupon_code ? ` (${orderData.coupon.coupon_code})` : ''}</td><td align="right" style="color: #10b981; font-size: 14px; font-weight: 600;">- ₹ ${formatCurrency(orderData.coupon.discount_amount)}</td></tr>`
+                : '',
             TOTAL: formatCurrency(orderData.total_amount || 0),
             PAYMENT_METHOD: getPaymentMethodName(orderData.payment_method),
             PAYMENT_STATUS_ROW: orderData.payment_method === 'online'
@@ -174,6 +177,9 @@ const sendOrderNotificationEmailToAdmin = async (orderData) => {
                 : '<tr><td style="color: #6b7280; font-size: 14px;">Shipping</td><td align="right" style="color: #10b981; font-size: 14px; font-weight: 600;">Free</td></tr>',
             TAX_ROW: (orderData.total_tax && orderData.total_tax > 0)
                 ? `<tr><td style="color: #6b7280; font-size: 14px;">Tax</td><td align="right" style="color: #374151; font-size: 14px; font-weight: 600;">₹ ${formatCurrency(orderData.total_tax)}</td></tr>`
+                : '',
+            COUPON_ROW: (orderData.coupon && orderData.coupon.discount_amount && orderData.coupon.discount_amount > 0)
+                ? `<tr><td style="color: #6b7280; font-size: 14px;">Discount${orderData.coupon.coupon_code ? ` (${orderData.coupon.coupon_code})` : ''}</td><td align="right" style="color: #10b981; font-size: 14px; font-weight: 600;">- ₹ ${formatCurrency(orderData.coupon.discount_amount)}</td></tr>`
                 : '',
             TOTAL: formatCurrency(orderData.total_amount || 0),
             PAYMENT_METHOD: getPaymentMethodName(orderData.payment_method),

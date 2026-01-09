@@ -451,6 +451,16 @@ const OrderDetail = () => {
                     <span className="text-gray-600">Tax</span>
                     <span className="font-semibold text-gray-900">₹{order.total_tax?.toLocaleString('en-IN') || 0}</span>
                   </div>
+                  {order.coupon && order.coupon.discount_amount > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">
+                        Discount{order.coupon.coupon_code && ` (${order.coupon.coupon_code})`}
+                      </span>
+                      <span className="font-semibold text-green-600">
+                        - ₹{order.coupon.discount_amount.toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                  )}
                   <div className="border-t-2 border-gray-200 pt-3 mt-3">
                     <div className="flex justify-between items-center">
                       <span className="font-bold text-gray-900">Total</span>
