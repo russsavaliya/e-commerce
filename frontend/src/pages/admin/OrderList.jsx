@@ -1,42 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ShoppingBag, Loader2, Search, ChevronLeft, ChevronRight, Filter, Download, ChevronDown } from 'lucide-react';
+import { ShoppingBag, Loader2, Search, Download, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { getAllOrders, downloadOrders } from '../../services/admin/orderService';
-
-const getStatusColor = (status) => {
-  const colors = {
-    pending: 'bg-amber-50 text-amber-700 border-amber-200',
-    confirmed: 'bg-blue-50 text-blue-700 border-blue-200',
-    accepted: 'bg-green-50 text-green-700 border-green-200',
-    shipment: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-    delivered: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    cancelled: 'bg-red-50 text-red-700 border-red-200',
-    missing: 'bg-orange-50 text-orange-700 border-orange-200',
-    failed: 'bg-rose-50 text-rose-700 border-rose-200',
-  };
-  return colors[status] || 'bg-gray-50 text-gray-700 border-gray-200';
-};
-
-const getPaymentStatusColor = (status) => {
-  const colors = {
-    pending: 'bg-amber-50 text-amber-700 border-amber-200',
-    paid: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    failed: 'bg-rose-50 text-rose-700 border-rose-200',
-    refunded: 'bg-orange-50 text-orange-700 border-orange-200',
-  };
-  return colors[status] || 'bg-gray-50 text-gray-700 border-gray-200';
-};
-
-const formatDate = (dateString) => {
-  if (!dateString) return 'N/A';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
-};
+import { useDebounce } from '../../hooks/useDebounce';
+import { useClickOutside } from '../../hooks/useClickOutside';
+import { getStatusColor, formatDate } from '../../utils/orderConstants';
+import OrderFilters from '../../components/admin/OrderFilters';
+import Pagination from '../../components/admin/Pagination';
 
 const OrderList = () => {
   const navigate = useNavigate();
@@ -53,174 +24,52 @@ const OrderList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [orderStatusFilter, setOrderStatusFilter] = useState('');
   const [paymentStatusFilter, setPaymentStatusFilter] = useState('');
+  
+  // Download states
+  const [isDownloadOpen, setIsDownloadOpen] = useState(false);
+  const [downloadingFormat, setDownloadingFormat] = useState(null);
 
   // Refs
-  const searchTimeoutRef = useRef(null);
   const isMounted = useRef(true);
-  const downloadMenuRef = useRef(null);
-  const hasInitialized = useRef(false);
-  const prevSearchTerm = useRef(searchTerm);
-  const prevOrderStatusFilter = useRef(orderStatusFilter);
-  const prevPaymentStatusFilter = useRef(paymentStatusFilter);
-  const isFilterChanging = useRef(false);
-  const isInitialPaginationUpdate = useRef(false);
-  const [isDownloadOpen, setIsDownloadOpen] = useState(false);
-  const [downloadingFormat, setDownloadingFormat] = useState(null); // 'csv' | 'pdf' | null
+  const downloadMenuRef = useClickOutside(() => setIsDownloadOpen(false));
 
-  // Main data fetching effect
-  useEffect(() => {
-    isMounted.current = true;
-    return () => {
-      isMounted.current = false;
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
-    };
-  }, []);
+  // Debounce search term
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
-  // Close download dropdown on click outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        downloadMenuRef.current &&
-        !downloadMenuRef.current.contains(event.target)
-      ) {
-        setIsDownloadOpen(false);
-      }
-    };
-
-    if (isDownloadOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    } else {
-      document.removeEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isDownloadOpen]);
-
-  // Initial fetch on mount only
-  useEffect(() => {
-    if (!hasInitialized.current) {
-      hasInitialized.current = true;
-      isInitialPaginationUpdate.current = true;
-      prevSearchTerm.current = searchTerm;
-      prevOrderStatusFilter.current = orderStatusFilter;
-      prevPaymentStatusFilter.current = paymentStatusFilter;
-      fetchOrders(1);
-    }
-  }, []);
-
-  // Fetch orders when filters change (skip initial mount)
-  useEffect(() => {
-    if (!hasInitialized.current) {
-      // Store initial values on first mount
-      prevSearchTerm.current = searchTerm;
-      prevOrderStatusFilter.current = orderStatusFilter;
-      prevPaymentStatusFilter.current = paymentStatusFilter;
-      return;
-    }
-
-    // Check if any filter actually changed
-    const searchChanged = prevSearchTerm.current !== searchTerm;
-    const orderStatusChanged = prevOrderStatusFilter.current !== orderStatusFilter;
-    const paymentStatusChanged = prevPaymentStatusFilter.current !== paymentStatusFilter;
-
-    if (!searchChanged && !orderStatusChanged && !paymentStatusChanged) {
-      return;
-    }
-
-    // Update previous values
-    prevSearchTerm.current = searchTerm;
-    prevOrderStatusFilter.current = orderStatusFilter;
-    prevPaymentStatusFilter.current = paymentStatusFilter;
-
-    // Clear existing timeout
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
-
-    isFilterChanging.current = true;
-
-    // Debounce search
-    if (searchTerm) {
-      searchTimeoutRef.current = setTimeout(() => {
-        setPagination(prev => ({ ...prev, page: 1 }));
-        fetchOrders(1); // Reset to page 1 on search
-        setTimeout(() => {
-          isFilterChanging.current = false;
-        }, 100);
-      }, 500);
-    } else {
-      setPagination(prev => ({ ...prev, page: 1 }));
-      fetchOrders(1);
-      setTimeout(() => {
-        isFilterChanging.current = false;
-      }, 100);
-    }
-
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
-    };
-  }, [searchTerm, orderStatusFilter, paymentStatusFilter]);
-
-  // Fetch orders when page or limit changes (skip if filter change or initial pagination update triggered it)
-  useEffect(() => {
-    if (!hasInitialized.current) return;
-    if (isFilterChanging.current) return;
-    if (isInitialPaginationUpdate.current) {
-      isInitialPaginationUpdate.current = false;
-      return;
-    }
-    fetchOrders(pagination.page);
-  }, [pagination.page, pagination.limit]);
-
-  const fetchOrders = async (page) => {
+  // Fetch orders
+  const fetchOrders = async (page = pagination.page) => {
     if (!isMounted.current) return;
 
     try {
       setLoading(true);
-
       const response = await getAllOrders(
         page,
         pagination.limit,
-        searchTerm,
+        debouncedSearchTerm,
         orderStatusFilter,
         paymentStatusFilter
       );
 
       if (!isMounted.current) return;
 
-      // Backend response structure: { status: true, message: '...', data: { orders, total_count, total_pages, page, limit } }
       if (response.status && response.data) {
         setOrders(response.data.orders || []);
         setPagination(prev => ({
           ...prev,
           page: response.data.page || page,
-          limit: response.data.limit || pagination.limit,
+          limit: response.data.limit || prev.limit,
           total_count: response.data.total_count || 0,
           total_pages: response.data.total_pages || 0,
         }));
       } else {
         setOrders([]);
-        setPagination(prev => ({
-          ...prev,
-          total_count: 0,
-          total_pages: 0,
-        }));
+        setPagination(prev => ({ ...prev, total_count: 0, total_pages: 0 }));
       }
     } catch (error) {
       console.error('Fetch Orders Error:', error);
       if (isMounted.current) {
         setOrders([]);
-        setPagination(prev => ({
-          ...prev,
-          total_count: 0,
-          total_pages: 0,
-        }));
+        setPagination(prev => ({ ...prev, total_count: 0, total_pages: 0 }));
         toast.error(error.message || 'Failed to fetch orders');
       }
     } finally {
@@ -230,6 +79,24 @@ const OrderList = () => {
     }
   };
 
+  // Fetch orders when filters or pagination changes
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    setPagination(prev => ({ ...prev, page: 1 }));
+    fetchOrders(1);
+  }, [debouncedSearchTerm, orderStatusFilter, paymentStatusFilter]);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [pagination.page, pagination.limit]);
+
+  // Handlers
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= pagination.total_pages) {
       setPagination(prev => ({ ...prev, page: newPage }));
@@ -239,19 +106,6 @@ const OrderList = () => {
   const handleLimitChange = (e) => {
     const newLimit = Number(e.target.value);
     setPagination(prev => ({ ...prev, limit: newLimit, page: 1 }));
-    fetchOrders(1);
-  };
-
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-  };
-
-  const handleOrderStatusFilterChange = (e) => {
-    setOrderStatusFilter(e.target.value);
-  };
-
-  const handlePaymentStatusFilterChange = (e) => {
-    setPaymentStatusFilter(e.target.value);
   };
 
   const clearFilters = () => {
@@ -289,6 +143,17 @@ const OrderList = () => {
     }
   };
 
+  const getPaymentMethodBadge = (method) => {
+    const methodLower = method?.toLowerCase();
+    if (methodLower === 'cod') {
+      return 'bg-orange-50 text-orange-700 border-orange-200';
+    }
+    if (methodLower === 'online') {
+      return 'bg-blue-50 text-blue-700 border-blue-200';
+    }
+    return 'bg-gray-50 text-gray-700 border-gray-200';
+  };
+
   if (loading && orders.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 min-h-[400px]">
@@ -299,124 +164,80 @@ const OrderList = () => {
     );
   }
 
-  return (
-    <div className="w-full space-y-5">
-      <div className="flex items-center justify-between mb-2">
-        <h1 className="text-2xl font-bold text-gray-900">
-          Orders List
-        </h1>
-      </div>
-      {/* Search, Filters & Download */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-        <div className="p-4 space-y-4">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            {/* Search */}
-            <div className="relative max-w-md w-full">
-              <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search by order ID, customer name, email, or phone..."
-                value={searchTerm}
-                onChange={handleSearchChange}
-                className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all duration-200 bg-white hover:border-gray-400"
-              />
-            </div>
+  const hasActiveFilters = searchTerm || orderStatusFilter || paymentStatusFilter;
 
-            {/* Download dropdown */}
-            <div className="flex justify-start md:justify-end">
-              <div className="relative inline-block text-left" ref={downloadMenuRef}>
-                <button
-                  type="button"
-                  onClick={() => !downloadingFormat && setIsDownloadOpen((prev) => !prev)}
-                  disabled={!!downloadingFormat}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold bg-gray-900 text-white rounded-lg hover:bg-gray-800 active:bg-gray-900 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
-                >
-                  <Download className="w-4 h-4" />
-                  {downloadingFormat ? `Downloading ${downloadingFormat.toUpperCase()}...` : 'Download'}
-                  <ChevronDown className="w-3.5 h-3.5" />
-                </button>
-                {isDownloadOpen && !downloadingFormat && (
-                  <div className="absolute right-0 mt-2 w-44 origin-top-right rounded-lg bg-white border border-gray-200 shadow-lg focus:outline-none z-10 overflow-hidden">
-                    <button
-                      type="button"
-                      onClick={() => handleDownload('csv')}
-                      className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      Download CSV
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDownload('pdf')}
-                      className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors border-t border-gray-100"
-                    >
-                      Download PDF
-                    </button>
-                  </div>
-                )}
+  return (
+    <div className="space-y-5">
+      {/* Top Box - Header, Search, Download & Filters */}
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm w-full">
+        <div className="p-5 lg:p-6 space-y-5">
+          {/* Header with Search and Download */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <h1 className="text-2xl font-bold text-gray-900">Orders List</h1>
+            
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              {/* Search */}
+              <div className="relative flex-1 min-w-[250px] sm:min-w-[300px]">
+                <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search by order ID, customer name, email, or phone..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all duration-200 bg-white hover:border-gray-400"
+                />
+              </div>
+
+              {/* Download dropdown */}
+              <div className="flex justify-start sm:justify-end">
+                <div className="relative inline-block text-left" ref={downloadMenuRef}>
+                  <button
+                    type="button"
+                    onClick={() => !downloadingFormat && setIsDownloadOpen((prev) => !prev)}
+                    disabled={!!downloadingFormat}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold bg-gray-900 text-white rounded-lg hover:bg-gray-800 active:bg-gray-900 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+                  >
+                    <Download className="w-4 h-4" />
+                    {downloadingFormat ? `Downloading ${downloadingFormat.toUpperCase()}...` : 'Download'}
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  </button>
+                  {isDownloadOpen && !downloadingFormat && (
+                    <div className="absolute right-0 mt-2 w-44 origin-top-right rounded-lg bg-white border border-gray-200 shadow-lg focus:outline-none z-10 overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={() => handleDownload('csv')}
+                        className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        Download CSV
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDownload('pdf')}
+                        className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors border-t border-gray-100"
+                      >
+                        Download PDF
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
 
           {/* Filters */}
-          <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-gray-100">
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-gray-500 flex-shrink-0" />
-              <label className="text-sm text-gray-700 font-semibold">Filters:</label>
-            </div>
-            <div className="relative z-10">
-              <select
-                value={orderStatusFilter}
-                onChange={handleOrderStatusFilterChange}
-                className="appearance-none bg-white border border-gray-300 rounded-lg px-3.5 py-2 pr-8 text-sm text-gray-700 cursor-pointer hover:border-gray-400 transition-all min-w-[160px]"
-              >
-                <option value="">All Order Status</option>
-                <option value="pending">Pending</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="accepted">Accepted</option>
-                <option value="shipment">Shipment</option>
-                <option value="delivered">Delivered</option>
-                <option value="cancelled">Cancelled</option>
-                <option value="missing">Missing</option>
-                <option value="failed">Failed</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
-            <div className="relative z-10">
-              <select
-                value={paymentStatusFilter}
-                onChange={handlePaymentStatusFilterChange}
-                className="appearance-none bg-white border border-gray-300 rounded-lg px-3.5 py-2 pr-8 text-sm text-gray-700 cursor-pointer hover:border-gray-400 transition-all min-w-[160px]"
-              >
-                <option value="">All Payment Status</option>
-                <option value="pending">Pending</option>
-                <option value="paid">Paid</option>
-                <option value="failed">Failed</option>
-                <option value="refunded">Refunded</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
-            {(searchTerm || orderStatusFilter || paymentStatusFilter) && (
-              <button
-                onClick={clearFilters}
-                className="px-3.5 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-all duration-200 font-medium border border-gray-200 hover:border-gray-300"
-              >
-                Clear Filters
-              </button>
-            )}
-          </div>
+          <OrderFilters
+            orderStatusFilter={orderStatusFilter}
+            paymentStatusFilter={paymentStatusFilter}
+            onOrderStatusChange={(e) => setOrderStatusFilter(e.target.value)}
+            onPaymentStatusChange={(e) => setPaymentStatusFilter(e.target.value)}
+            onClearFilters={clearFilters}
+            hasActiveFilters={hasActiveFilters}
+          />
         </div>
       </div>
 
-      {/* Orders Table */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      {/* Bottom Box - Only Table */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden w-full">
         {orders.length === 0 ? (
           <div className="text-center py-20">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
@@ -424,7 +245,7 @@ const OrderList = () => {
             </div>
             <p className="text-base font-semibold text-gray-700 mb-1.5">No orders found</p>
             <p className="text-sm text-gray-500">
-              {searchTerm || orderStatusFilter || paymentStatusFilter
+              {hasActiveFilters
                 ? 'Try adjusting your search or filters'
                 : 'No orders have been placed yet'}
             </p>
@@ -432,36 +253,14 @@ const OrderList = () => {
         ) : (
           <>
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-[1200px]">
                 <thead className="bg-gradient-to-r from-green-50 to-emerald-50/50">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                      #
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                      Order ID
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                      Customer
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                      Products
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                      Total Amount
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                      Order Status
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                      Payment Status
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                      Payment Method
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                      Date
-                    </th>
+                    {['#', 'Order ID', 'Customer', 'Products', 'Total Amount', 'Order Status', 'Payment Status', 'Payment Method', 'Date'].map((header) => (
+                      <th key={header} className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        {header}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-100">
@@ -502,23 +301,17 @@ const OrderList = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full border ${getStatusColor(order.order_status)}`}>
+                        <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full border ${getStatusColor(order.order_status, 'order')}`}>
                           {order.order_status || 'N/A'}
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full border ${getPaymentStatusColor(order.payment_status)}`}>
+                        <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full border ${getStatusColor(order.payment_status, 'payment')}`}>
                           {order.payment_status || 'N/A'}
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full border ${
-                          order.payment_method?.toLowerCase() === 'cod' 
-                            ? 'bg-orange-50 text-orange-700 border-orange-200' 
-                            : order.payment_method?.toLowerCase() === 'online'
-                            ? 'bg-blue-50 text-blue-700 border-blue-200'
-                            : 'bg-gray-50 text-gray-700 border-gray-200'
-                        }`}>
+                        <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full border ${getPaymentMethodBadge(order.payment_method)}`}>
                           {order.payment_method ? (order.payment_method.toUpperCase() === 'COD' ? 'COD' : 'Online') : 'N/A'}
                         </span>
                       </td>
@@ -534,91 +327,14 @@ const OrderList = () => {
             </div>
 
             {/* Pagination */}
-            {pagination.total_pages > 1 && (
-              <div className="bg-gray-50 border-t border-gray-200 px-6 py-4">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <div className="flex items-center gap-2 relative z-10">
-                    <label className="text-sm text-gray-600 font-medium">Items per page:</label>
-                    <div className="relative">
-                      <select
-                        value={pagination.limit}
-                        onChange={handleLimitChange}
-                        className="appearance-none bg-white border border-gray-300 rounded-lg px-3 py-1.5 pr-8 text-sm text-gray-700 cursor-pointer hover:border-gray-400 transition-all"
-                      >
-                        <option value={5}>5</option>
-                        <option value={10}>10</option>
-                        <option value={20}>20</option>
-                        <option value={50}>50</option>
-                      </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="text-sm text-gray-600">
-                    Showing{' '}
-                    <span className="font-semibold text-gray-900">
-                      {((pagination.page - 1) * pagination.limit) + 1}
-                    </span>{' '}
-                    to{' '}
-                    <span className="font-semibold text-gray-900">
-                      {Math.min(pagination.page * pagination.limit, pagination.total_count)}
-                    </span>{' '}
-                    of{' '}
-                    <span className="font-semibold text-gray-900">{pagination.total_count}</span> orders
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handlePageChange(pagination.page - 1)}
-                      disabled={pagination.page === 1}
-                      className="p-2 border border-gray-300 rounded-lg hover:bg-white hover:border-gray-400 active:bg-gray-50 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </button>
-
-                    <div className="flex items-center gap-1.5">
-                      {Array.from({ length: Math.min(5, pagination.total_pages) }, (_, i) => {
-                        let pageNum;
-                        if (pagination.total_pages <= 5) {
-                          pageNum = i + 1;
-                        } else if (pagination.page <= 3) {
-                          pageNum = i + 1;
-                        } else if (pagination.page >= pagination.total_pages - 2) {
-                          pageNum = pagination.total_pages - 4 + i;
-                        } else {
-                          pageNum = pagination.page - 2 + i;
-                        }
-
-                        return (
-                          <button
-                            key={pageNum}
-                            onClick={() => handlePageChange(pageNum)}
-                            className={`px-3.5 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ${pagination.page === pageNum
-                              ? 'bg-green-600 text-white shadow-sm'
-                              : 'border border-gray-300 hover:bg-white hover:border-gray-400 active:bg-gray-50 text-gray-700'
-                              }`}
-                          >
-                            {pageNum}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    <button
-                      onClick={() => handlePageChange(pagination.page + 1)}
-                      disabled={pagination.page === pagination.total_pages}
-                      className="p-2 border border-gray-300 rounded-lg hover:bg-white hover:border-gray-400 active:bg-gray-50 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+            <Pagination
+              currentPage={pagination.page}
+              totalPages={pagination.total_pages}
+              totalCount={pagination.total_count}
+              limit={pagination.limit}
+              onPageChange={handlePageChange}
+              onLimitChange={handleLimitChange}
+            />
           </>
         )}
       </div>

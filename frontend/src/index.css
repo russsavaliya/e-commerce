@@ -333,3 +333,17 @@ input[type="range"]::-moz-range-track {
 .animate-pulse-slow {
   animation: pulseSlow 3s ease-in-out infinite;
 }
+
+/* Add to Bag Button Pulsing Animation */
+@keyframes pulseButton {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+}
+
+.animate-pulse-button {
+  animation: pulseButton 2s ease-in-out infinite;
+}

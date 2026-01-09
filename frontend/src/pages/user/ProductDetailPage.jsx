@@ -562,7 +562,7 @@ const ProductDetailPage = () => {
                 <button
                   onClick={handleAddToCart}
                   disabled={addingToCart}
-                  className="flex-1 flex items-center justify-center gap-2 bg-[rgb(72,29,111)] text-white py-3 rounded-full text-sm font-semibold hover:bg-[#390e60] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`flex-1 flex items-center justify-center gap-2 bg-[rgb(72,29,111)] text-white py-3 rounded-full text-sm font-semibold hover:bg-[#390e60] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${!addingToCart && !isOutOfStock ? 'animate-pulse-button' : ''}`}
                 >
                   {addingToCart ? (
                     <>
