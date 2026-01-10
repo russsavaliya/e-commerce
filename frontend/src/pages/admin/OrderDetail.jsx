@@ -456,7 +456,7 @@ const OrderDetail = () => {
                       <span className="text-gray-600">
                         Discount{order.coupon.coupon_code && ` (${order.coupon.coupon_code})`}
                       </span>
-                      <span className="font-semibold text-green-600">
+                      <span className="font-semibold text-red-600">
                         - ₹{order.coupon.discount_amount.toLocaleString('en-IN')}
                       </span>
                     </div>

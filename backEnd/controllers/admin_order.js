@@ -202,6 +202,7 @@ exports.get_order_one = async (req, res) => {
           payment_status: { $first: '$payment_status' },
           payment_reference: { $first: '$payment_reference' },
           shipping_address: { $first: '$shipping_address' },
+          coupon:{$first:'$coupon'},
           created_at: { $first: '$created_at' },
           updatedAt: { $first: '$updatedAt' },
           createdAt: { $first: '$createdAt' },
@@ -533,6 +534,7 @@ exports.export_order_one = async (req, res) => {
           payment_status: { $first: '$payment_status' },
           payment_reference: { $first: '$payment_reference' },
           shipping_address: { $first: '$shipping_address' },
+          coupon: { $first: '$coupon' },
           created_at: { $first: '$created_at' },
           updatedAt: { $first: '$updatedAt' },
         },
@@ -589,6 +591,14 @@ exports.export_order_one = async (req, res) => {
       .join('');
 
     const safe = (val) => (val === null || val === undefined ? '' : String(val));
+    const discountAmount = order.coupon?.discount_amount || 0;
+    const couponRowHtml =
+      discountAmount > 0
+        ? `<div class="summary-row">
+            <span class="label">Discount${order.coupon?.coupon_code ? ` (${order.coupon.coupon_code})` : ''}</span>
+            <span class="value" style="color:red;">- ₹${discountAmount.toLocaleString('en-IN')}</span>
+          </div>`
+        : '';
 
     // Replace placeholders
     template = template
@@ -629,7 +639,8 @@ exports.export_order_one = async (req, res) => {
         /{{TOTAL}}/g,
         `₹${(order.total_amount || 0).toLocaleString('en-IN')}`
       )
-      .replace(/{{PRODUCT_ROWS}}/g, productRowsHtml || '');
+      .replace(/{{PRODUCT_ROWS}}/g, productRowsHtml || '')
+      .replace(/{{COUPON_ROW}}/g, couponRowHtml);
 
     const options = {
       format: 'A4',
