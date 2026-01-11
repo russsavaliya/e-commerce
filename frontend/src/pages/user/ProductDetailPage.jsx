@@ -41,6 +41,7 @@ const ProductDetailPage = () => {
   const [availableCoupons, setAvailableCoupons] = useState([]);
   const [loadingCoupons, setLoadingCoupons] = useState(false);
   const [copiedCode, setCopiedCode] = useState(null);
+  const [mobileTab, setMobileTab] = useState('description');
 
   const renderStars = (rating, size = 'sm') => {
     const total = 5;
@@ -325,6 +326,182 @@ const ProductDetailPage = () => {
 
   const images = product.images || [];
 
+  const DescriptionCard = ({ className = '' }) => {
+    if (!product?.description) return null;
+    return (
+      <div
+        className={`bg-white border border-[#E5E7EB] rounded-xl shadow-sm overflow-hidden ${className}`}
+      >
+        <div className="px-6 py-4 border-b border-[#E5E7EB] bg-[#FAF9F5]">
+          <h3 className="text-sm font-semibold text-[rgb(72,29,111)] uppercase tracking-wide">
+            Product Description
+          </h3>
+        </div>
+        <div className="px-6 py-5">
+          <div
+            className="text-base text-[#374151] leading-relaxed prose prose-sm max-w-none"
+            dangerouslySetInnerHTML={{ __html: product.description }}
+          />
+        </div>
+      </div>
+    );
+  };
+
+  const ReviewSummaryCard = ({ className = '' }) => (
+    <div className={`border-t border-[#E5E7EB] pt-8 ${className}`}>
+      <div className="bg-white border border-[#E5E7EB] rounded-2xl shadow-sm px-6 py-5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+          <div className="flex flex-col items-center md:items-start gap-2">
+            <h2 className="text-base font-semibold text-[rgb(72,29,111)]">
+              Customer Reviews
+            </h2>
+            {renderStars(reviewSummary.average, 'lg')}
+            <p className="text-3xl font-bold text-[#1F2937]">
+              {reviewSummary.average?.toFixed(1) || '0.0'}
+            </p>
+            <p className="text-xs text-[#6B7280]">
+              {reviewSummary.count > 0
+                ? `Based on ${reviewSummary.count} review${reviewSummary.count > 1 ? 's' : ''
+                }`
+                : 'No reviews yet'}
+            </p>
+          </div>
+
+          <div className="space-y-1.5">
+            {[5, 4, 3, 2, 1].map((star) => {
+              const perRating = reviewSummary.perRating || {};
+              const count = perRating[star] || 0;
+              const total = reviewSummary.count || 0;
+              const percent =
+                total > 0 ? Math.round((count / total) * 100) : 0;
+              return (
+                <div
+                  key={star}
+                  className="flex items-center gap-3 text-xs text-[#6B7280]"
+                >
+                  <span className="w-10 flex items-center justify-end gap-0.5">
+                    <span>{star}</span>
+                    <span className="text-[rgb(72,29,111)] text-[11px]">★</span>
+                  </span>
+                  <div className="flex-1 h-2 rounded-full bg-[#E5E7EB] overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-[rgb(72,29,111)] transition-all"
+                      style={{ width: `${percent}%` }}
+                    />
+                  </div>
+                  <span className="w-4 text-right text-[11px] text-[#6B7280]">
+                    {count}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="flex justify-center md:justify-end">
+            <button
+              type="button"
+              onClick={() => setIsReviewModalOpen(true)}
+              className="px-5 py-3 rounded-full border-[1.5px] border-[#EC4899] text-sm font-semibold text-[#EC4899] hover:bg-[rgba(236,72,153,0.08)] transition-all duration-200"
+            >
+              Write a review
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const ReviewsListing = ({ className = '' }) => (
+    <div className={`w-full ${className}`}>
+      {reviewLoading ? (
+        <div className="flex items-center justify-center gap-2 py-12 text-sm text-[#6B7280]">
+          <Loader2 className="w-5 h-5 animate-spin text-[rgb(72,29,111)]" />
+          <span>Loading reviews...</span>
+        </div>
+      ) : reviews.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-sm text-[#6B7280]">
+            No reviews for this product yet.
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+            {reviews.map((rev) => (
+              <div
+                key={rev._id}
+                className="border border-[#E5E7EB] rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition-all duration-200 hover:border-[rgb(72,29,111)] flex flex-col h-full"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-[#374151] mb-1.5">
+                      {rev.name}
+                    </p>
+                    <div className="mb-2">
+                      {renderStars(rev.rating, 'sm')}
+                    </div>
+                  </div>
+                  <p className="text-xs text-[#6B7280] whitespace-nowrap ml-3">
+                    {rev.createdAt
+                      ? new Date(rev.createdAt).toLocaleDateString(
+                        'en-IN',
+                        {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                        }
+                      )
+                      : ''}
+                  </p>
+                </div>
+
+                {rev.comment && (
+                  <p className="text-sm text-[#374151] whitespace-pre-line flex-1 leading-relaxed">
+                    {rev.comment}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {reviewTotalPages > 1 && (
+            <div className="flex items-center justify-between pt-6 mt-6 border-t border-[#E5E7EB] text-sm text-[#6B7280]">
+              <span>
+                Page {reviewPage} of {reviewTotalPages}
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setReviewPage((p) => Math.max(1, p - 1))
+                  }
+                  disabled={reviewPage === 1 || reviewLoading}
+                  className="px-4 py-2 border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-[#374151] font-medium"
+                >
+                  Previous
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setReviewPage((p) =>
+                      Math.min(reviewTotalPages, p + 1)
+                    )
+                  }
+                  disabled={
+                    reviewPage === reviewTotalPages || reviewLoading
+                  }
+                  className="px-4 py-2 border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-[#374151] font-medium"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-[#FAF9F5]">
       <Navbar />
@@ -396,22 +573,7 @@ const ProductDetailPage = () => {
               )}
             </div>
 
-            {/* Product Description - Moved to Left Column */}
-            {product.description && (
-              <div className="bg-white border border-[#E5E7EB] rounded-xl shadow-sm overflow-hidden">
-                <div className="px-6 py-4 border-b border-[#E5E7EB] bg-[#FAF9F5]">
-                  <h3 className="text-sm font-semibold text-[rgb(72,29,111)] uppercase tracking-wide">
-                    Product Description
-                  </h3>
-                </div>
-                <div className="px-6 py-5">
-                  <div
-                    className="text-base text-[#374151] leading-relaxed prose prose-sm max-w-none"
-                    dangerouslySetInnerHTML={{ __html: product.description }}
-                  />
-                </div>
-              </div>
-            )}
+            <DescriptionCard className="hidden md:block" />
           </div>
 
           {/* Right Column: Details, Price, Variants, Actions, Reviews */}
@@ -437,7 +599,7 @@ const ProductDetailPage = () => {
               {activeVariant && activeVariant.variant_name && (
                 <div className="mt-3 flex items-center gap-2">
                   <span className="text-sm font-medium text-[#6B7280]">Selected Option:</span>
-                  <span className="text-base font-semibold text-[rgb(72,29,111)] bg-[rgba(72,29,111,0.06)] px-3 py-1.5 rounded-lg border border-[rgb(72,29,111)]">
+                  <span className="text-sm font-semibold text-[rgb(72,29,111)] bg-[rgba(72,29,111,0.06)] px-2 py-1 rounded-lg border border-[rgb(72,29,111)]">
                     {activeVariant.variant_name}
                   </span>
                 </div>
@@ -587,9 +749,9 @@ const ProductDetailPage = () => {
 
             {/* Product Features - COD, Easy Return, 7 Day Return */}
             <div className="mt-6 pt-6 border-t border-gray-200">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="flex md:grid md:grid-cols-3 gap-3 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
                 {/* COD Available */}
-                <div className="flex items-center gap-2.5 p-2.5 bg-white rounded-lg border border-gray-200 hover:border-[rgb(72,29,111)] hover:shadow-sm transition-all duration-200">
+                <div className="flex items-center gap-2.5 p-2 bg-white rounded-xl border border-gray-200 hover:border-[rgb(72,29,111)] hover:shadow-sm transition-all duration-200 min-w-[140px] md:min-w-0">
                   <div className="flex-shrink-0">
                     <div className="w-10 h-10 rounded-lg bg-[rgba(72,29,111,0.1)] flex items-center justify-center">
                       <CreditCard className="w-5 h-5 text-[rgb(72,29,111)]" />
@@ -604,7 +766,7 @@ const ProductDetailPage = () => {
                 </div>
 
                 {/* Easy Return */}
-                <div className="flex items-center gap-2.5 p-2.5 bg-white rounded-lg border border-gray-200 hover:border-[rgb(72,29,111)] hover:shadow-sm transition-all duration-200">
+                <div className="flex items-center gap-2.5 p-2 bg-white rounded-xl border border-gray-200 hover:border-[rgb(72,29,111)] hover:shadow-sm transition-all duration-200 min-w-[140px] md:min-w-0">
                   <div className="flex-shrink-0">
                     <div className="w-10 h-10 rounded-lg bg-[rgba(72,29,111,0.1)] flex items-center justify-center">
                       <RotateCcw className="w-5 h-5 text-[rgb(72,29,111)]" />
@@ -619,7 +781,7 @@ const ProductDetailPage = () => {
                 </div>
 
                 {/* 7 Day Return */}
-                <div className="flex items-center gap-2.5 p-2.5 bg-white rounded-lg border border-gray-200 hover:border-[rgb(72,29,111)] hover:shadow-sm transition-all duration-200">
+                <div className="flex items-center gap-2.5 p-2 bg-white rounded-xl border border-gray-200 hover:border-[rgb(72,29,111)] hover:shadow-sm transition-all duration-200 min-w-[140px] md:min-w-0">
                   <div className="flex-shrink-0">
                     <div className="w-10 h-10 rounded-lg bg-[rgba(72,29,111,0.1)] flex items-center justify-center">
                       <Calendar className="w-5 h-5 text-[rgb(72,29,111)]" />
@@ -725,71 +887,7 @@ const ProductDetailPage = () => {
               </div>
             </div>
 
-            {/* Reviews Summary Section - Side by side with Product Description */}
-            <div className="mt-10 border-t border-[#E5E7EB] pt-8">
-              <div className="bg-white border border-[#E5E7EB] rounded-2xl shadow-sm px-6 py-5">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-                  {/* Left: average rating */}
-                  <div className="flex flex-col items-center md:items-start gap-2">
-                    <h2 className="text-base font-semibold text-[rgb(72,29,111)]">
-                      Customer Reviews
-                    </h2>
-                    {renderStars(reviewSummary.average, 'lg')}
-                    <p className="text-3xl font-bold text-[#1F2937]">
-                      {reviewSummary.average?.toFixed(1) || '0.0'}
-                    </p>
-                    <p className="text-xs text-[#6B7280]">
-                      {reviewSummary.count > 0
-                        ? `Based on ${reviewSummary.count} review${reviewSummary.count > 1 ? 's' : ''
-                        }`
-                        : 'No reviews yet'}
-                    </p>
-                  </div>
-
-                  {/* Middle: rating distribution */}
-                  <div className="space-y-1.5">
-                    {[5, 4, 3, 2, 1].map((star) => {
-                      const perRating = reviewSummary.perRating || {};
-                      const count = perRating[star] || 0;
-                      const total = reviewSummary.count || 0;
-                      const percent =
-                        total > 0 ? Math.round((count / total) * 100) : 0;
-                      return (
-                        <div
-                          key={star}
-                          className="flex items-center gap-3 text-xs text-[#6B7280]"
-                        >
-                          <span className="w-10 flex items-center justify-end gap-0.5">
-                            <span>{star}</span>
-                            <span className="text-[rgb(72,29,111)] text-[11px]">★</span>
-                          </span>
-                          <div className="flex-1 h-2 rounded-full bg-[#E5E7EB] overflow-hidden">
-                            <div
-                              className="h-full rounded-full bg-[rgb(72,29,111)] transition-all"
-                              style={{ width: `${percent}%` }}
-                            />
-                          </div>
-                          <span className="w-4 text-right text-[11px] text-[#6B7280]">
-                            {count}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Right: write review button */}
-                  <div className="flex md:justify-end">
-                    <button
-                      type="button"
-                      onClick={() => setIsReviewModalOpen(true)}
-                      className="px-5 py-3 rounded-full border-[1.5px] border-[#EC4899] text-sm font-semibold text-[#EC4899] hover:bg-[rgba(236,72,153,0.08)] transition-all duration-200"
-                    >
-                      Write a review
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <ReviewSummaryCard className="mt-10 hidden md:block" />
           </div>
         </div>
 
@@ -799,97 +897,41 @@ const ProductDetailPage = () => {
         </div>
 
         {/* Reviews Listing Section - Full Width Grid Layout */}
-        <div className="w-full">
-          {reviewLoading ? (
-            <div className="flex items-center justify-center gap-2 py-12 text-sm text-[#6B7280]">
-              <Loader2 className="w-5 h-5 animate-spin text-[rgb(72,29,111)]" />
-              <span>Loading reviews...</span>
-            </div>
-          ) : reviews.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-sm text-[#6B7280]">
-                No reviews for this product yet.
-              </p>
-            </div>
-          ) : (
-            <>
-              {/* Reviews Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                {reviews.map((rev) => (
-                  <div
-                    key={rev._id}
-                    className="border border-[#E5E7EB] rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition-all duration-200 hover:border-[rgb(72,29,111)] flex flex-col h-full"
-                  >
-                    {/* Review Header */}
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold text-[#374151] mb-1.5">
-                          {rev.name}
-                        </p>
-                        <div className="mb-2">
-                          {renderStars(rev.rating, 'sm')}
-                        </div>
-                      </div>
-                      <p className="text-xs text-[#6B7280] whitespace-nowrap ml-3">
-                        {rev.createdAt
-                          ? new Date(rev.createdAt).toLocaleDateString(
-                            'en-IN',
-                            {
-                              day: '2-digit',
-                              month: 'short',
-                              year: 'numeric',
-                            }
-                          )
-                          : ''}
-                      </p>
-                    </div>
+        <ReviewsListing className="hidden md:block" />
 
-                    {/* Review Comment */}
-                    {rev.comment && (
-                      <p className="text-sm text-[#374151] whitespace-pre-line flex-1 leading-relaxed">
-                        {rev.comment}
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
+        {/* Mobile-only tabs for Description & Reviews */}
+        <div className="md:hidden mt-8 space-y-4">
+          <div className="flex rounded-full border border-[#E5E7EB] bg-white text-xs font-semibold text-[#6B7280] shadow-sm">
+            <button
+              type="button"
+              className={`flex-1 px-3 py-2 transition-colors duration-200 ${mobileTab === 'description'
+                ? 'bg-[rgb(72,29,111)] text-white shadow-md'
+                : 'hover:bg-[#F3F4F6]'
+                }`}
+              onClick={() => setMobileTab('description')}
+            >
+              Product Description
+            </button>
+            <button
+              type="button"
+              className={`flex-1 px-3 py-2 transition-colors duration-200 ${mobileTab === 'reviews'
+                ? 'bg-[rgb(72,29,111)] text-white shadow-md'
+                : 'hover:bg-[#F3F4F6]'
+                }`}
+              onClick={() => setMobileTab('reviews')}
+            >
+              Reviews
+            </button>
+          </div>
 
-              {/* Reviews Pagination */}
-              {reviewTotalPages > 1 && (
-                <div className="flex items-center justify-between pt-6 mt-6 border-t border-[#E5E7EB] text-sm text-[#6B7280]">
-                  <span>
-                    Page {reviewPage} of {reviewTotalPages}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setReviewPage((p) => Math.max(1, p - 1))
-                      }
-                      disabled={reviewPage === 1 || reviewLoading}
-                      className="px-4 py-2 border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-[#374151] font-medium"
-                    >
-                      Previous
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setReviewPage((p) =>
-                          Math.min(reviewTotalPages, p + 1)
-                        )
-                      }
-                      disabled={
-                        reviewPage === reviewTotalPages || reviewLoading
-                      }
-                      className="px-4 py-2 border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-[#374151] font-medium"
-                    >
-                      Next
-                    </button>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
+          <div className={mobileTab === 'description' ? 'block' : 'hidden'}>
+            <DescriptionCard />
+          </div>
+
+          <div className={mobileTab === 'reviews' ? 'block space-y-4' : 'hidden'}>
+            <ReviewSummaryCard className="mt-0" />
+            <ReviewsListing className="mt-0" />
+          </div>
         </div>
       </main>
       <Footer />
