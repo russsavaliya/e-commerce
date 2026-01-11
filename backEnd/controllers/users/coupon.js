@@ -185,6 +185,8 @@ exports.apply_coupon = async (req, res) => {
 
     // Final payable amount
     const finalAmount = Math.max(0, cartTotal - discountAmount);
+    const roundedFinalAmount = Math.ceil(finalAmount);
+    const roundedDiscountAmount = Math.max(0, cartTotal - roundedFinalAmount);
 
     return res.status(200).json({
       status: true,
@@ -193,8 +195,10 @@ exports.apply_coupon = async (req, res) => {
         couponCode: coupon.code,
         couponId: coupon._id,
         discountAmount: Math.round(discountAmount * 100) / 100, // Round to 2 decimal places
+        roundedDiscountAmount: Math.round(roundedDiscountAmount * 100) / 100,
         cartTotal: cartTotal,
         finalAmount: Math.round(finalAmount * 100) / 100,
+        roundedFinalAmount,
         discountType: coupon.discountType,
         discountValue: coupon.discountValue,
       },

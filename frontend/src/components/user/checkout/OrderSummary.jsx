@@ -28,7 +28,8 @@ const OrderSummary = ({
   const subtotal = cart?.subtotal || 0;
   const shipping = 0; // Free shipping for now
   const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
-  const total = Math.max(0, subtotal + shipping - discount);
+  const baseTotal = Math.max(0, subtotal + shipping - discount);
+  const total = appliedCoupon ? (appliedCoupon.finalAmount ?? baseTotal) : baseTotal;
 
   const handleCopyCode = (code) => {
     navigator.clipboard.writeText(code);

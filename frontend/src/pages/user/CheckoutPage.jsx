@@ -16,6 +16,27 @@ import ShippingForm from '../../components/user/checkout/ShippingForm';
 import OrderSummary from '../../components/user/checkout/OrderSummary';
 import CartItemsReview from '../../components/user/checkout/CartItemsReview';
 
+const normalizeCouponPayload = (rawCoupon) => {
+  if (!rawCoupon) {
+    return null;
+  }
+
+  const rawDiscount = rawCoupon.roundedDiscountAmount ?? rawCoupon.discountAmount ?? 0;
+  const safeDiscount = typeof rawDiscount === 'number' ? rawDiscount : Number(rawDiscount) || 0;
+  const normalizedDiscount = Number(safeDiscount.toFixed(2));
+  const rawFinal = rawCoupon.roundedFinalAmount ?? rawCoupon.finalAmount ?? Math.max(0, (rawCoupon.cartTotal || 0) - normalizedDiscount);
+  const safeFinal = typeof rawFinal === 'number' ? rawFinal : Number(rawFinal) || 0;
+  const normalizedFinal = Number(safeFinal);
+
+  return {
+    ...rawCoupon,
+    discountAmount: normalizedDiscount,
+    roundedDiscountAmount: normalizedDiscount,
+    finalAmount: normalizedFinal,
+    roundedFinalAmount: normalizedFinal,
+  };
+};
+
 const CheckoutPage = () => {
   const navigate = useNavigate();
   const [cart, setCart] = useState(null);
@@ -313,7 +334,11 @@ const CheckoutPage = () => {
       const subtotal = cart.subtotal || 0;
       const shipping = 0; // Free shipping
       const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
-      const totalAmount = Math.max(0, subtotal + shipping - discount);
+      const baseTotal = Math.max(0, subtotal + shipping - discount);
+      const totalAmount = Math.max(
+        0,
+        appliedCoupon ? (appliedCoupon.finalAmount ?? baseTotal) : baseTotal
+      );
 
       // Create Razorpay order
       const razorpayResponse = await createRazorpayOrder(draftOrderId, totalAmount);
@@ -417,8 +442,12 @@ const CheckoutPage = () => {
       const response = await applyCoupon(couponCode.trim(), cart.subtotal, selectedPayment);
 
       if (response.status) {
-        setAppliedCoupon(response.data);
-        toast.success(`Coupon ${response.data.couponCode} applied! You saved ₹${response.data.discountAmount.toFixed(2)}`);
+        const normalizedCoupon = normalizeCouponPayload(response.data);
+        setAppliedCoupon(normalizedCoupon);
+        const savedDiscount = normalizedCoupon?.discountAmount ?? 0;
+        toast.success(
+          `Coupon ${normalizedCoupon?.couponCode} applied! You saved ₹${savedDiscount.toFixed(2)}`
+        );
       } else {
         setCouponError(response.message || 'Failed to apply coupon');
         setAppliedCoupon(null);

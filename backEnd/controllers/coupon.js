@@ -226,6 +226,8 @@ exports.update_coupon = async (req, res) => {
       validTill,
       isActive,
       showOnUserSide,
+      applicableToCOD,
+      applicableToOnline
     } = req.body;
 
     if (!coupon_id) {
