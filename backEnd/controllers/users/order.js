@@ -5,6 +5,7 @@ const coupon_model = require('../../model/coupon');
 const customer_controller = require('./customer');
 const { sendOrderSuccessEmail } = require('../../helper/emailHelper');
 const { getNextSequence } = require('../../helper/sequenceHelper');
+const { extractGuestId, createCanonicalCart, clearCart } = require('../../helper/cartHelper');
 
 /**
  * Helper: Decrement product and variant quantities after order creation
@@ -35,7 +36,7 @@ const decrementProductQuantities = async (orderProducts) => {
 
         // Find and decrement variant quantity
         const variantIndex = product.variants.findIndex(
-          v => v._id.toString() === variantId.toString()
+          v => v._id.toString() == variantId.toString()
         );
 
         if (variantIndex !== -1) {
@@ -117,14 +118,22 @@ const buildCartItems = async (cart = []) => {
  */
 exports.init_order = async (req, res) => {
   try {
-    const cart = req.session.cart || [];
-    if (!cart.length) {
+    const guestId = extractGuestId(req);
+    if (!guestId) {
+      return res.status(400).json({
+        status: false,
+        message: 'guestId is required to place an order.',
+      });
+    }
+
+    const cartDoc = await createCanonicalCart(guestId);
+    if (!cartDoc || !cartDoc.items.length) {
       return res.status(400).json({
         status: false,
         message: 'Cart is empty. Add items before placing an order.',
       });
     }
-
+    console.log("cartDoc==>", cartDoc);
     const {
       fullName,
       phone,
@@ -146,15 +155,15 @@ exports.init_order = async (req, res) => {
       });
     }
 
-    const { items, subtotal } = await buildCartItems(cart);
-
+    // const { items, subtotal } = await buildCartItems(cartDoc.items);
+    const subtotal = cartDoc.totals.subtotal;
     const shipping_amount = 0;
     const total_tax = 0;
     const coupon_discount = discount_amount ? Number(discount_amount) : 0;
     const total_amount = Math.max(0, subtotal + shipping_amount + total_tax - coupon_discount);
 
     // Prepare cart items for DraftOrder
-    const cartItems = cart.map((item) => ({
+    const cartItems = cartDoc.items.map((item) => ({
       productId: item.productId,
       variantId: item.variantId || null,
       quantity: item.quantity,
@@ -309,6 +318,14 @@ exports.update_payment = async (req, res) => {
       });
     }
 
+    const guestId = extractGuestId(req);
+    if (!guestId) {
+      return res.status(400).json({
+        status: false,
+        message: 'guestId is required to complete the order.',
+      });
+    }
+
     // Find DraftOrder
     const draftOrder = await draftOrder_model.findById(draftOrderId);
     if (!draftOrder) {
@@ -361,7 +378,7 @@ exports.update_payment = async (req, res) => {
 
     // Clear cart only after payment is confirmed/order is placed
     // This ensures cart remains intact if user abandons checkout
-    req.session.cart = [];
+    await clearCart(guestId);
 
     // Send order confirmation emails (customer + admin)
     try {

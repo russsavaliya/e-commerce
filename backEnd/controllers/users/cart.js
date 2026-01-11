@@ -1,12 +1,21 @@
 const product_model = require('../../model/product');
+const { createCanonicalCart, extractGuestId, clearCart, createCartItemId, applyTotals } = require('../../helper/cartHelper');
 
 exports.get_cart = async (req, res) => {
   try {
-    const cart = req.session.cart || [];
-    
+    const guestId = extractGuestId(req);
+    if (!guestId) {
+      return res.status(400).json({
+        status: false,
+        message: 'guestId is required for cart operations',
+      });
+    }
+
+    const cart = await createCanonicalCart(guestId);
+
     // Populate product details for cart items
     const cartWithProducts = await Promise.all(
-      cart.map(async (item) => {
+      cart.items.map(async (item) => {
         try {
           const product = await product_model.findById(item.productId)
             .populate('category', 'name')
@@ -19,9 +28,8 @@ exports.get_cart = async (req, res) => {
           // Calculate price and get image (use variant if variant selected, otherwise product)
           let price = product.selling_price;
           let displayImage = product.images && product.images.length > 0 ? product.images[0] : null;
-          
           if (item.variantId) {
-            const variant = product.variants?.find(v => v._id.toString() === item.variantId);
+            const variant = product.variants?.find(v => v._id.toString() == item.variantId.toString());
             if (variant) {
               if (variant.variant_price) {
                 price = variant.variant_price;
@@ -88,6 +96,17 @@ exports.get_cart = async (req, res) => {
 exports.add_to_cart = async (req, res) => {
   try {
     const { productId, variantId, quantity = 1 } = req.body;
+    const guestId = extractGuestId(req);
+    console.log("guestId==>", guestId);
+    console.log("productId==>", productId);
+    console.log("variantId==>", variantId);
+    console.log("quantity==>", quantity);
+    if (!guestId) {
+      return res.status(400).json({
+        status: false,
+        message: 'guestId is required for cart operations',
+      });
+    }
 
     if (!productId) {
       return res.status(400).json({
@@ -107,8 +126,9 @@ exports.add_to_cart = async (req, res) => {
 
     // If variant is provided, validate it exists
     let variantName = null;
+    let price = product.selling_price;
     if (variantId) {
-      const variant = product.variants?.find(v => v._id.toString() === variantId);
+      const variant = product.variants?.find(v => v._id.toString() == variantId.toString());
       if (!variant) {
         return res.status(404).json({
           status: false,
@@ -116,38 +136,37 @@ exports.add_to_cart = async (req, res) => {
         });
       }
       variantName = variant.variant_name;
+      price = variant.variant_price || price;
     }
 
-    // Initialize cart if it doesn't exist
-    if (!req.session.cart) {
-      req.session.cart = [];
-    }
+    const cart = await createCanonicalCart(guestId);
 
-    // Check if item already exists in cart (same product and variant)
-    const existingItemIndex = req.session.cart.findIndex(
-      item => item.productId === productId && item.variantId === variantId
+    const existingItem = cart.items.find(
+      item => item.productId.toString() === productId && (item.variantId?.toString() || null) === (variantId || null)
     );
 
-    if (existingItemIndex !== -1) {
-      // Update quantity
-      req.session.cart[existingItemIndex].quantity += parseInt(quantity);
+    if (existingItem) {
+      existingItem.quantity += parseInt(quantity);
+      existingItem.price = price;
     } else {
-      // Add new item
-      const cartItemId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
-      req.session.cart.push({
-        cartItemId,
+      cart.items.push({
+        cartItemId: createCartItemId(),
         productId,
         variantId: variantId || null,
         variantName: variantName || null,
-        quantity: parseInt(quantity)
+        quantity: parseInt(quantity),
+        price: price
       });
     }
+
+    await applyTotals(cart);
+    await cart.save();
 
     return res.status(200).json({
       status: true,
       message: 'Item added to cart successfully',
       data: {
-        cartItemCount: req.session.cart.reduce((sum, item) => sum + item.quantity, 0)
+        cartItemCount: cart.items.reduce((sum, item) => sum + item.quantity, 0)
       }
     });
   } catch (error) {
@@ -164,6 +183,16 @@ exports.update_cart_item = async (req, res) => {
   try {
     const { cartItemId } = req.params;
     const { quantity } = req.body;
+    const guestId = extractGuestId(req);
+
+    if (!guestId) {
+      return res.status(400).json({
+        status: false,
+        message: 'guestId is required for cart operations',
+      });
+    }
+
+    const cart = await createCanonicalCart(guestId);
 
     if (!quantity || quantity < 1) {
       return res.status(400).json({
@@ -172,28 +201,24 @@ exports.update_cart_item = async (req, res) => {
       });
     }
 
-    if (!req.session.cart) {
-      return res.status(404).json({
-        status: false,
-        message: 'Cart is empty'
-      });
-    }
-
-    const itemIndex = req.session.cart.findIndex(item => item.cartItemId === cartItemId);
-    if (itemIndex === -1) {
+    const item = cart.items.find(item => item.cartItemId === cartItemId);
+    if (!item) {
       return res.status(404).json({
         status: false,
         message: 'Cart item not found'
       });
     }
 
-    req.session.cart[itemIndex].quantity = parseInt(quantity);
+    item.quantity = parseInt(quantity);
+    await applyTotals(cart);
+    await cart.save();
+    await cart.save();
 
     return res.status(200).json({
       status: true,
       message: 'Cart item updated successfully',
       data: {
-        cartItemCount: req.session.cart.reduce((sum, item) => sum + item.quantity, 0)
+        cartItemCount: cart.items.reduce((sum, item) => sum + item.quantity, 0)
       }
     });
   } catch (error) {
@@ -209,29 +234,34 @@ exports.update_cart_item = async (req, res) => {
 exports.remove_from_cart = async (req, res) => {
   try {
     const { cartItemId } = req.params;
+    const guestId = extractGuestId(req);
 
-    if (!req.session.cart) {
-      return res.status(404).json({
+    if (!guestId) {
+      return res.status(400).json({
         status: false,
-        message: 'Cart is empty'
+        message: 'guestId is required for cart operations',
       });
     }
 
-    const initialLength = req.session.cart.length;
-    req.session.cart = req.session.cart.filter(item => item.cartItemId !== cartItemId);
+    const cart = await createCanonicalCart(guestId);
+    const initialLength = cart.items.length;
+    cart.items = cart.items.filter(item => item.cartItemId !== cartItemId);
 
-    if (req.session.cart.length === initialLength) {
+    if (cart.items.length === initialLength) {
       return res.status(404).json({
         status: false,
         message: 'Cart item not found'
       });
     }
 
+    await applyTotals(cart);
+    await cart.save();
+
     return res.status(200).json({
       status: true,
       message: 'Item removed from cart successfully',
       data: {
-        cartItemCount: req.session.cart.reduce((sum, item) => sum + item.quantity, 0)
+        cartItemCount: cart.items.reduce((sum, item) => sum + item.quantity, 0)
       }
     });
   } catch (error) {
@@ -246,7 +276,16 @@ exports.remove_from_cart = async (req, res) => {
 // Clear entire cart
 exports.clear_cart = async (req, res) => {
   try {
-    req.session.cart = [];
+    const guestId = extractGuestId(req);
+
+    if (!guestId) {
+      return res.status(400).json({
+        status: false,
+        message: 'guestId is required for cart operations',
+      });
+    }
+
+    await clearCart(guestId);
 
     return res.status(200).json({
       status: true,
@@ -264,8 +303,17 @@ exports.clear_cart = async (req, res) => {
 // Get cart item count (for navbar badge)
 exports.get_cart_count = async (req, res) => {
   try {
-    const cart = req.session.cart || [];
-    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+    const guestId = extractGuestId(req);
+
+    if (!guestId) {
+      return res.status(400).json({
+        status: false,
+        message: 'guestId is required for cart operations',
+      });
+    }
+
+    const cart = await createCanonicalCart(guestId);
+    const totalItems = cart.items.reduce((sum, item) => sum + item.quantity, 0);
 
     return res.status(200).json({
       status: true,

@@ -12,6 +12,7 @@ const customer_controller = require('./customer');
 const { sendOrderSuccessEmail } = require('../../helper/emailHelper');
 const { getNextSequence } = require('../../helper/sequenceHelper');
 const product_model = require('../../model/product');
+const { extractGuestId, clearCart } = require('../../helper/cartHelper');
 
 /**
  * Helper: Decrement product and variant quantities after order creation
@@ -41,7 +42,7 @@ const decrementProductQuantities = async (orderProducts) => {
 
         // Find and decrement variant quantity
         const variantIndex = product.variants.findIndex(
-          v => v._id.toString() === variantId.toString()
+          v => v._id.toString() == variantId.toString()
         );
 
         if (variantIndex !== -1) {
@@ -355,9 +356,9 @@ exports.verify_payment = async (req, res) => {
         }
       }
 
-      // Clear cart from session
-      if (req.session) {
-        req.session.cart = [];
+      const guestId = extractGuestId(req);
+      if (guestId) {
+        await clearCart(guestId);
       }
 
       // Send order confirmation emails (customer + admin)
