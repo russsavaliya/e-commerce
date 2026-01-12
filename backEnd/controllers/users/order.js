@@ -3,7 +3,7 @@ const order_model = require('../../model/order');
 const draftOrder_model = require('../../model/draftOrder');
 const coupon_model = require('../../model/coupon');
 const customer_controller = require('./customer');
-const { sendOrderSuccessEmail } = require('../../helper/emailHelper');
+const { sendOrderSuccessEmail, sendOrderCancellationEmail } = require('../../helper/emailHelper');
 const { getNextSequence } = require('../../helper/sequenceHelper');
 const { extractGuestId, createCanonicalCart, clearCart } = require('../../helper/cartHelper');
 
@@ -380,15 +380,8 @@ exports.update_payment = async (req, res) => {
     // This ensures cart remains intact if user abandons checkout
     await clearCart(guestId);
 
-    // Send order confirmation emails (customer + admin)
-    try {
-      await sendOrderSuccessEmail(order.toObject());
-    } catch (err) {
-      console.error('Failed to send order confirmation emails:', err);
-      // Don't throw - order is already created successfully
-    }
-
-    return res.status(200).json({
+    // Send API response immediately (don't wait for email)
+    res.status(200).json({
       status: true,
       message: 'Order confirmed successfully.',
       data: {
@@ -397,6 +390,15 @@ exports.update_payment = async (req, res) => {
         payment_method: order.payment_method,
         payment_status: order.payment_status,
       },
+    });
+
+    // Send order confirmation emails in background (fire and forget)
+    // This runs asynchronously without blocking the response
+    setImmediate(() => {
+      sendOrderSuccessEmail(order.toObject()).catch((err) => {
+        console.error('Failed to send order confirmation emails:', err);
+        // Email failure won't affect order creation
+      });
     });
   } catch (error) {
     console.error('Error creating order from draft:', error);
@@ -481,6 +483,96 @@ exports.track_order = async (req, res) => {
     return res.status(500).json({
       status: false,
       message: error.message || 'Failed to track order',
+    });
+  }
+};
+
+/**
+ * Cancel Order
+ * Allows users to cancel their order if it's in pending, confirmed, or accepted status
+ */
+exports.cancel_order = async (req, res) => {
+  try {
+    const { orderId, email, reason } = req.body;
+
+    if (!orderId || !email) {
+      return res.status(400).json({
+        status: false,
+        message: 'Order ID and email are required',
+      });
+    }
+
+    if (!reason || !reason.trim()) {
+      return res.status(400).json({
+        status: false,
+        message: 'Cancellation reason is required',
+      });
+    }
+
+    // Find order with matching orderId and email
+    const order = await order_model.findOne({
+      order_id: orderId,
+      'shipping_address.email': email.toLowerCase().trim(),
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        status: false,
+        message: 'Order not found or email does not match',
+      });
+    }
+
+    // Check if order can be cancelled (only pending, confirmed, or accepted)
+    const cancellableStatuses = ['pending', 'confirmed', 'accepted'];
+    
+    if (!cancellableStatuses.includes(order.order_status.toLowerCase())) {
+      // Order cannot be cancelled - shipment is already in progress
+      return res.status(400).json({
+        status: false,
+        message: 'Your order cannot be cancelled as the shipment has already been prepared or dispatched.',
+        canCancel: false,
+        currentStatus: order.order_status,
+      });
+    }
+
+    // Check if already cancelled
+    if (order.order_status.toLowerCase() === 'cancelled') {
+      return res.status(400).json({
+        status: false,
+        message: 'This order is already cancelled',
+      });
+    }
+
+    // Update order status to cancelled with reason
+    order.order_status = 'cancelled';
+    order.cancelled_at = new Date();
+    order.cancellation_reason = reason.trim();
+    await order.save();
+
+    // Send API response immediately (don't wait for email)
+    res.status(200).json({
+      status: true,
+      message: 'Order cancelled successfully',
+      data: {
+        order_id: order.order_id,
+        order_status: order.order_status,
+        cancelled_at: order.cancelled_at,
+        cancellation_reason: order.cancellation_reason,
+      },
+    });
+
+    // Send cancellation emails in background (fire and forget)
+    setImmediate(() => {
+      sendOrderCancellationEmail(order.toObject()).catch((err) => {
+        console.error('Failed to send order cancellation emails:', err);
+        // Email failure won't affect cancellation
+      });
+    });
+  } catch (error) {
+    console.error('Error cancelling order:', error);
+    return res.status(500).json({
+      status: false,
+      message: error.message || 'Failed to cancel order',
     });
   }
 };

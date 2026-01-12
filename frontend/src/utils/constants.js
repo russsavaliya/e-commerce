@@ -4,8 +4,8 @@
  */
 
 // API Base URLs - Update these with your backend URLs
-// export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:1200';
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://h7dnb20f-1200.inc1.devtunnels.ms';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:1200';
+// export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://h7dnb20f-1200.inc1.devtunnels.ms';
 
 // User Auth Endpoints (for future use)
 export const USER_AUTH_ENDPOINTS = {

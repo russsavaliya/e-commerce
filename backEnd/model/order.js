@@ -123,6 +123,14 @@ const orderSchema = new schema({
       default: 0,
     },
   },
+  cancelled_at: {
+    type: Date,
+    default: null,
+  },
+  cancellation_reason: {
+    type: String,
+    default: null,
+  },
   created_at: {
     type: Date,
     default: Date.now,

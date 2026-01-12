@@ -361,16 +361,8 @@ exports.verify_payment = async (req, res) => {
         await clearCart(guestId);
       }
 
-      // Send order confirmation emails (customer + admin)
-      // Note: Email sending is non-blocking - errors won't affect order creation
-      try {
-        await sendOrderSuccessEmail(order.toObject());
-      } catch (err) {
-        console.error('Failed to send order confirmation emails:', err);
-        // Don't throw - order is already created successfully
-      }
-
-      return res.status(200).json({
+      // Send API response immediately (don't wait for email)
+      res.status(200).json({
         status: true,
         message: 'Payment verified and order confirmed successfully',
         data: {
@@ -379,6 +371,15 @@ exports.verify_payment = async (req, res) => {
           order_status: order.order_status,
           payment_id: razorpay_payment_id,
         },
+      });
+
+      // Send order confirmation emails in background (fire and forget)
+      // This runs asynchronously without blocking the response
+      setImmediate(() => {
+        sendOrderSuccessEmail(order.toObject()).catch((err) => {
+          console.error('Failed to send order confirmation emails:', err);
+          // Email failure won't affect order creation
+        });
       });
     } catch (razorpayError) {
       console.error('Razorpay API error:', razorpayError);

@@ -53,7 +53,7 @@ exports.get_accepted_orders = async (req, res) => {
  */
 exports.get_order_list = async (req, res) => {
   try {
-    console.log('Order list API called with params:', req.query);
+    // console.log('Order list API called with params:', req.query);
     let { page = 1, limit = 10, search = '', order_status = '', payment_status = '' } = req.query;
 
     page = parseInt(page);
