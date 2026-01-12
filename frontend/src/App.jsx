@@ -112,6 +112,7 @@ import NotFoundPage from './pages/user/NotFoundPage';
 // STEP 7: Import User Components
 // ============================================
 import WhatsAppSupport from './components/user/WhatsAppSupport';
+import PromoPopup from './components/user/PromoPopup';
 
 // TODO: When you create new user pages, import them here:
 // import UserOrders from './pages/user/UserOrders';
@@ -400,6 +401,9 @@ function App() {
 
           {/* WhatsApp Support Button - Visible on all user pages */}
           <WhatsAppSupport />
+
+          {/* Promotional Popup - Auto-displays after 3-5 seconds on user pages */}
+          <PromoPopup />
 
       </AdminAuthProvider>
 

@@ -546,6 +546,9 @@ const CheckoutPage = () => {
     );
   }
 
+  const hasCodCoupon = Array.isArray(availableCoupons) && availableCoupons.some((c) => c?.applicableToCOD);
+  const hasOnlineCoupon = Array.isArray(availableCoupons) && availableCoupons.some((c) => c?.applicableToOnline);
+
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -631,7 +634,17 @@ const CheckoutPage = () => {
                       <div className="flex items-center gap-2">
                         <Wallet className="w-5 h-5 text-gray-700" />
                         <div>
-                          <p className="font-semibold text-gray-900">Cash on Delivery</p>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-semibold text-gray-900">Cash on Delivery</p>
+                            {hasCodCoupon && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold 
+                                bg-purple-50 text-purple-700 border border-purple-200 
+                                animate-pulse">
+                                <Tag className="w-3 h-3" />
+                                Coupon Available
+                              </span>
+                            )}
+                          </div>
                           <p className="text-xs text-gray-500">Pay when you receive the order</p>
                         </div>
                       </div>
@@ -648,7 +661,18 @@ const CheckoutPage = () => {
                       <div className="flex items-center gap-2">
                         <CreditCard className="w-5 h-5 text-gray-700" />
                         <div>
-                          <p className="font-semibold text-gray-900">Online Payment (placeholder)</p>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-semibold text-gray-900">Online Payment</p>
+                            {hasOnlineCoupon && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold 
+                                bg-purple-50 text-purple-700 border border-purple-200 
+                                animate-pulse">
+                                <Tag className="w-3 h-3" />
+                                Coupon Available
+                              </span>
+                            )}
+
+                          </div>
                           <p className="text-xs text-gray-500">We'll confirm without charging for now</p>
                         </div>
                       </div>
@@ -675,8 +699,8 @@ const CheckoutPage = () => {
                             <div
                               key={coupon._id}
                               className={`p-4 border-2 rounded-lg transition-all ${isCompatibleWithSelected
-                                  ? 'border-green-300 bg-green-50/30 hover:border-green-400'
-                                  : 'border-gray-200 bg-gray-50/50 hover:border-gray-300 opacity-75'
+                                ? 'border-green-300 bg-green-50/30 hover:border-green-400'
+                                : 'border-gray-200 bg-gray-50/50 hover:border-gray-300 opacity-75'
                                 }`}
                             >
                               <div className="flex items-start justify-between gap-3">
@@ -688,16 +712,16 @@ const CheckoutPage = () => {
                                     {/* Payment Method Badges - Next to coupon name */}
                                     {coupon.applicableToCOD && (
                                       <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${selectedPayment === 'cod' && isCompatibleWithSelected
-                                          ? 'bg-blue-100 text-blue-700 border border-blue-300'
-                                          : 'bg-gray-100 text-gray-600 border border-gray-300'
+                                        ? 'bg-blue-100 text-blue-700 border border-blue-300'
+                                        : 'bg-gray-100 text-gray-600 border border-gray-300'
                                         }`}>
                                         💵 COD
                                       </span>
                                     )}
                                     {coupon.applicableToOnline && (
                                       <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${selectedPayment === 'online' && isCompatibleWithSelected
-                                          ? 'bg-purple-100 text-purple-700 border border-purple-300'
-                                          : 'bg-gray-100 text-gray-600 border border-gray-300'
+                                        ? 'bg-purple-100 text-purple-700 border border-purple-300'
+                                        : 'bg-gray-100 text-gray-600 border border-gray-300'
                                         }`}>
                                         💳 Online
                                       </span>
@@ -725,8 +749,8 @@ const CheckoutPage = () => {
                                     toast.success(`Coupon code "${coupon.code}" copied!`);
                                   }}
                                   className={`px-4 py-2 text-xs font-semibold rounded-lg transition-colors flex-shrink-0 ${isCompatibleWithSelected
-                                      ? 'bg-green-600 text-white hover:bg-green-700'
-                                      : 'bg-gray-300 text-gray-600 hover:bg-gray-400'
+                                    ? 'bg-green-600 text-white hover:bg-green-700'
+                                    : 'bg-gray-300 text-gray-600 hover:bg-gray-400'
                                     }`}
                                 >
                                   Copy
