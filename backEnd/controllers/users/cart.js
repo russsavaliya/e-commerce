@@ -20,7 +20,7 @@ exports.get_cart = async (req, res) => {
           const product = await product_model.findById(item.productId)
             .populate('category', 'name')
             .select('name images selling_price original_price discount_percentage category variants');
-          
+
           if (!product) {
             return null;
           }
@@ -57,7 +57,7 @@ exports.get_cart = async (req, res) => {
               category: product.category
             },
             image: displayImage, // Use variant image if variant selected, otherwise product image
-            price: price,
+            price: price,// Use variant price if variant selected, otherwise product price
             subtotal: price * item.quantity
           };
         } catch (error) {

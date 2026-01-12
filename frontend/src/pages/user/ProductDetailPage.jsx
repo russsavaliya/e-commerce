@@ -749,47 +749,53 @@ const ProductDetailPage = () => {
 
             {/* Product Features - COD, Easy Return, 7 Day Return */}
             <div className="mt-6 pt-6 border-t border-gray-200">
-              <div className="flex md:grid md:grid-cols-3 gap-3 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
+              <div className="grid grid-cols-3 gap-2 md:gap-3 md:grid-cols-3 overflow-hidden md:overflow-visible">
                 {/* COD Available */}
-                <div className="flex items-center gap-2.5 p-2 bg-white rounded-xl border border-gray-200 hover:border-[rgb(72,29,111)] hover:shadow-sm transition-all duration-200 min-w-[140px] md:min-w-0">
+                <div className="flex items-center gap-2 p-1 md:p-2 bg-white rounded-lg md:rounded-xl border border-gray-200 hover:border-[rgb(72,29,111)] hover:shadow-sm transition-all duration-200 min-w-0">
                   <div className="flex-shrink-0">
-                    <div className="w-10 h-10 rounded-lg bg-[rgba(72,29,111,0.1)] flex items-center justify-center">
-                      <CreditCard className="w-5 h-5 text-[rgb(72,29,111)]" />
+                    <div className="w-7 h-7 md:w-10 md:h-10 rounded-lg bg-[rgba(72,29,111,0.1)] flex items-center justify-center">
+                      <CreditCard className="w-3.5 h-3.5 md:w-5 md:h-5 text-[rgb(72,29,111)]" />
                     </div>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-semibold text-gray-900">COD Available</span>
+                      <span className="text-[10px] leading-tight md:text-xs font-semibold text-gray-900 whitespace-nowrap">
+                        COD Available
+                      </span>
                     </div>
                     {/* <p className="text-xs text-gray-500">Cash on delivery option available</p> */}
                   </div>
                 </div>
 
                 {/* Easy Return */}
-                <div className="flex items-center gap-2.5 p-2 bg-white rounded-xl border border-gray-200 hover:border-[rgb(72,29,111)] hover:shadow-sm transition-all duration-200 min-w-[140px] md:min-w-0">
+                <div className="flex items-center gap-2 p-1 md:p-2 bg-white rounded-lg md:rounded-xl border border-gray-200 hover:border-[rgb(72,29,111)] hover:shadow-sm transition-all duration-200 min-w-0">
                   <div className="flex-shrink-0">
-                    <div className="w-10 h-10 rounded-lg bg-[rgba(72,29,111,0.1)] flex items-center justify-center">
-                      <RotateCcw className="w-5 h-5 text-[rgb(72,29,111)]" />
+                    <div className="w-7 h-7 md:w-10 md:h-10 rounded-lg bg-[rgba(72,29,111,0.1)] flex items-center justify-center">
+                      <RotateCcw className="w-3.5 h-3.5 md:w-5 md:h-5 text-[rgb(72,29,111)]" />
                     </div>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-semibold text-gray-900">Easy Return</span>
+                      <span className="text-[10px] leading-tight md:text-xs font-semibold text-gray-900 whitespace-nowrap">
+                        Easy Return
+                      </span>
                     </div>
                     {/* <p className="text-xs text-gray-500">Hassle-free return process</p> */}
                   </div>
                 </div>
 
                 {/* 7 Day Return */}
-                <div className="flex items-center gap-2.5 p-2 bg-white rounded-xl border border-gray-200 hover:border-[rgb(72,29,111)] hover:shadow-sm transition-all duration-200 min-w-[140px] md:min-w-0">
+                <div className="flex items-center gap-2 p-1 md:p-2 bg-white rounded-lg md:rounded-xl border border-gray-200 hover:border-[rgb(72,29,111)] hover:shadow-sm transition-all duration-200 min-w-0">
                   <div className="flex-shrink-0">
-                    <div className="w-10 h-10 rounded-lg bg-[rgba(72,29,111,0.1)] flex items-center justify-center">
-                      <Calendar className="w-5 h-5 text-[rgb(72,29,111)]" />
+                    <div className="w-7 h-7 md:w-10 md:h-10 rounded-lg bg-[rgba(72,29,111,0.1)] flex items-center justify-center">
+                      <Calendar className="w-3.5 h-3.5 md:w-5 md:h-5 text-[rgb(72,29,111)]" />
                     </div>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-semibold text-gray-900">7 Day Return</span>
+                      <span className="text-[10px] leading-tight md:text-xs font-semibold text-gray-900 whitespace-nowrap">
+                        7 Day Return
+                      </span>
                     </div>
                     {/* <p className="text-xs text-gray-500">Return within 7 days of delivery</p> */}
                   </div>

@@ -26,24 +26,25 @@ import { API_BASE_URL } from '../../utils/constants';
 
 const getStatusColor = (status) => {
   const colors = {
-    pending: 'bg-amber-50 text-amber-700 border-amber-200',
-    confirmed: 'bg-blue-50 text-blue-700 border-blue-200',
-    accepted: 'bg-green-50 text-green-700 border-green-200',
-    shipment: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-    delivered: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    cancelled: 'bg-red-50 text-red-700 border-red-200',
-    missing: 'bg-orange-50 text-orange-700 border-orange-200',
-    failed: 'bg-rose-50 text-rose-700 border-rose-200',
+    pending: 'bg-yellow-50 text-yellow-800 border-yellow-300',   // Waiting
+    confirmed: 'bg-sky-50 text-sky-800 border-sky-300',            // Order confirmed
+    accepted: 'bg-teal-50 text-teal-800 border-teal-300',         // Accepted by system
+    shipment: 'bg-indigo-50 text-indigo-800 border-indigo-300',  // Shipment created
+    shipped: 'bg-violet-50 text-violet-800 border-violet-300',  // On the way
+    delivered: 'bg-green-50 text-green-800 border-green-300',     // Success
+    cancelled: 'bg-red-50 text-red-800 border-red-300',           // Cancelled
+    missing: 'bg-orange-50 text-orange-800 border-orange-300',  // Problem
+    failed: 'bg-rose-50 text-rose-800 border-rose-300',         // Failed
   };
   return colors[status] || 'bg-gray-50 text-gray-700 border-gray-200';
 };
 
 const getPaymentStatusColor = (status) => {
   const colors = {
-    pending: 'bg-amber-50 text-amber-700 border-amber-200',
-    paid: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    failed: 'bg-rose-50 text-rose-700 border-rose-200',
-    refunded: 'bg-orange-50 text-orange-700 border-orange-200',
+    pending: 'bg-yellow-50 text-yellow-800 border-yellow-300',   // Waiting for payment
+    paid: 'bg-green-50 text-green-800 border-green-300',     // Success
+    failed: 'bg-red-50 text-red-800 border-red-300',           // Payment failed
+    refunded: 'bg-blue-50 text-blue-800 border-blue-300',        // Money returned
   };
   return colors[status] || 'bg-gray-50 text-gray-700 border-gray-200';
 };
