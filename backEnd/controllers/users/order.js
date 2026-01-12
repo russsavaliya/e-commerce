@@ -66,20 +66,47 @@ const decrementProductQuantities = async (orderProducts) => {
 
 const allowedPaymentMethods = ['cod', 'online'];
 
+/**
+ * Helper: Generate Order ID based on product SKU and variant SKU
+ * Format: ORD-<PRODUCT_SKU>-<8_DIGIT_UNIQUE>-<VARIANT_SKU>-<8_DIGIT_UNIQUE> (if variant exists)
+ * Format: ORD-<PRODUCT_SKU>-<8_DIGIT_UNIQUE> (if no variant)
+ */
+const generateOrderId = (productSKU, variantSKU = null) => {
+  const getUniqueNumber = () => Date.now().toString().slice(-8);
+
+  const productPart = `${productSKU || 'PROD'}-${getUniqueNumber()}`;
+
+  if (variantSKU) {
+    // Add small delay to ensure different timestamp for variant part
+    const variantUnique = (Date.now() + Math.floor(Math.random() * 100)).toString().slice(-8);
+    return `ORD-${productPart}-${variantSKU}-${variantUnique}`;
+  }
+
+  return `ORD-${productPart}`;
+};
+
 const buildCartItems = async (cart = []) => {
   const items = [];
   let subtotal = 0;
+  let firstProductSKU = null;
+  let firstVariantSKU = null;
 
   for (const item of cart) {
-    const product = await product_model.findById(item.productId).select('name selling_price original_price discount_percentage variants images category');
+    const product = await product_model.findById(item.productId).select('name SKU selling_price original_price discount_percentage variants images category');
     if (!product) {
       throw new Error('One of the products in your cart is no longer available.');
+    }
+
+    // Store first product's SKU for order_id generation
+    if (!firstProductSKU) {
+      firstProductSKU = product.SKU;
     }
 
     let price = product.selling_price;
     let variantName = item.variantName || null;
     let image = product.images?.[0] || null;
     const categoryId = product.category || null;
+    let variantSKU = null;
 
     if (item.variantId) {
       const variant = product.variants?.find(v => v._id.toString() == item.variantId.toString());
@@ -88,6 +115,13 @@ const buildCartItems = async (cart = []) => {
       }
       price = variant.variant_price || price;
       variantName = variant.variant_name || variantName;
+      variantSKU = variant.variant_SKU;
+
+      // Store first variant's SKU for order_id generation
+      if (!firstVariantSKU && items.length === 0) {
+        firstVariantSKU = variantSKU;
+      }
+
       if (variant.variant_image) {
         image = variant.variant_image;
       }
@@ -109,7 +143,7 @@ const buildCartItems = async (cart = []) => {
     });
   }
 
-  return { items, subtotal };
+  return { items, subtotal, firstProductSKU, firstVariantSKU };
 };
 
 /**
@@ -133,7 +167,7 @@ exports.init_order = async (req, res) => {
         message: 'Cart is empty. Add items before placing an order.',
       });
     }
-    console.log("cartDoc==>", cartDoc);
+    // console.log("cartDoc==>", cartDoc);
     const {
       fullName,
       phone,
@@ -239,7 +273,7 @@ exports.init_order = async (req, res) => {
 const createOrderFromDraftOrder = async (draftOrder, paymentMethod, paymentStatus, orderStatus, couponDetails = null) => {
   // Build cart items from DraftOrder
   const cart = draftOrder.cart_items || [];
-  const { items, subtotal } = await buildCartItems(
+  const { items, subtotal, firstProductSKU, firstVariantSKU } = await buildCartItems(
     cart.map((item) => ({
       productId: item.productId,
       variantId: item.variantId,
@@ -249,6 +283,9 @@ const createOrderFromDraftOrder = async (draftOrder, paymentMethod, paymentStatu
 
   // Get next sequence number for order
   const number_id = await getNextSequence('order');
+
+  // Generate order_id based on product SKU and variant SKU
+  const order_id = generateOrderId(firstProductSKU, firstVariantSKU);
 
   // Calculate amounts with coupon discount
   const sub_total = draftOrder.sub_total || subtotal;
@@ -267,7 +304,7 @@ const createOrderFromDraftOrder = async (draftOrder, paymentMethod, paymentStatu
   // Create Order
   const orderPayload = {
     number_id,
-    order_id: `ORD-${Date.now()}`,
+    order_id: order_id,
     products: items,
     sub_total: sub_total,
     shipping_amount: shipping_amount,
@@ -524,7 +561,7 @@ exports.cancel_order = async (req, res) => {
 
     // Check if order can be cancelled (only pending, confirmed, or accepted)
     const cancellableStatuses = ['pending', 'confirmed', 'accepted'];
-    
+
     if (!cancellableStatuses.includes(order.order_status.toLowerCase())) {
       // Order cannot be cancelled - shipment is already in progress
       return res.status(400).json({

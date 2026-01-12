@@ -77,22 +77,49 @@ const razorpay = new Razorpay({
 });
 
 /**
+ * Helper: Generate Order ID based on product SKU and variant SKU
+ * Format: ORD-<PRODUCT_SKU>-<8_DIGIT_UNIQUE>-<VARIANT_SKU>-<8_DIGIT_UNIQUE> (if variant exists)
+ * Format: ORD-<PRODUCT_SKU>-<8_DIGIT_UNIQUE> (if no variant)
+ */
+const generateOrderId = (productSKU, variantSKU = null) => {
+  const getUniqueNumber = () => Date.now().toString().slice(-8);
+
+  const productPart = `${productSKU || 'PROD'}-${getUniqueNumber()}`;
+
+  if (variantSKU) {
+    // Add small delay to ensure different timestamp for variant part
+    const variantUnique = (Date.now() + Math.floor(Math.random() * 100)).toString().slice(-8);
+    return `ORD-${productPart}-${variantSKU}-${variantUnique}`;
+  }
+
+  return `ORD-${productPart}`;
+};
+
+/**
  * Helper: Build cart items from DraftOrder cart_items
  */
 const buildCartItems = async (cart = []) => {
   const items = [];
   let subtotal = 0;
+  let firstProductSKU = null;
+  let firstVariantSKU = null;
 
   for (const item of cart) {
-    const product = await product_model.findById(item.productId).select('name selling_price original_price discount_percentage variants images category');
+    const product = await product_model.findById(item.productId).select('name SKU selling_price original_price discount_percentage variants images category');
     if (!product) {
       throw new Error('One of the products in your cart is no longer available.');
+    }
+
+    // Store first product's SKU for order_id generation
+    if (!firstProductSKU) {
+      firstProductSKU = product.SKU;
     }
 
     let price = product.selling_price;
     let variantName = null;
     let image = product.images?.[0] || null;
     const categoryId = product.category || null;
+    let variantSKU = null;
 
     if (item.variantId) {
       const variant = product.variants?.find(v => v._id.toString() == item.variantId.toString());
@@ -101,6 +128,13 @@ const buildCartItems = async (cart = []) => {
       }
       price = variant.variant_price || price;
       variantName = variant.variant_name || variantName;
+      variantSKU = variant.variant_SKU;
+
+      // Store first variant's SKU for order_id generation
+      if (!firstVariantSKU && items.length === 0) {
+        firstVariantSKU = variantSKU;
+      }
+
       if (variant.variant_image) {
         image = variant.variant_image;
       }
@@ -122,7 +156,7 @@ const buildCartItems = async (cart = []) => {
     });
   }
 
-  return { items, subtotal };
+  return { items, subtotal, firstProductSKU, firstVariantSKU };
 };
 
 /**
@@ -131,10 +165,13 @@ const buildCartItems = async (cart = []) => {
 const createOrderFromDraftOrder = async (draftOrder, paymentMethod, paymentStatus, orderStatus, razorpayOrderId = null, razorpayPaymentId = null, couponDetails = null) => {
   // Build cart items from DraftOrder
   const cart = draftOrder.cart_items || [];
-  const { items, subtotal } = await buildCartItems(cart);
+  const { items, subtotal, firstProductSKU, firstVariantSKU } = await buildCartItems(cart);
 
   // Get next sequence number for order
   const number_id = await getNextSequence('order');
+
+  // Generate order_id based on product SKU and variant SKU
+  const order_id = generateOrderId(firstProductSKU, firstVariantSKU);
 
   // Calculate amounts with coupon discount
   const sub_total = draftOrder.sub_total || subtotal;
@@ -153,7 +190,7 @@ const createOrderFromDraftOrder = async (draftOrder, paymentMethod, paymentStatu
   // Create Order
   const orderPayload = {
     number_id,
-    order_id: `ORD-${Date.now()}`,
+    order_id: order_id,
     products: items,
     sub_total: sub_total,
     shipping_amount: shipping_amount,
