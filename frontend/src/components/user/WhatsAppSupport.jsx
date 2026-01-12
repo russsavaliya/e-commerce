@@ -34,7 +34,7 @@ const WhatsAppSupport = () => {
   // WhatsApp Business Number
   // Format: Country code + number without + or spaces
   // Example: 919876543210 (for India: +91 9876543210)
-  const WHATSAPP_NUMBER = '919510928019'; // WhatsApp number from Footer component
+  const WHATSAPP_NUMBER = '919687568041'; // WhatsApp number from Footer component
 
   // Get current page context for smart message
   const getContextMessage = () => {
