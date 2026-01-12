@@ -66,9 +66,15 @@ const WhatsAppSupport = () => {
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
   };
 
+  // Check if current page is Product Detail page
+  const isProductDetailPage = location.pathname.includes('/product/');
+  
+  // Adjust bottom position: higher on Product Detail page (mobile only) to avoid sticky buttons
+  const bottomPosition = isProductDetailPage ? 'bottom-20' : 'bottom-4';
+
   return (
     <div
-      className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40"
+      className={`fixed ${bottomPosition} right-4 sm:bottom-6 sm:right-6 z-40`}
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
     >

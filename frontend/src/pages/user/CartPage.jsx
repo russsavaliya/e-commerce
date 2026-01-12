@@ -17,6 +17,8 @@ const CartPage = () => {
   const [loadingCoupons, setLoadingCoupons] = useState(false);
 
   useEffect(() => {
+    // Scroll to top when cart page loads
+    window.scrollTo(0, 0);
     fetchCart();
     fetchAvailableCoupons();
   }, []);
