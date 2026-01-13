@@ -4,6 +4,7 @@ const draftOrder_model = require('../../model/draftOrder');
 const coupon_model = require('../../model/coupon');
 const customer_controller = require('./customer');
 const { sendOrderSuccessEmail, sendOrderCancellationEmail } = require('../../helper/emailHelper');
+const { sendOrderSuccessWhatsApp } = require('../../helper/whatsappHelper');
 const { getNextSequence } = require('../../helper/sequenceHelper');
 const { extractGuestId, createCanonicalCart, clearCart } = require('../../helper/cartHelper');
 
@@ -429,13 +430,19 @@ exports.update_payment = async (req, res) => {
       },
     });
 
-    // Send order confirmation emails in background (fire and forget)
+    // Send notifications in background (fire and forget)
     // This runs asynchronously without blocking the response
     setImmediate(() => {
-      sendOrderSuccessEmail(order.toObject()).catch((err) => {
+      const orderData = order.toObject();
+
+      sendOrderSuccessEmail(orderData).catch((err) => {
         console.error('Failed to send order confirmation emails:', err);
         // Email failure won't affect order creation
       });
+
+      // sendOrderSuccessWhatsApp(orderData).catch((err) => {
+      //   console.error('Failed to send order confirmation WhatsApp:', err);
+      // });
     });
   } catch (error) {
     console.error('Error creating order from draft:', error);
