@@ -7,7 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/user/Navbar';
 import Footer from '../../components/user/Footer';
-import { Loader2, ArrowLeft, CreditCard, Wallet, Tag } from 'lucide-react';
+import { Loader2, ArrowLeft, CreditCard, Wallet, Tag, X, CheckCircle2 } from 'lucide-react';
 import { getCart } from '../../services/user/cartService';
 import { validatePincode, initOrder, updatePayment, createRazorpayOrder, verifyRazorpayPayment } from '../../services/user/checkoutService';
 import { applyCoupon, getAvailableCoupons } from '../../services/user/couponService';
@@ -59,9 +59,8 @@ const CheckoutPage = () => {
   const [currentStep, setCurrentStep] = useState('shipping'); // 'shipping' | 'payment'
   const [selectedPayment, setSelectedPayment] = useState('cod');
   const [draftOrderId, setDraftOrderId] = useState(null);
-  const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
-  const [applyingCoupon, setApplyingCoupon] = useState(false);
+  const [applyingCoupon, setApplyingCoupon] = useState(null); // Track which coupon is being applied
   const [couponError, setCouponError] = useState('');
   const [availableCoupons, setAvailableCoupons] = useState([]);
 
@@ -97,9 +96,10 @@ const CheckoutPage = () => {
         : availableCoupons.some(c => c.code === appliedCoupon.couponCode && c.applicableToOnline);
 
       if (!isCompatible) {
+        const couponData = availableCoupons.find(c => c.code === appliedCoupon.couponCode);
+        const paymentMethodName = selectedPayment === 'cod' ? 'Cash on Delivery' : 'Online Payment';
         setAppliedCoupon(null);
-        setCouponCode('');
-        toast.error('Current coupon is not applicable for selected payment method');
+        toast.error(`Coupon ${appliedCoupon.couponCode} is not applicable for ${paymentMethodName} orders and has been removed`);
       }
     }
   }, [selectedPayment, currentStep, appliedCoupon, availableCoupons]);
@@ -419,27 +419,46 @@ const CheckoutPage = () => {
     }
   };
 
-  const handleApplyCoupon = async () => {
-    if (!couponCode.trim()) {
-      setCouponError('Please enter a coupon code');
-      return;
-    }
-
+  const handleApplyCoupon = async (coupon) => {
     if (!cart || !cart.subtotal) {
-      setCouponError('Cart is empty');
+      toast.error('Cart is empty');
       return;
     }
 
     if (currentStep !== 'payment') {
-      setCouponError('Please proceed to payment step to apply coupon');
+      toast.error('Please proceed to payment step to apply coupon');
+      return;
+    }
+
+    // Check if another coupon is already applied
+    if (appliedCoupon && appliedCoupon.couponCode !== coupon.code) {
+      toast.error('Only one coupon can be applied per order. Please remove the current coupon first.');
+      return;
+    }
+
+    // Check if this coupon is already applied
+    if (appliedCoupon && appliedCoupon.couponCode === coupon.code) {
+      toast.info('This coupon is already applied');
+      return;
+    }
+
+    // Check payment method compatibility before API call
+    const isCompatibleWithSelected = selectedPayment === 'cod'
+      ? coupon.applicableToCOD
+      : coupon.applicableToOnline;
+
+    if (!isCompatibleWithSelected) {
+      const paymentMethodName = selectedPayment === 'cod' ? 'Cash on Delivery' : 'Online Payment';
+      toast.error(`This coupon is not applicable for ${paymentMethodName} orders`);
       return;
     }
 
     try {
-      setApplyingCoupon(true);
+      setApplyingCoupon(coupon.code);
       setCouponError('');
+
       // Pass payment method to validate coupon compatibility
-      const response = await applyCoupon(couponCode.trim(), cart.subtotal, selectedPayment);
+      const response = await applyCoupon(coupon.code, cart.subtotal, selectedPayment);
 
       if (response.status) {
         const normalizedCoupon = normalizeCouponPayload(response.data);
@@ -449,21 +468,22 @@ const CheckoutPage = () => {
           `Coupon ${normalizedCoupon?.couponCode} applied! You saved ₹${savedDiscount.toFixed(2)}`
         );
       } else {
+        // Show API error as toast notification
+        toast.error(response.message || 'Failed to apply coupon');
         setCouponError(response.message || 'Failed to apply coupon');
-        setAppliedCoupon(null);
       }
     } catch (error) {
       console.error('Error applying coupon:', error);
-      setCouponError(error.response?.data?.message || error.message || 'Failed to apply coupon');
-      setAppliedCoupon(null);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to apply coupon';
+      toast.error(errorMessage);
+      setCouponError(errorMessage);
     } finally {
-      setApplyingCoupon(false);
+      setApplyingCoupon(null);
     }
   };
 
   const handleRemoveCoupon = () => {
     setAppliedCoupon(null);
-    setCouponCode('');
     setCouponError('');
     toast.success('Coupon removed');
   };
@@ -742,19 +762,40 @@ const CheckoutPage = () => {
                                   </p>
                                 </div>
 
-                                {/* Copy Button */}
-                                <button
-                                  onClick={() => {
-                                    navigator.clipboard.writeText(coupon.code);
-                                    toast.success(`Coupon code "${coupon.code}" copied!`);
-                                  }}
-                                  className={`px-4 py-2 text-xs font-semibold rounded-lg transition-colors flex-shrink-0 ${isCompatibleWithSelected
-                                    ? 'bg-green-600 text-white hover:bg-green-700'
-                                    : 'bg-gray-300 text-gray-600 hover:bg-gray-400'
-                                    }`}
-                                >
-                                  Copy
-                                </button>
+                                {/* Apply/Remove Button */}
+                                {appliedCoupon?.couponCode === coupon.code ? (
+                                  <button
+                                    onClick={handleRemoveCoupon}
+                                    className="px-4 py-2 text-xs font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors flex-shrink-0 flex items-center gap-1"
+                                  >
+                                    <X className="w-3 h-3" />
+                                    Remove
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => handleApplyCoupon(coupon)}
+                                    disabled={applyingCoupon === coupon.code || (appliedCoupon && appliedCoupon.couponCode !== coupon.code)}
+                                    className={`px-4 py-2 text-xs font-semibold rounded-lg transition-colors flex-shrink-0 flex items-center gap-1 ${
+                                      isCompatibleWithSelected && !appliedCoupon
+                                        ? 'bg-green-600 text-white hover:bg-green-700'
+                                        : appliedCoupon
+                                        ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                                        : 'bg-gray-300 text-gray-600 hover:bg-gray-400'
+                                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                  >
+                                    {applyingCoupon === coupon.code ? (
+                                      <>
+                                        <Loader2 className="w-3 h-3 animate-spin" />
+                                        Applying...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <CheckCircle2 className="w-3 h-3" />
+                                        Apply
+                                      </>
+                                    )}
+                                  </button>
+                                )}
                               </div>
 
                               {/* Compatibility Notice */}
@@ -763,6 +804,16 @@ const CheckoutPage = () => {
                                   <p className="text-xs text-amber-600 flex items-center gap-1">
                                     <span>⚠️</span>
                                     <span>This coupon is not applicable for {selectedPayment === 'cod' ? 'COD' : 'Online'} payment. Switch payment method to use it.</span>
+                                  </p>
+                                </div>
+                              )}
+
+                              {/* One Coupon Notice */}
+                              {appliedCoupon && appliedCoupon.couponCode !== coupon.code && (
+                                <div className="mt-2 pt-2 border-t border-gray-200">
+                                  <p className="text-xs text-blue-600 flex items-center gap-1">
+                                    <span>ℹ️</span>
+                                    <span>Only one coupon can be applied per order. Remove the current coupon to apply this one.</span>
                                   </p>
                                 </div>
                               )}
@@ -796,15 +847,8 @@ const CheckoutPage = () => {
               isSubmitting={isSubmitting}
               buttonLabel={currentStep === 'payment' ? 'Place Order' : 'Continue to Payment'}
               currentStep={currentStep}
-              couponCode={couponCode}
               appliedCoupon={appliedCoupon}
-              onCouponCodeChange={setCouponCode}
-              onApplyCoupon={handleApplyCoupon}
               onRemoveCoupon={handleRemoveCoupon}
-              applyingCoupon={applyingCoupon}
-              couponError={couponError}
-              availableCoupons={availableCoupons}
-              selectedPayment={selectedPayment}
             />
           </div>
         </div>
