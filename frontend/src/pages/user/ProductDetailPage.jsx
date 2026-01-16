@@ -339,7 +339,7 @@ const ProductDetailPage = () => {
         </div>
         <div className="px-6 py-5">
           <div
-            className="text-base text-[#374151] leading-relaxed prose prose-sm max-w-none"
+            className="text-base text-[#374151] leading-relaxed prose prose-sm max-w-none whitespace-pre-wrap"
             dangerouslySetInnerHTML={{ __html: product.description }}
           />
         </div>
@@ -626,23 +626,24 @@ const ProductDetailPage = () => {
             </div>
 
             {/* Product-level attributes (read-only display) */}
+            {/* Product-level attributes (read-only display) */}
             {product.attributesvalues &&
               product.attributesvalues.length > 0 &&
               product.attributesvalues.some(attr => attr.values && attr.values.length > 0) && (
-                <div className="space-y-3 border-t border-[#E5E7EB] pt-4">
-                  <div className="text-sm font-semibold text-[#374151] mb-4 uppercase tracking-wide">Product Details</div>
+                <div className="space-y-2 border-t border-[#E5E7EB] pt-4">
+                  <div className="text-sm font-semibold text-[#374151] mb-3 uppercase tracking-wide">Product Details</div>
                   {product.attributesvalues
                     .filter(attr => attr.values && attr.values.length > 0)
                     .map((attr, idx) => (
-                      <div key={attr._id || idx} className="flex items-start gap-3">
-                        <div className="text-sm font-medium text-[#6B7280] min-w-[100px]">
+                      <div key={attr._id || idx} className="flex items-start gap-2 py-0.5">
+                        <div className="text-sm font-medium text-[#6B7280] w-20 sm:w-24 flex-shrink-0">
                           {attr.name || 'Attribute'}:
                         </div>
-                        <div className="flex-1 text-sm text-[#374151]">
+                        <div className="flex-1 text-sm text-[#374151] flex flex-wrap items-center">
                           {attr.values.map((val, vIdx) => (
-                            <span key={val._id || vIdx}>
+                            <span key={val._id || vIdx} className="inline-flex items-center">
                               {val.value || 'Value'}
-                              {vIdx < attr.values.length - 1 && <span className="text-[#9CA3AF] mx-2">•</span>}
+                              {vIdx < attr.values.length - 1 && <span className="text-[#9CA3AF] mx-2 text-[10px]">•</span>}
                             </span>
                           ))}
                         </div>
@@ -654,7 +655,7 @@ const ProductDetailPage = () => {
             {/* Variants list */}
             {product.variants && product.variants.length > 0 && (
               <div>
-                <div className="text-sm font-semibold text-[#374151] mb-3 uppercase tracking-wide">Options</div>
+                <div className="text-sm font-semibold text-[#374151] mb-3 uppercase tracking-wide">Select Options</div>
                 <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                   {product.variants.map((variant) => {
                     const variantOutOfStock = (variant.quantity ?? 0) <= 0;
