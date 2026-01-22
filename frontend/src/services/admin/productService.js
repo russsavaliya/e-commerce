@@ -27,7 +27,6 @@ productApi.interceptors.request.use(
 
 /**
  * Create a new product
- * @param {FormData} formData - FormData object containing product data and files
  */
 export const createProduct = async (formData) => {
   try {
@@ -46,8 +45,6 @@ export const createProduct = async (formData) => {
 
 /**
  * Update an existing product
- * @param {string} id - Product ID
- * @param {FormData} formData - FormData object containing updated product data and files
  */
 export const updateProduct = async (id, formData) => {
   try {

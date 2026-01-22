@@ -213,8 +213,6 @@ const sendOrderNotificationEmailToAdmin = async (orderData) => {
 
 /**
  * Send order success emails (both customer and admin)
- * @param {Object} orderData - Order data object
- * @returns {Promise<Object>} Email send results
  */
 const sendOrderSuccessEmail = async (orderData) => {
     const results = {

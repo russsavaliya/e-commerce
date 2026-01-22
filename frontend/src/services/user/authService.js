@@ -60,8 +60,6 @@ userApi.interceptors.response.use(
 
 /**
  * User Login Service
- * @param {object} credentials - { email, password }
- * @returns {Promise<object>} - { user, token }
  */
 export const userLogin = async (credentials) => {
   try {
@@ -92,8 +90,6 @@ export const userLogin = async (credentials) => {
 
 /**
  * User Signup Service
- * @param {object} userData - { name, email, phone, password }
- * @returns {Promise<object>} - { user, token }
  */
 export const userSignup = async (userData) => {
   try {
@@ -124,7 +120,6 @@ export const userSignup = async (userData) => {
 
 /**
  * User Logout Service
- * @returns {Promise<void>}
  */
 export const userLogout = async () => {
   try {
@@ -140,7 +135,6 @@ export const userLogout = async () => {
 
 /**
  * Get stored user token
- * @returns {string|null}
  */
 export const getUserToken = () => {
   return localStorage.getItem(STORAGE_KEYS.USER_TOKEN);
@@ -148,7 +142,6 @@ export const getUserToken = () => {
 
 /**
  * Get stored user
- * @returns {object|null}
  */
 export const getUser = () => {
   const userStr = localStorage.getItem(STORAGE_KEYS.USER_USER);
@@ -164,7 +157,6 @@ export const getUser = () => {
 
 /**
  * Check if user is authenticated
- * @returns {boolean}
  */
 export const isUserAuthenticated = () => {
   return !!getUserToken();

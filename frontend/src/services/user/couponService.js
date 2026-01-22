@@ -11,7 +11,6 @@ const userApi = axios.create({
 
 /**
  * Get available coupons for users
- * @param {string} paymentMethod - Optional: 'cod' or 'online' to filter coupons
  */
 export const getAvailableCoupons = async (paymentMethod = null) => {
   try {
@@ -25,9 +24,6 @@ export const getAvailableCoupons = async (paymentMethod = null) => {
 
 /**
  * Apply coupon code
- * @param {string} code - Coupon code
- * @param {number} cartTotal - Cart total amount
- * @param {string} paymentMethod - Optional: 'cod' or 'online' to validate coupon compatibility
  */
 export const applyCoupon = async (code, cartTotal, paymentMethod = null) => {
   try {

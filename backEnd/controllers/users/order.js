@@ -265,11 +265,6 @@ exports.init_order = async (req, res) => {
 /**
  * Helper: Create Order from DraftOrder
  * This is used by both COD and Online Payment flows
- * @param {Object} draftOrder - The draft order object
- * @param {String} paymentMethod - Payment method ('cod' or 'online')
- * @param {String} paymentStatus - Payment status ('pending' or 'paid')
- * @param {String} orderStatus - Order status
- * @param {Object} couponDetails - Coupon details { coupon_id, coupon_code, discount_amount }
  */
 const createOrderFromDraftOrder = async (draftOrder, paymentMethod, paymentStatus, orderStatus, couponDetails = null) => {
   // Build cart items from DraftOrder

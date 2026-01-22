@@ -53,8 +53,6 @@ export const getAllAttributes = async (page = 1, limit = 10, search = '') => {
 
 /**
  * Create a new attribute
- * @param {object} attributeData - { name: string, values: Array<{value: string}> }
- * @returns {Promise<object>} - Created attribute
  */
 export const createAttribute = async (attributeData) => {
   try {
