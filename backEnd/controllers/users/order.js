@@ -3,8 +3,10 @@ const order_model = require('../../model/order');
 const draftOrder_model = require('../../model/draftOrder');
 const coupon_model = require('../../model/coupon');
 const customer_controller = require('./customer');
-const { sendOrderSuccessEmail } = require('../../helper/emailHelper');
+const { sendOrderSuccessEmail, sendOrderCancellationEmail } = require('../../helper/emailHelper');
+const { sendOrderSuccessWhatsApp } = require('../../helper/whatsappHelper');
 const { getNextSequence } = require('../../helper/sequenceHelper');
+const { extractGuestId, createCanonicalCart, clearCart } = require('../../helper/cartHelper');
 
 /**
  * Helper: Decrement product and variant quantities after order creation
@@ -35,7 +37,7 @@ const decrementProductQuantities = async (orderProducts) => {
 
         // Find and decrement variant quantity
         const variantIndex = product.variants.findIndex(
-          v => v._id.toString() === variantId.toString()
+          v => v._id.toString() == variantId.toString()
         );
 
         if (variantIndex !== -1) {
@@ -65,20 +67,47 @@ const decrementProductQuantities = async (orderProducts) => {
 
 const allowedPaymentMethods = ['cod', 'online'];
 
+/**
+ * Helper: Generate Order ID based on product SKU and variant SKU
+ * Format: ORD-<PRODUCT_SKU>-<8_DIGIT_UNIQUE>-<VARIANT_SKU>-<8_DIGIT_UNIQUE> (if variant exists)
+ * Format: ORD-<PRODUCT_SKU>-<8_DIGIT_UNIQUE> (if no variant)
+ */
+const generateOrderId = (productSKU, variantSKU = null) => {
+  const getUniqueNumber = () => Date.now().toString().slice(-8);
+
+  const productPart = `${productSKU || 'PROD'}-${getUniqueNumber()}`;
+
+  if (variantSKU) {
+    // Add small delay to ensure different timestamp for variant part
+    const variantUnique = (Date.now() + Math.floor(Math.random() * 100)).toString().slice(-8);
+    return `ORD-${productPart}-${variantSKU}-${variantUnique}`;
+  }
+
+  return `ORD-${productPart}`;
+};
+
 const buildCartItems = async (cart = []) => {
   const items = [];
   let subtotal = 0;
+  let firstProductSKU = null;
+  let firstVariantSKU = null;
 
   for (const item of cart) {
-    const product = await product_model.findById(item.productId).select('name selling_price original_price discount_percentage variants images category');
+    const product = await product_model.findById(item.productId).select('name SKU selling_price original_price discount_percentage variants images category');
     if (!product) {
       throw new Error('One of the products in your cart is no longer available.');
+    }
+
+    // Store first product's SKU for order_id generation
+    if (!firstProductSKU) {
+      firstProductSKU = product.SKU;
     }
 
     let price = product.selling_price;
     let variantName = item.variantName || null;
     let image = product.images?.[0] || null;
     const categoryId = product.category || null;
+    let variantSKU = null;
 
     if (item.variantId) {
       const variant = product.variants?.find(v => v._id.toString() == item.variantId.toString());
@@ -87,6 +116,13 @@ const buildCartItems = async (cart = []) => {
       }
       price = variant.variant_price || price;
       variantName = variant.variant_name || variantName;
+      variantSKU = variant.variant_SKU;
+
+      // Store first variant's SKU for order_id generation
+      if (!firstVariantSKU && items.length === 0) {
+        firstVariantSKU = variantSKU;
+      }
+
       if (variant.variant_image) {
         image = variant.variant_image;
       }
@@ -108,7 +144,7 @@ const buildCartItems = async (cart = []) => {
     });
   }
 
-  return { items, subtotal };
+  return { items, subtotal, firstProductSKU, firstVariantSKU };
 };
 
 /**
@@ -117,14 +153,22 @@ const buildCartItems = async (cart = []) => {
  */
 exports.init_order = async (req, res) => {
   try {
-    const cart = req.session.cart || [];
-    if (!cart.length) {
+    const guestId = extractGuestId(req);
+    if (!guestId) {
+      return res.status(400).json({
+        status: false,
+        message: 'guestId is required to place an order.',
+      });
+    }
+
+    const cartDoc = await createCanonicalCart(guestId);
+    if (!cartDoc || !cartDoc.items.length) {
       return res.status(400).json({
         status: false,
         message: 'Cart is empty. Add items before placing an order.',
       });
     }
-
+    // console.log("cartDoc==>", cartDoc);
     const {
       fullName,
       phone,
@@ -146,15 +190,15 @@ exports.init_order = async (req, res) => {
       });
     }
 
-    const { items, subtotal } = await buildCartItems(cart);
-
+    // const { items, subtotal } = await buildCartItems(cartDoc.items);
+    const subtotal = cartDoc.totals.subtotal;
     const shipping_amount = 0;
     const total_tax = 0;
     const coupon_discount = discount_amount ? Number(discount_amount) : 0;
     const total_amount = Math.max(0, subtotal + shipping_amount + total_tax - coupon_discount);
 
     // Prepare cart items for DraftOrder
-    const cartItems = cart.map((item) => ({
+    const cartItems = cartDoc.items.map((item) => ({
       productId: item.productId,
       variantId: item.variantId || null,
       quantity: item.quantity,
@@ -221,16 +265,11 @@ exports.init_order = async (req, res) => {
 /**
  * Helper: Create Order from DraftOrder
  * This is used by both COD and Online Payment flows
- * @param {Object} draftOrder - The draft order object
- * @param {String} paymentMethod - Payment method ('cod' or 'online')
- * @param {String} paymentStatus - Payment status ('pending' or 'paid')
- * @param {String} orderStatus - Order status
- * @param {Object} couponDetails - Coupon details { coupon_id, coupon_code, discount_amount }
  */
 const createOrderFromDraftOrder = async (draftOrder, paymentMethod, paymentStatus, orderStatus, couponDetails = null) => {
   // Build cart items from DraftOrder
   const cart = draftOrder.cart_items || [];
-  const { items, subtotal } = await buildCartItems(
+  const { items, subtotal, firstProductSKU, firstVariantSKU } = await buildCartItems(
     cart.map((item) => ({
       productId: item.productId,
       variantId: item.variantId,
@@ -240,6 +279,9 @@ const createOrderFromDraftOrder = async (draftOrder, paymentMethod, paymentStatu
 
   // Get next sequence number for order
   const number_id = await getNextSequence('order');
+
+  // Generate order_id based on product SKU and variant SKU
+  const order_id = generateOrderId(firstProductSKU, firstVariantSKU);
 
   // Calculate amounts with coupon discount
   const sub_total = draftOrder.sub_total || subtotal;
@@ -258,7 +300,7 @@ const createOrderFromDraftOrder = async (draftOrder, paymentMethod, paymentStatu
   // Create Order
   const orderPayload = {
     number_id,
-    order_id: `ORD-${Date.now()}`,
+    order_id: order_id,
     products: items,
     sub_total: sub_total,
     shipping_amount: shipping_amount,
@@ -306,6 +348,14 @@ exports.update_payment = async (req, res) => {
       return res.status(400).json({
         status: false,
         message: 'Invalid payment method.',
+      });
+    }
+
+    const guestId = extractGuestId(req);
+    if (!guestId) {
+      return res.status(400).json({
+        status: false,
+        message: 'guestId is required to complete the order.',
       });
     }
 
@@ -361,17 +411,10 @@ exports.update_payment = async (req, res) => {
 
     // Clear cart only after payment is confirmed/order is placed
     // This ensures cart remains intact if user abandons checkout
-    req.session.cart = [];
+    await clearCart(guestId);
 
-    // Send order confirmation emails (customer + admin)
-    try {
-      await sendOrderSuccessEmail(order.toObject());
-    } catch (err) {
-      console.error('Failed to send order confirmation emails:', err);
-      // Don't throw - order is already created successfully
-    }
-
-    return res.status(200).json({
+    // Send API response immediately (don't wait for email)
+    res.status(200).json({
       status: true,
       message: 'Order confirmed successfully.',
       data: {
@@ -380,6 +423,21 @@ exports.update_payment = async (req, res) => {
         payment_method: order.payment_method,
         payment_status: order.payment_status,
       },
+    });
+
+    // Send notifications in background (fire and forget)
+    // This runs asynchronously without blocking the response
+    setImmediate(() => {
+      const orderData = order.toObject();
+
+      sendOrderSuccessEmail(orderData).catch((err) => {
+        console.error('Failed to send order confirmation emails:', err);
+        // Email failure won't affect order creation
+      });
+
+      // sendOrderSuccessWhatsApp(orderData).catch((err) => {
+      //   console.error('Failed to send order confirmation WhatsApp:', err);
+      // });
     });
   } catch (error) {
     console.error('Error creating order from draft:', error);
@@ -464,6 +522,96 @@ exports.track_order = async (req, res) => {
     return res.status(500).json({
       status: false,
       message: error.message || 'Failed to track order',
+    });
+  }
+};
+
+/**
+ * Cancel Order
+ * Allows users to cancel their order if it's in pending, confirmed, or accepted status
+ */
+exports.cancel_order = async (req, res) => {
+  try {
+    const { orderId, email, reason } = req.body;
+
+    if (!orderId || !email) {
+      return res.status(400).json({
+        status: false,
+        message: 'Order ID and email are required',
+      });
+    }
+
+    if (!reason || !reason.trim()) {
+      return res.status(400).json({
+        status: false,
+        message: 'Cancellation reason is required',
+      });
+    }
+
+    // Find order with matching orderId and email
+    const order = await order_model.findOne({
+      order_id: orderId,
+      'shipping_address.email': email.toLowerCase().trim(),
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        status: false,
+        message: 'Order not found or email does not match',
+      });
+    }
+
+    // Check if order can be cancelled (only pending, confirmed, or accepted)
+    const cancellableStatuses = ['pending', 'confirmed', 'accepted'];
+
+    if (!cancellableStatuses.includes(order.order_status.toLowerCase())) {
+      // Order cannot be cancelled - shipment is already in progress
+      return res.status(400).json({
+        status: false,
+        message: 'Your order cannot be cancelled as the shipment has already been prepared or dispatched.',
+        canCancel: false,
+        currentStatus: order.order_status,
+      });
+    }
+
+    // Check if already cancelled
+    if (order.order_status.toLowerCase() === 'cancelled') {
+      return res.status(400).json({
+        status: false,
+        message: 'This order is already cancelled',
+      });
+    }
+
+    // Update order status to cancelled with reason
+    order.order_status = 'cancelled';
+    order.cancelled_at = new Date();
+    order.cancellation_reason = reason.trim();
+    await order.save();
+
+    // Send API response immediately (don't wait for email)
+    res.status(200).json({
+      status: true,
+      message: 'Order cancelled successfully',
+      data: {
+        order_id: order.order_id,
+        order_status: order.order_status,
+        cancelled_at: order.cancelled_at,
+        cancellation_reason: order.cancellation_reason,
+      },
+    });
+
+    // Send cancellation emails in background (fire and forget)
+    setImmediate(() => {
+      sendOrderCancellationEmail(order.toObject()).catch((err) => {
+        console.error('Failed to send order cancellation emails:', err);
+        // Email failure won't affect cancellation
+      });
+    });
+  } catch (error) {
+    console.error('Error cancelling order:', error);
+    return res.status(500).json({
+      status: false,
+      message: error.message || 'Failed to cancel order',
     });
   }
 };

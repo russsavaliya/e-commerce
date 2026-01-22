@@ -21,4 +21,17 @@ export const trackOrder = async ({ orderId, email }) => {
   }
 };
 
-export default { trackOrder };
+export const cancelOrder = async ({ orderId, email, reason }) => {
+  try {
+    const response = await api.post('/users/orders/cancel', {
+      orderId,
+      email,
+      reason,
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || new Error('Failed to cancel order');
+  }
+};
+
+export default { trackOrder, cancelOrder };

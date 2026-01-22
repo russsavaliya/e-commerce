@@ -33,8 +33,8 @@ const WhatsAppSupport = () => {
 
   // WhatsApp Business Number
   // Format: Country code + number without + or spaces
-  // Example: 919876543210 (for India: +91 9876543210)
-  const WHATSAPP_NUMBER = '919510928019'; // WhatsApp number from Footer component
+  // Example: 919265733241 (for India: +91 9265733241)
+  const WHATSAPP_NUMBER = '919265733241'; // WhatsApp number from Footer component
 
   // Get current page context for smart message
   const getContextMessage = () => {
@@ -66,9 +66,15 @@ const WhatsAppSupport = () => {
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
   };
 
+  // Check if current page is Product Detail page
+  const isProductDetailPage = location.pathname.includes('/product/');
+  
+  // Adjust bottom position: higher on Product Detail page (mobile only) to avoid sticky buttons
+  const bottomPosition = isProductDetailPage ? 'bottom-20' : 'bottom-4';
+
   return (
     <div
-      className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40"
+      className={`fixed ${bottomPosition} right-4 sm:bottom-6 sm:right-6 z-40`}
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
     >

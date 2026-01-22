@@ -339,7 +339,7 @@ const ProductDetailPage = () => {
         </div>
         <div className="px-6 py-5">
           <div
-            className="text-base text-[#374151] leading-relaxed prose prose-sm max-w-none"
+            className="text-base text-[#374151] leading-relaxed prose prose-sm max-w-none whitespace-pre-wrap"
             dangerouslySetInnerHTML={{ __html: product.description }}
           />
         </div>
@@ -505,7 +505,7 @@ const ProductDetailPage = () => {
   return (
     <div className="min-h-screen bg-[#FAF9F5]">
       <Navbar />
-      <main className="max-w-6xl mx-auto px-4 lg:px-6 py-10">
+      <main className="max-w-6xl mx-auto px-4 lg:px-6 py-10 pb-24 md:pb-10">
         <button
           onClick={() => navigate(-1)}
           className="flex items-center gap-2 text-sm text-[#6B7280] hover:text-[rgb(72,29,111)] mb-6 transition-colors"
@@ -626,23 +626,24 @@ const ProductDetailPage = () => {
             </div>
 
             {/* Product-level attributes (read-only display) */}
+            {/* Product-level attributes (read-only display) */}
             {product.attributesvalues &&
               product.attributesvalues.length > 0 &&
               product.attributesvalues.some(attr => attr.values && attr.values.length > 0) && (
-                <div className="space-y-3 border-t border-[#E5E7EB] pt-4">
-                  <div className="text-sm font-semibold text-[#374151] mb-4 uppercase tracking-wide">Product Details</div>
+                <div className="space-y-2 border-t border-[#E5E7EB] pt-4">
+                  <div className="text-sm font-semibold text-[#374151] mb-3 uppercase tracking-wide">Product Details</div>
                   {product.attributesvalues
                     .filter(attr => attr.values && attr.values.length > 0)
                     .map((attr, idx) => (
-                      <div key={attr._id || idx} className="flex items-start gap-3">
-                        <div className="text-sm font-medium text-[#6B7280] min-w-[100px]">
+                      <div key={attr._id || idx} className="flex items-start gap-2 py-0.5">
+                        <div className="text-sm font-medium text-[#6B7280] w-20 sm:w-24 flex-shrink-0">
                           {attr.name || 'Attribute'}:
                         </div>
-                        <div className="flex-1 text-sm text-[#374151]">
+                        <div className="flex-1 text-sm text-[#374151] flex flex-wrap items-center">
                           {attr.values.map((val, vIdx) => (
-                            <span key={val._id || vIdx}>
+                            <span key={val._id || vIdx} className="inline-flex items-center">
                               {val.value || 'Value'}
-                              {vIdx < attr.values.length - 1 && <span className="text-[#9CA3AF] mx-2">•</span>}
+                              {vIdx < attr.values.length - 1 && <span className="text-[#9CA3AF] mx-2 text-[10px]">•</span>}
                             </span>
                           ))}
                         </div>
@@ -654,7 +655,7 @@ const ProductDetailPage = () => {
             {/* Variants list */}
             {product.variants && product.variants.length > 0 && (
               <div>
-                <div className="text-sm font-semibold text-[#374151] mb-3 uppercase tracking-wide">Options</div>
+                <div className="text-sm font-semibold text-[#374151] mb-3 uppercase tracking-wide">Select Options</div>
                 <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                   {product.variants.map((variant) => {
                     const variantOutOfStock = (variant.quantity ?? 0) <= 0;
@@ -710,8 +711,8 @@ const ProductDetailPage = () => {
               </div>
             )}
 
-            {/* Actions */}
-            <div className="flex gap-3">
+            {/* Actions - Desktop Only (Hidden on Mobile) */}
+            <div className="hidden md:flex gap-3">
               {isOutOfStock ? (
                 <button
                   disabled
@@ -749,49 +750,52 @@ const ProductDetailPage = () => {
 
             {/* Product Features - COD, Easy Return, 7 Day Return */}
             <div className="mt-6 pt-6 border-t border-gray-200">
-              <div className="flex md:grid md:grid-cols-3 gap-3 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
+              <div className="grid grid-cols-3 gap-2 md:gap-3 md:grid-cols-3 overflow-hidden md:overflow-visible">
                 {/* COD Available */}
-                <div className="flex items-center gap-2.5 p-2 bg-white rounded-xl border border-gray-200 hover:border-[rgb(72,29,111)] hover:shadow-sm transition-all duration-200 min-w-[140px] md:min-w-0">
+                <div className="flex items-center gap-1.5 md:gap-2 p-1 md:p-2 bg-white rounded-lg md:rounded-xl border border-gray-200 hover:border-[rgb(72,29,111)] hover:shadow-sm transition-all duration-200 min-w-0">
                   <div className="flex-shrink-0">
-                    <div className="w-10 h-10 rounded-lg bg-[rgba(72,29,111,0.1)] flex items-center justify-center">
-                      <CreditCard className="w-5 h-5 text-[rgb(72,29,111)]" />
+                    <div className="w-6 h-6 md:w-10 md:h-10 rounded-md md:rounded-lg bg-[rgba(72,29,111,0.1)] flex items-center justify-center">
+                      <CreditCard className="w-3 h-3 md:w-5 md:h-5 text-[rgb(72,29,111)]" />
                     </div>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-semibold text-gray-900">COD Available</span>
+                      <span className="text-[9px] leading-tight md:text-xs font-semibold text-gray-900 whitespace-nowrap">
+                        COD Available
+                      </span>
                     </div>
-                    {/* <p className="text-xs text-gray-500">Cash on delivery option available</p> */}
                   </div>
                 </div>
 
                 {/* Easy Return */}
-                <div className="flex items-center gap-2.5 p-2 bg-white rounded-xl border border-gray-200 hover:border-[rgb(72,29,111)] hover:shadow-sm transition-all duration-200 min-w-[140px] md:min-w-0">
+                <div className="flex items-center gap-1.5 md:gap-2 p-1 md:p-2 bg-white rounded-lg md:rounded-xl border border-gray-200 hover:border-[rgb(72,29,111)] hover:shadow-sm transition-all duration-200 min-w-0">
                   <div className="flex-shrink-0">
-                    <div className="w-10 h-10 rounded-lg bg-[rgba(72,29,111,0.1)] flex items-center justify-center">
-                      <RotateCcw className="w-5 h-5 text-[rgb(72,29,111)]" />
+                    <div className="w-6 h-6 md:w-10 md:h-10 rounded-md md:rounded-lg bg-[rgba(72,29,111,0.1)] flex items-center justify-center">
+                      <RotateCcw className="w-3 h-3 md:w-5 md:h-5 text-[rgb(72,29,111)]" />
                     </div>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-semibold text-gray-900">Easy Return</span>
+                      <span className="text-[9px] leading-tight md:text-xs font-semibold text-gray-900 whitespace-nowrap">
+                        Easy Return
+                      </span>
                     </div>
-                    {/* <p className="text-xs text-gray-500">Hassle-free return process</p> */}
                   </div>
                 </div>
 
                 {/* 7 Day Return */}
-                <div className="flex items-center gap-2.5 p-2 bg-white rounded-xl border border-gray-200 hover:border-[rgb(72,29,111)] hover:shadow-sm transition-all duration-200 min-w-[140px] md:min-w-0">
+                <div className="flex items-center gap-1.5 md:gap-2 p-1 md:p-2 bg-white rounded-lg md:rounded-xl border border-gray-200 hover:border-[rgb(72,29,111)] hover:shadow-sm transition-all duration-200 min-w-0">
                   <div className="flex-shrink-0">
-                    <div className="w-10 h-10 rounded-lg bg-[rgba(72,29,111,0.1)] flex items-center justify-center">
-                      <Calendar className="w-5 h-5 text-[rgb(72,29,111)]" />
+                    <div className="w-6 h-6 md:w-10 md:h-10 rounded-md md:rounded-lg bg-[rgba(72,29,111,0.1)] flex items-center justify-center">
+                      <Calendar className="w-3 h-3 md:w-5 md:h-5 text-[rgb(72,29,111)]" />
                     </div>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-semibold text-gray-900">7 Day Return</span>
+                      <span className="text-[9px] leading-tight md:text-xs font-semibold text-gray-900 whitespace-nowrap">
+                        7 Day Return
+                      </span>
                     </div>
-                    {/* <p className="text-xs text-gray-500">Return within 7 days of delivery</p> */}
                   </div>
                 </div>
               </div>
@@ -1101,6 +1105,45 @@ const ProductDetailPage = () => {
           </div>
         </div>
       )}
+
+      {/* Mobile Sticky Action Buttons - Fixed at Bottom */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-40 px-4 py-3 safe-area-inset-bottom">
+        <div className="flex gap-3">
+          {isOutOfStock ? (
+            <button
+              disabled
+              className="flex-1 flex items-center justify-center gap-2 bg-gray-400 text-white py-3 rounded-full text-sm font-semibold opacity-60 cursor-not-allowed"
+            >
+              <Package className="w-4 h-4" />
+              Out of Stock
+            </button>
+          ) : (
+            <button
+              onClick={handleAddToCart}
+              disabled={addingToCart}
+              className={`flex-1 flex items-center justify-center gap-2 bg-[rgb(72,29,111)] text-white py-3 rounded-full text-sm font-semibold active:bg-[#390e60] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${!addingToCart && !isOutOfStock ? 'animate-pulse-button' : ''}`}
+            >
+              {addingToCart ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Adding...
+                </>
+              ) : (
+                <>
+                  <ShoppingBag className="w-4 h-4" />
+                  Add to Bag
+                </>
+              )}
+            </button>
+          )}
+          <button
+            onClick={() => navigate('/cart')}
+            className="px-5 py-3 rounded-full border-[1.5px] border-[rgb(72,29,111)] text-sm font-semibold text-[rgb(72,29,111)] active:bg-[rgba(72,29,111,0.08)] transition-all duration-200"
+          >
+            View Cart
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

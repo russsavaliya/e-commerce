@@ -7,7 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/user/Navbar';
 import Footer from '../../components/user/Footer';
-import { Loader2, ArrowLeft, CreditCard, Wallet, Tag } from 'lucide-react';
+import { Loader2, ArrowLeft, CreditCard, Wallet, Tag, X, CheckCircle2 } from 'lucide-react';
 import { getCart } from '../../services/user/cartService';
 import { validatePincode, initOrder, updatePayment, createRazorpayOrder, verifyRazorpayPayment } from '../../services/user/checkoutService';
 import { applyCoupon, getAvailableCoupons } from '../../services/user/couponService';
@@ -15,6 +15,27 @@ import toast from 'react-hot-toast';
 import ShippingForm from '../../components/user/checkout/ShippingForm';
 import OrderSummary from '../../components/user/checkout/OrderSummary';
 import CartItemsReview from '../../components/user/checkout/CartItemsReview';
+
+const normalizeCouponPayload = (rawCoupon) => {
+  if (!rawCoupon) {
+    return null;
+  }
+
+  const rawDiscount = rawCoupon.roundedDiscountAmount ?? rawCoupon.discountAmount ?? 0;
+  const safeDiscount = typeof rawDiscount === 'number' ? rawDiscount : Number(rawDiscount) || 0;
+  const normalizedDiscount = Number(safeDiscount.toFixed(2));
+  const rawFinal = rawCoupon.roundedFinalAmount ?? rawCoupon.finalAmount ?? Math.max(0, (rawCoupon.cartTotal || 0) - normalizedDiscount);
+  const safeFinal = typeof rawFinal === 'number' ? rawFinal : Number(rawFinal) || 0;
+  const normalizedFinal = Number(safeFinal);
+
+  return {
+    ...rawCoupon,
+    discountAmount: normalizedDiscount,
+    roundedDiscountAmount: normalizedDiscount,
+    finalAmount: normalizedFinal,
+    roundedFinalAmount: normalizedFinal,
+  };
+};
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
@@ -38,9 +59,8 @@ const CheckoutPage = () => {
   const [currentStep, setCurrentStep] = useState('shipping'); // 'shipping' | 'payment'
   const [selectedPayment, setSelectedPayment] = useState('cod');
   const [draftOrderId, setDraftOrderId] = useState(null);
-  const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
-  const [applyingCoupon, setApplyingCoupon] = useState(false);
+  const [applyingCoupon, setApplyingCoupon] = useState(null); // Track which coupon is being applied
   const [couponError, setCouponError] = useState('');
   const [availableCoupons, setAvailableCoupons] = useState([]);
 
@@ -76,9 +96,10 @@ const CheckoutPage = () => {
         : availableCoupons.some(c => c.code === appliedCoupon.couponCode && c.applicableToOnline);
 
       if (!isCompatible) {
+        const couponData = availableCoupons.find(c => c.code === appliedCoupon.couponCode);
+        const paymentMethodName = selectedPayment === 'cod' ? 'Cash on Delivery' : 'Online Payment';
         setAppliedCoupon(null);
-        setCouponCode('');
-        toast.error('Current coupon is not applicable for selected payment method');
+        toast.error(`Coupon ${appliedCoupon.couponCode} is not applicable for ${paymentMethodName} orders and has been removed`);
       }
     }
   }, [selectedPayment, currentStep, appliedCoupon, availableCoupons]);
@@ -313,7 +334,11 @@ const CheckoutPage = () => {
       const subtotal = cart.subtotal || 0;
       const shipping = 0; // Free shipping
       const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
-      const totalAmount = Math.max(0, subtotal + shipping - discount);
+      const baseTotal = Math.max(0, subtotal + shipping - discount);
+      const totalAmount = Math.max(
+        0,
+        appliedCoupon ? (appliedCoupon.finalAmount ?? baseTotal) : baseTotal
+      );
 
       // Create Razorpay order
       const razorpayResponse = await createRazorpayOrder(draftOrderId, totalAmount);
@@ -394,47 +419,71 @@ const CheckoutPage = () => {
     }
   };
 
-  const handleApplyCoupon = async () => {
-    if (!couponCode.trim()) {
-      setCouponError('Please enter a coupon code');
-      return;
-    }
-
+  const handleApplyCoupon = async (coupon) => {
     if (!cart || !cart.subtotal) {
-      setCouponError('Cart is empty');
+      toast.error('Cart is empty');
       return;
     }
 
     if (currentStep !== 'payment') {
-      setCouponError('Please proceed to payment step to apply coupon');
+      toast.error('Please proceed to payment step to apply coupon');
+      return;
+    }
+
+    // Check if another coupon is already applied
+    if (appliedCoupon && appliedCoupon.couponCode !== coupon.code) {
+      toast.error('Only one coupon can be applied per order. Please remove the current coupon first.');
+      return;
+    }
+
+    // Check if this coupon is already applied
+    if (appliedCoupon && appliedCoupon.couponCode === coupon.code) {
+      toast.info('This coupon is already applied');
+      return;
+    }
+
+    // Check payment method compatibility before API call
+    const isCompatibleWithSelected = selectedPayment === 'cod'
+      ? coupon.applicableToCOD
+      : coupon.applicableToOnline;
+
+    if (!isCompatibleWithSelected) {
+      const paymentMethodName = selectedPayment === 'cod' ? 'Cash on Delivery' : 'Online Payment';
+      toast.error(`This coupon is not applicable for ${paymentMethodName} orders`);
       return;
     }
 
     try {
-      setApplyingCoupon(true);
+      setApplyingCoupon(coupon.code);
       setCouponError('');
+
       // Pass payment method to validate coupon compatibility
-      const response = await applyCoupon(couponCode.trim(), cart.subtotal, selectedPayment);
+      const response = await applyCoupon(coupon.code, cart.subtotal, selectedPayment);
 
       if (response.status) {
-        setAppliedCoupon(response.data);
-        toast.success(`Coupon ${response.data.couponCode} applied! You saved ₹${response.data.discountAmount.toFixed(2)}`);
+        const normalizedCoupon = normalizeCouponPayload(response.data);
+        setAppliedCoupon(normalizedCoupon);
+        const savedDiscount = normalizedCoupon?.discountAmount ?? 0;
+        toast.success(
+          `Coupon ${normalizedCoupon?.couponCode} applied! You saved ₹${savedDiscount.toFixed(2)}`
+        );
       } else {
+        // Show API error as toast notification
+        toast.error(response.message || 'Failed to apply coupon');
         setCouponError(response.message || 'Failed to apply coupon');
-        setAppliedCoupon(null);
       }
     } catch (error) {
       console.error('Error applying coupon:', error);
-      setCouponError(error.response?.data?.message || error.message || 'Failed to apply coupon');
-      setAppliedCoupon(null);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to apply coupon';
+      toast.error(errorMessage);
+      setCouponError(errorMessage);
     } finally {
-      setApplyingCoupon(false);
+      setApplyingCoupon(null);
     }
   };
 
   const handleRemoveCoupon = () => {
     setAppliedCoupon(null);
-    setCouponCode('');
     setCouponError('');
     toast.success('Coupon removed');
   };
@@ -516,6 +565,9 @@ const CheckoutPage = () => {
       </div>
     );
   }
+
+  const hasCodCoupon = Array.isArray(availableCoupons) && availableCoupons.some((c) => c?.applicableToCOD);
+  const hasOnlineCoupon = Array.isArray(availableCoupons) && availableCoupons.some((c) => c?.applicableToOnline);
 
   return (
     <div className="min-h-screen">
@@ -602,7 +654,17 @@ const CheckoutPage = () => {
                       <div className="flex items-center gap-2">
                         <Wallet className="w-5 h-5 text-gray-700" />
                         <div>
-                          <p className="font-semibold text-gray-900">Cash on Delivery</p>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-semibold text-gray-900">Cash on Delivery</p>
+                            {hasCodCoupon && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold 
+                                bg-purple-50 text-purple-700 border border-purple-200 
+                                animate-pulse">
+                                <Tag className="w-3 h-3" />
+                                Coupon Available
+                              </span>
+                            )}
+                          </div>
                           <p className="text-xs text-gray-500">Pay when you receive the order</p>
                         </div>
                       </div>
@@ -619,7 +681,18 @@ const CheckoutPage = () => {
                       <div className="flex items-center gap-2">
                         <CreditCard className="w-5 h-5 text-gray-700" />
                         <div>
-                          <p className="font-semibold text-gray-900">Online Payment (placeholder)</p>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-semibold text-gray-900">Online Payment</p>
+                            {hasOnlineCoupon && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold 
+                                bg-purple-50 text-purple-700 border border-purple-200 
+                                animate-pulse">
+                                <Tag className="w-3 h-3" />
+                                Coupon Available
+                              </span>
+                            )}
+
+                          </div>
                           <p className="text-xs text-gray-500">We'll confirm without charging for now</p>
                         </div>
                       </div>
@@ -646,8 +719,8 @@ const CheckoutPage = () => {
                             <div
                               key={coupon._id}
                               className={`p-4 border-2 rounded-lg transition-all ${isCompatibleWithSelected
-                                  ? 'border-green-300 bg-green-50/30 hover:border-green-400'
-                                  : 'border-gray-200 bg-gray-50/50 hover:border-gray-300 opacity-75'
+                                ? 'border-green-300 bg-green-50/30 hover:border-green-400'
+                                : 'border-gray-200 bg-gray-50/50 hover:border-gray-300 opacity-75'
                                 }`}
                             >
                               <div className="flex items-start justify-between gap-3">
@@ -659,16 +732,16 @@ const CheckoutPage = () => {
                                     {/* Payment Method Badges - Next to coupon name */}
                                     {coupon.applicableToCOD && (
                                       <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${selectedPayment === 'cod' && isCompatibleWithSelected
-                                          ? 'bg-blue-100 text-blue-700 border border-blue-300'
-                                          : 'bg-gray-100 text-gray-600 border border-gray-300'
+                                        ? 'bg-blue-100 text-blue-700 border border-blue-300'
+                                        : 'bg-gray-100 text-gray-600 border border-gray-300'
                                         }`}>
                                         💵 COD
                                       </span>
                                     )}
                                     {coupon.applicableToOnline && (
                                       <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${selectedPayment === 'online' && isCompatibleWithSelected
-                                          ? 'bg-purple-100 text-purple-700 border border-purple-300'
-                                          : 'bg-gray-100 text-gray-600 border border-gray-300'
+                                        ? 'bg-purple-100 text-purple-700 border border-purple-300'
+                                        : 'bg-gray-100 text-gray-600 border border-gray-300'
                                         }`}>
                                         💳 Online
                                       </span>
@@ -689,19 +762,40 @@ const CheckoutPage = () => {
                                   </p>
                                 </div>
 
-                                {/* Copy Button */}
-                                <button
-                                  onClick={() => {
-                                    navigator.clipboard.writeText(coupon.code);
-                                    toast.success(`Coupon code "${coupon.code}" copied!`);
-                                  }}
-                                  className={`px-4 py-2 text-xs font-semibold rounded-lg transition-colors flex-shrink-0 ${isCompatibleWithSelected
-                                      ? 'bg-green-600 text-white hover:bg-green-700'
-                                      : 'bg-gray-300 text-gray-600 hover:bg-gray-400'
-                                    }`}
-                                >
-                                  Copy
-                                </button>
+                                {/* Apply/Remove Button */}
+                                {appliedCoupon?.couponCode === coupon.code ? (
+                                  <button
+                                    onClick={handleRemoveCoupon}
+                                    className="px-4 py-2 text-xs font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors flex-shrink-0 flex items-center gap-1"
+                                  >
+                                    <X className="w-3 h-3" />
+                                    Remove
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => handleApplyCoupon(coupon)}
+                                    disabled={applyingCoupon === coupon.code || (appliedCoupon && appliedCoupon.couponCode !== coupon.code)}
+                                    className={`px-4 py-2 text-xs font-semibold rounded-lg transition-colors flex-shrink-0 flex items-center gap-1 ${
+                                      isCompatibleWithSelected && !appliedCoupon
+                                        ? 'bg-green-600 text-white hover:bg-green-700'
+                                        : appliedCoupon
+                                        ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                                        : 'bg-gray-300 text-gray-600 hover:bg-gray-400'
+                                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                  >
+                                    {applyingCoupon === coupon.code ? (
+                                      <>
+                                        <Loader2 className="w-3 h-3 animate-spin" />
+                                        Applying...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <CheckCircle2 className="w-3 h-3" />
+                                        Apply
+                                      </>
+                                    )}
+                                  </button>
+                                )}
                               </div>
 
                               {/* Compatibility Notice */}
@@ -710,6 +804,16 @@ const CheckoutPage = () => {
                                   <p className="text-xs text-amber-600 flex items-center gap-1">
                                     <span>⚠️</span>
                                     <span>This coupon is not applicable for {selectedPayment === 'cod' ? 'COD' : 'Online'} payment. Switch payment method to use it.</span>
+                                  </p>
+                                </div>
+                              )}
+
+                              {/* One Coupon Notice */}
+                              {appliedCoupon && appliedCoupon.couponCode !== coupon.code && (
+                                <div className="mt-2 pt-2 border-t border-gray-200">
+                                  <p className="text-xs text-blue-600 flex items-center gap-1">
+                                    <span>ℹ️</span>
+                                    <span>Only one coupon can be applied per order. Remove the current coupon to apply this one.</span>
                                   </p>
                                 </div>
                               )}
@@ -743,15 +847,8 @@ const CheckoutPage = () => {
               isSubmitting={isSubmitting}
               buttonLabel={currentStep === 'payment' ? 'Place Order' : 'Continue to Payment'}
               currentStep={currentStep}
-              couponCode={couponCode}
               appliedCoupon={appliedCoupon}
-              onCouponCodeChange={setCouponCode}
-              onApplyCoupon={handleApplyCoupon}
               onRemoveCoupon={handleRemoveCoupon}
-              applyingCoupon={applyingCoupon}
-              couponError={couponError}
-              availableCoupons={availableCoupons}
-              selectedPayment={selectedPayment}
             />
           </div>
         </div>

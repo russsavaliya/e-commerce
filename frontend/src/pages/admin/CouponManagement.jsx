@@ -305,6 +305,14 @@ const CouponManagement = () => {
     return coupon.isActive && now >= validFrom && now <= validTill && coupon.usedCount < coupon.usageLimit;
   };
 
+  // Check if coupon has already expired
+  const isCouponExpired = (coupon) => {
+    if (!coupon.validTill) return false;
+    const now = new Date();
+    const validTill = new Date(coupon.validTill);
+    return now > validTill;
+  };
+
   return (
     <div className="w-full">
       {/* Header */}
@@ -765,7 +773,7 @@ const CouponManagement = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           {coupon.isActive ? (
                             <span className="px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full">
                               Active
@@ -783,6 +791,11 @@ const CouponManagement = () => {
                           {isValid && (
                             <span className="px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full">
                               Valid
+                            </span>
+                          )}
+                          {isCouponExpired(coupon) && (
+                            <span className="px-2 py-1 text-xs font-semibold bg-red-100 text-red-800 rounded-full">
+                              Expired
                             </span>
                           )}
                         </div>

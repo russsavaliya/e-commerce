@@ -120,10 +120,10 @@ const Footer = () => {
               <div className="flex items-start gap-3 group">
                 <Mail className="w-5 h-5 text-[rgb(72,29,111)] mt-0.5 flex-shrink-0 transition-transform duration-200 group-hover:scale-110" />
                 <a
-                  href="mailto:support@siyara.com"
+                  href="mailto:siyaratrend@gmail.com"
                   className="text-[15px] text-[#374151] hover:text-[rgb(72,29,111)] transition-colors duration-200 font-['Playfair Display']"
                 >
-                  support@siyara.com
+                  siyaratrend@gmail.com
                 </a>
               </div>
 
@@ -131,10 +131,10 @@ const Footer = () => {
               <div className="flex items-start gap-3 group">
                 <Phone className="w-5 h-5 text-[rgb(72,29,111)] mt-0.5 flex-shrink-0 transition-transform duration-200 group-hover:scale-110" />
                 <a
-                  href="tel:+919876543210"
+                  href="tel:+919265733241"
                   className="text-[15px] text-[#374151] hover:text-[rgb(72,29,111)] transition-colors duration-200 font-['Playfair Display']"
                 >
-                  +91 98765 43210
+                  +91 9265733241
                 </a>
               </div>
 
@@ -169,7 +169,7 @@ const Footer = () => {
                   <Facebook className="w-5 h-5" />
                 </a>
                 <a
-                  href="https://wa.me/919876543210"
+                  href="https://wa.me/9265733241"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Chat with us on WhatsApp"

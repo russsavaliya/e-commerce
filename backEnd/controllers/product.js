@@ -111,6 +111,37 @@ exports.create_product = async (req, res) => {
             variants
         });
 
+        // -----------------------------------------------
+        // 🎯 OPTIMIZE VARIANT IMAGES: Use product image for variants without images
+        // -----------------------------------------------
+        if (product.variants && product.variants.length > 0 && product.images && product.images.length > 0) {
+            const firstProductImage = product.images[0];
+            let hasVariantImageUpdates = false;
+
+            // Check each variant and assign product image if variant has no image
+            const updatedVariants = product.variants.map(variant => {
+                if (!variant.variant_image && firstProductImage) {
+                    hasVariantImageUpdates = true;
+                    return {
+                        ...variant.toObject(),
+                        variant_image: firstProductImage
+                    };
+                }
+                return variant;
+            });
+
+            // Update product if any variants were modified
+            if (hasVariantImageUpdates) {
+                await product_model.findByIdAndUpdate(
+                    product._id,
+                    { variants: updatedVariants },
+                    { new: true }
+                );
+                // Update the response data to reflect changes
+                product.variants = updatedVariants;
+            }
+        }
+
         return res.status(201).json({
             status: true,
             message: "Product created successfully",
@@ -266,6 +297,37 @@ exports.update_product = async (req, res) => {
             },
             { new: true, runValidators: true }
         );
+
+        // -----------------------------------------------
+        // 🎯 OPTIMIZE VARIANT IMAGES: Use product image for variants without images
+        // -----------------------------------------------
+        if (updatedProduct.variants && updatedProduct.variants.length > 0 && updatedProduct.images && updatedProduct.images.length > 0) {
+            const firstProductImage = updatedProduct.images[0];
+            let hasVariantImageUpdates = false;
+
+            // Check each variant and assign product image if variant has no image
+            const updatedVariants = updatedProduct.variants.map(variant => {
+                if (!variant.variant_image && firstProductImage) {
+                    hasVariantImageUpdates = true;
+                    return {
+                        ...variant,
+                        variant_image: firstProductImage
+                    };
+                }
+                return variant;
+            });
+
+            // Update product if any variants were modified
+            if (hasVariantImageUpdates) {
+                const finalUpdatedProduct = await product_model.findByIdAndUpdate(
+                    id,
+                    { variants: updatedVariants },
+                    { new: true }
+                );
+                // Update the response data to reflect changes
+                updatedProduct.variants = finalUpdatedProduct.variants;
+            }
+        }
 
         return res.status(200).json({
             status: true,
