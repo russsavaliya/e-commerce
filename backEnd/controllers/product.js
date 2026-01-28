@@ -40,7 +40,7 @@ exports.create_product = async (req, res) => {
             // Upload all product images in parallel
             if (productImageFiles.length > 0) {
                 try {
-                    const productUploadPromises = productImageFiles.map(file => 
+                    const productUploadPromises = productImageFiles.map(file =>
                         uploadToCloudinary(file.buffer, 'products')
                     );
                     const productResults = await Promise.all(productUploadPromises);
@@ -112,13 +112,13 @@ exports.create_product = async (req, res) => {
         });
 
         // -----------------------------------------------
-        // 🎯 OPTIMIZE VARIANT IMAGES: Use product image for variants without images
+        // 🎯 OPTIMIZE: Assign product image to ALL variants without images
         // -----------------------------------------------
         if (product.variants && product.variants.length > 0 && product.images && product.images.length > 0) {
             const firstProductImage = product.images[0];
             let hasVariantImageUpdates = false;
 
-            // Check each variant and assign product image if variant has no image
+            // ✅ Check ALL variants and assign product image if variant has no image
             const updatedVariants = product.variants.map(variant => {
                 if (!variant.variant_image && firstProductImage) {
                     hasVariantImageUpdates = true;
@@ -157,6 +157,7 @@ exports.create_product = async (req, res) => {
     }
 };
 
+// ============= UPDATE PRODUCT =============
 exports.update_product = async (req, res) => {
     try {
         const { id } = req.params; // Product ID from URL params
@@ -219,7 +220,7 @@ exports.update_product = async (req, res) => {
             const newProductImageFiles = req.files.filter(file => file.fieldname === "images");
             if (newProductImageFiles.length > 0) {
                 try {
-                    const productUploadPromises = newProductImageFiles.map(file => 
+                    const productUploadPromises = newProductImageFiles.map(file =>
                         uploadToCloudinary(file.buffer, 'products')
                     );
                     const productResults = await Promise.all(productUploadPromises);
@@ -299,18 +300,18 @@ exports.update_product = async (req, res) => {
         );
 
         // -----------------------------------------------
-        // 🎯 OPTIMIZE VARIANT IMAGES: Use product image for variants without images
+        // 🎯 OPTIMIZE: Assign product image to ALL variants without images
         // -----------------------------------------------
         if (updatedProduct.variants && updatedProduct.variants.length > 0 && updatedProduct.images && updatedProduct.images.length > 0) {
             const firstProductImage = updatedProduct.images[0];
             let hasVariantImageUpdates = false;
 
-            // Check each variant and assign product image if variant has no image
+            // ✅ Check ALL variants and assign product image if variant has no image
             const updatedVariants = updatedProduct.variants.map(variant => {
                 if (!variant.variant_image && firstProductImage) {
                     hasVariantImageUpdates = true;
                     return {
-                        ...variant,
+                        ...variant.toObject(),
                         variant_image: firstProductImage
                     };
                 }
@@ -343,7 +344,6 @@ exports.update_product = async (req, res) => {
         });
     }
 };
-
 exports.get_product_list = async (req, res) => {
     try {
         let { page = 1, limit = 10, search = '' } = req.query;
