@@ -68,7 +68,7 @@ export const deleteCategory = async (id) => {
 export const updateCategory = async (id, categoryData) => {
   try {
     const response = await api.put(
-      '/category/update/' + id,
+      '/category/update/?id=' + id,
       categoryData
     );
     return response.data;
