@@ -1650,10 +1650,10 @@ const ProductEdit = () => {
                       <button
                         type="button"
                         onClick={addVariant}
-                        className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                        className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-black text-white rounded-lg hover:bg-gray-600 transition-colors"
                       >
                         <Plus className="w-4 h-4" />
-                        Add More Variant
+                        Add Another Variant
                       </button>
                     </div>
 
