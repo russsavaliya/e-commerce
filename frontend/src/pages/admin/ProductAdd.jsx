@@ -59,6 +59,7 @@ const ProductAdd = () => {
     is_trending: false,
     productImages: [], // Array of File objects
     productImagePreviews: [], // Array of preview URLs
+    details: '',
   });
 
   // Attributes state - array of { attributeId, selectedValueIds: [] }
@@ -678,6 +679,7 @@ const ProductAdd = () => {
       formDataToSend.append('is_best_seller', formData.is_best_seller);
       formDataToSend.append('is_new', formData.is_new);
       formDataToSend.append('is_trending', formData.is_trending);
+      formDataToSend.append('details', formData.details.trim() || '');
 
       // Product images
       formData.productImages.forEach((file) => {
@@ -1154,6 +1156,23 @@ const ProductAdd = () => {
                       }
                     }}
                     placeholder="Enter product description"
+                  />
+                </div>
+
+                {/* Details */}
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Details
+                  </label>
+                  <RichTextEditor
+                    value={formData.details}
+                    onChange={(html) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        details: html,
+                      }));
+                    }}
+                    placeholder="Enter product details"
                   />
                 </div>
 

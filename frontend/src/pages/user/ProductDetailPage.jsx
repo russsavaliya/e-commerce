@@ -339,6 +339,7 @@ const ProductDetailPage = () => {
         </div>
         <div className="px-6 py-5">
           <div
+            // className="text-base text-[#374151] leading-relaxed rich-text-content"
             className="text-base text-[#374151] leading-relaxed prose prose-sm max-w-none whitespace-pre-wrap"
             dangerouslySetInnerHTML={{ __html: product.description }}
           />
@@ -624,14 +625,23 @@ const ProductDetailPage = () => {
                 </span>
               )}
             </div>
+            {/* Product-level Details (read-only display) */}
+            {product.details && (
+              <div className="mt-4 space-y-2 border-t border-[#E5E7EB] pt-4">
+                <div className="text-sm font-semibold text-[#374151] mb-3 uppercase tracking-wide">Product Details</div>
+                <div
+                  className="text-sm text-[#374151] rich-text-content"
+                  dangerouslySetInnerHTML={{ __html: product.details }}
+                />
+              </div>
+            )}
 
             {/* Product-level attributes (read-only display) */}
-            {/* Product-level attributes (read-only display) */}
-            {product.attributesvalues &&
+            {/* {product.attributesvalues &&
               product.attributesvalues.length > 0 &&
               product.attributesvalues.some(attr => attr.values && attr.values.length > 0) && (
                 <div className="space-y-2 border-t border-[#E5E7EB] pt-4">
-                  <div className="text-sm font-semibold text-[#374151] mb-3 uppercase tracking-wide">Product Details</div>
+                  <div className="text-sm font-semibold text-[#374151] mb-3 uppercase tracking-wide">Product Attributes</div>
                   {product.attributesvalues
                     .filter(attr => attr.values && attr.values.length > 0)
                     .map((attr, idx) => (
@@ -650,7 +660,7 @@ const ProductDetailPage = () => {
                       </div>
                     ))}
                 </div>
-              )}
+              )} */}
 
             {/* Variants list */}
             {product.variants && product.variants.length > 0 && (

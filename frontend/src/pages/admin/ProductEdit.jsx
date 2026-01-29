@@ -78,6 +78,7 @@ const ProductEdit = () => {
     productImages: [], // Array of File objects (new images)
     productImagePreviews: [], // Array of preview URLs (new images)
     existingImages: [], // Array of existing image URLs from server
+    details: '',
   });
 
   // Attributes state - array of { attributeId, selectedValueIds: [] }
@@ -178,6 +179,7 @@ const ProductEdit = () => {
           productImages: [],
           productImagePreviews: [],
           existingImages: product.images || [], // Store original paths, normalize only for display
+          details: product.details || '',
         });
 
         // Set product attributes
@@ -779,6 +781,7 @@ const ProductEdit = () => {
       formDataToSend.append('is_best_seller', formData.is_best_seller);
       formDataToSend.append('is_new', formData.is_new);
       formDataToSend.append('is_trending', formData.is_trending);
+      formDataToSend.append('details', formData.details.trim() || '');
 
       // Add new product images
       formData.productImages.forEach((file) => {
@@ -1256,6 +1259,23 @@ const ProductEdit = () => {
                       }
                     }}
                     placeholder="Enter product description"
+                  />
+                </div>
+
+                {/* Details */}
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Details
+                  </label>
+                  <RichTextEditor
+                    value={formData.details}
+                    onChange={(html) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        details: html,
+                      }));
+                    }}
+                    placeholder="Enter product details"
                   />
                 </div>
 

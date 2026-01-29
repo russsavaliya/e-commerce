@@ -18,7 +18,8 @@ exports.create_product = async (req, res) => {
             is_trending,
             sort_order,
             attributes,
-            variants
+            variants,
+            details
         } = req.body;
 
         // Parse JSON fields
@@ -108,7 +109,8 @@ exports.create_product = async (req, res) => {
             is_trending: is_trending === true || is_trending === 'true',
             sort_order: sort_order || 0,
             attributes,
-            variants
+            variants,
+            details
         });
 
         // -----------------------------------------------
@@ -179,7 +181,8 @@ exports.update_product = async (req, res) => {
             attributes,
             variants,
             existing_images,           // existing product images (JSON array of URLs)
-            existing_variant_images    // existing variant images (JSON array)
+            existing_variant_images,    // existing variant images (JSON array)
+            details
         } = req.body;
 
         // Parse JSON fields
@@ -294,7 +297,8 @@ exports.update_product = async (req, res) => {
                 is_trending: is_trending !== undefined ? (is_trending === true || is_trending === 'true') : existingProduct.is_trending,
                 sort_order: sort_order !== undefined ? sort_order : existingProduct.sort_order,
                 attributes,
-                variants
+                variants,
+                details
             },
             { new: true, runValidators: true }
         );
@@ -393,12 +397,12 @@ exports.get_product_list = async (req, res) => {
                 $limit: limit
             }
         ]);
-        
+
         // Count total documents matching search
         const countMatchCondition = matchCondition;
         const total_count = await product_model.countDocuments(countMatchCondition);
         const total_pages = Math.ceil(total_count / limit);
-        
+
         return res.status(200).json({
             status: true,
             message: "Product list fetched successfully",

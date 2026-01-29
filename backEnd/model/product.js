@@ -3,6 +3,7 @@ const productSchema = new mongoose.Schema({
     name: { type: String, required: [true, "Product name is required"] },
     SKU: String,
     description: String,
+    details: String,
     images: [String],
     category: {
         type: mongoose.Schema.Types.ObjectId,
