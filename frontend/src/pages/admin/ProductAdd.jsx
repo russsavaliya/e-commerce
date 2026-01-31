@@ -20,6 +20,7 @@ import {
   ChevronDown,
   ChevronUp,
   Search,
+  ArrowLeft,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
@@ -752,12 +753,24 @@ const ProductAdd = () => {
           {/* Action Buttons */}
           {/* Page Header */}
           <div className="mb-6 pb-4 border-b border-gray-200">
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">
-              Create Product
-            </h1>
-            <p className="text-sm text-gray-600">
-              Add a new product to your catalog with all necessary details
-            </p>
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
+                className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600 hover:text-gray-900"
+                title="Go Back"
+              >
+                <ArrowLeft className="w-6 h-6" />
+              </button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 mb-1">
+                  Create Product
+                </h1>
+                <p className="text-sm text-gray-600">
+                  Add a new product to your catalog with all necessary details
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="flex items-center justify-end gap-3 mb-4">
@@ -2038,7 +2051,7 @@ const ProductAdd = () => {
                                   <div className="relative">
                                     <IndianRupee className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                                     <input
-                                      type="number"
+                                      type="text"
                                       value={variant.variant_price}
                                       onChange={(e) =>
                                         handleVariantChange(
@@ -2047,8 +2060,6 @@ const ProductAdd = () => {
                                           e.target.value
                                         )
                                       }
-                                      step="0.01"
-                                      min="0"
                                       className={`w-full pl-9 pr-3 py-1.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-sm ${formErrors[`variant_price_${variantIndex}`]
                                         ? 'border-red-500 bg-red-50'
                                         : 'border-gray-300'
