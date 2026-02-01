@@ -10,6 +10,8 @@ import {
   FolderTree,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   BarChart3,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -41,6 +43,10 @@ const CategoryManagement = () => {
     name: '',
     parent_category_id: '',
   });
+
+  const [parentCategoryDropdownOpen, setParentCategoryDropdownOpen] = useState(false);
+  const [parentCategorySearchTerm, setParentCategorySearchTerm] = useState('');
+  const [allCategories, setAllCategories] = useState([]); // For dropdown options (unpaginated)
 
   const [formErrors, setFormErrors] = useState({});
 
@@ -96,7 +102,47 @@ const CategoryManagement = () => {
         searchTimeoutRef.current = null;
       }
     };
-  }, [currentPage, itemsPerPage, searchQuery]);
+  }, [currentPage, itemsPerPage, searchQuery, parentCategoryDropdownOpen]);
+
+  // Fetch All Categories for Dropdown (Unpaginated)
+  const fetchAllCategories = async () => {
+    try {
+      // Fetch with a large limit to get all categories
+      const data = await getAllCategories(1, 1000);
+      const categoriesArray = Array.isArray(data.data?.exist_category) ? data.data.exist_category : [];
+      setAllCategories(categoriesArray);
+    } catch (error) {
+      console.error('Error fetching all categories:', error);
+      // Fallback to empty array, don't show error toast to avoid spamming if main fetch fails too
+      setAllCategories([]);
+    }
+  };
+
+  // Fetch all categories on component mount
+  useEffect(() => {
+    fetchAllCategories();
+  }, []);
+
+  // Handle click outside for dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        parentCategoryDropdownOpen &&
+        !event.target.closest('.parent-category-dropdown-container')
+      ) {
+        setParentCategoryDropdownOpen(false);
+        setParentCategorySearchTerm('');
+      }
+    };
+
+    if (parentCategoryDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [parentCategoryDropdownOpen]);
 
   // Fetch Categories from API with Pagination and Search
   const fetchCategories = async (page = currentPage, limit = itemsPerPage, search = '') => {
@@ -167,7 +213,8 @@ const CategoryManagement = () => {
     }
 
     // Find parent category by _id
-    const parent = categories.find((c) => c._id === parentId);
+    // Try to find in paginated list first, then allCategories
+    const parent = categories.find((c) => c._id === parentId) || allCategories.find((c) => c._id === parentId);
     if (parent) {
       return `${getCategoryPath(parent)} > ${category.name}`;
     }
@@ -196,8 +243,9 @@ const CategoryManagement = () => {
 
   // Get All Parent Options (for dropdown)
   const getAllParentOptions = (excludeId = null) => {
+    // Use allCategories (unpaginated) for dropdown
     // Use _id to exclude the current category being edited
-    return categories.filter((cat) => cat._id !== excludeId);
+    return allCategories.filter((cat) => cat._id !== excludeId);
   };
 
   // Form Validation
@@ -255,6 +303,9 @@ const CategoryManagement = () => {
         toast.success('Category created successfully!');
       }
 
+      // Refresh all categories for dropdown
+      fetchAllCategories();
+
       resetForm();
       // Reset to first page after creating/updating
       setCurrentPage(1);
@@ -292,6 +343,8 @@ const CategoryManagement = () => {
       }
       fetchCategories(currentPage - 1, itemsPerPage, searchQuery);
       setDeleteConfirm(null);
+      // Refresh all categories for dropdown
+      fetchAllCategories();
     } catch (error) {
       console.error('Error deleting category:', error);
       toast.error(error.message || 'Failed to delete category');
@@ -309,6 +362,8 @@ const CategoryManagement = () => {
     setEditingCategory(null);
     setShowForm(false);
     setFormErrors({});
+    setParentCategorySearchTerm('');
+    setParentCategoryDropdownOpen(false);
   };
 
   return (
@@ -431,35 +486,114 @@ const CategoryManagement = () => {
               </div>
 
               {/* Parent Category Dropdown */}
-              <div>
+              <div className="relative z-20">
                 <label
                   htmlFor="parentCategory"
                   className="block text-sm font-medium text-gray-700 mb-1.5"
                 >
                   Parent Category <span className="text-gray-400 text-xs">(Optional)</span>
                 </label>
-                <div className="relative z-10">
-                  <select
-                    id="parentCategory"
-                    value={formData.parent_category_id}
-                    onChange={(e) =>
-                      setFormData({ ...formData, parent_category_id: e.target.value })
-                    }
-                    className="appearance-none bg-white border border-gray-300 rounded-lg px-3 py-2 pr-8 text-sm text-gray-700 cursor-pointer hover:border-gray-400 transition-all w-full"
+
+                <div className="relative parent-category-dropdown-container">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setParentCategoryDropdownOpen(!parentCategoryDropdownOpen);
+                      setParentCategorySearchTerm('');
+                    }}
+                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-left flex items-center justify-between hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
                   >
-                    <option value="">None (Top Level Category)</option>
-                    {/* Use _id for option value - this ensures we pass _id instead of name */}
-                    {getAllParentOptions(editingCategory?._id).map((cat) => (
-                      <option key={cat._id} value={cat._id}>
-                        {getCategoryPath(cat)}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
+                    <span className={formData.parent_category_id ? 'text-gray-900' : 'text-gray-500'}>
+                      {formData.parent_category_id
+                        ? (
+                          getAllParentOptions(editingCategory?._id).find(
+                            (cat) => cat._id === formData.parent_category_id
+                          )
+                            ? getCategoryPath(
+                              getAllParentOptions(editingCategory?._id).find(
+                                (cat) => cat._id === formData.parent_category_id
+                              )
+                            )
+                            : 'Selected category not found'
+                        )
+                        : 'None (Top Level Category)'}
+                    </span>
+                    {parentCategoryDropdownOpen ? (
+                      <ChevronUp className="w-4 h-4 text-gray-400" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 text-gray-400" />
+                    )}
+                  </button>
+
+                  {parentCategoryDropdownOpen && (
+                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-hidden flex flex-col">
+                      {/* Search in Dropdown */}
+                      <div className="p-2 border-b border-gray-100">
+                        <div className="relative">
+                          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                          <input
+                            type="text"
+                            placeholder="Search category..."
+                            value={parentCategorySearchTerm}
+                            onChange={(e) => setParentCategorySearchTerm(e.target.value)}
+                            className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-green-500 bg-gray-50"
+                            autoFocus
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Options List */}
+                      <div className="overflow-y-auto max-h-48">
+                        {/* None Option */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormData({ ...formData, parent_category_id: '' });
+                            setParentCategoryDropdownOpen(false);
+                            setParentCategorySearchTerm('');
+                          }}
+                          className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-50 transition-colors border-b border-gray-50 ${formData.parent_category_id === ''
+                            ? 'bg-green-50 text-green-700 font-medium'
+                            : 'text-gray-700'
+                            }`}
+                        >
+                          None (Top Level Category)
+                        </button>
+
+                        {/* Filtered Categories */}
+                        {getAllParentOptions(editingCategory?._id)
+                          .filter((cat) =>
+                            cat.name.toLowerCase().includes(parentCategorySearchTerm.toLowerCase())
+                          )
+                          .map((cat) => (
+                            <button
+                              key={cat._id}
+                              type="button"
+                              onClick={() => {
+                                setFormData({ ...formData, parent_category_id: cat._id });
+                                setParentCategoryDropdownOpen(false);
+                                setParentCategorySearchTerm('');
+                              }}
+                              className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-50 transition-colors ${formData.parent_category_id === cat._id
+                                ? 'bg-green-50 text-green-700 font-medium'
+                                : 'text-gray-700'
+                                }`}
+                            >
+                              {getCategoryPath(cat)}
+                            </button>
+                          ))}
+
+                        {getAllParentOptions(editingCategory?._id).filter((cat) =>
+                          cat.name.toLowerCase().includes(parentCategorySearchTerm.toLowerCase())
+                        ).length === 0 && (
+                            <div className="px-3 py-3 text-sm text-gray-500 text-center italic">
+                              No categories found
+                            </div>
+                          )}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <p className="mt-1.5 text-xs text-gray-500">
                   Leave empty to create a top-level category

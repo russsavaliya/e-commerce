@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '../../components/user/Navbar';
 import Footer from '../../components/user/Footer';
 import { trackOrder, cancelOrder } from '../../services/user/orderTrackService';
@@ -48,7 +48,10 @@ const OrderTrackPage = () => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
-
+  useEffect(() => {
+    // Scroll to top when cart page loads
+    window.scrollTo(0, 0);
+  }, []);
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');

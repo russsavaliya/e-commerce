@@ -665,7 +665,25 @@ const ProductDetailPage = () => {
             {/* Variants list */}
             {product.variants && product.variants.length > 0 && (
               <div>
-                <div className="text-sm font-semibold text-[#374151] mb-3 uppercase tracking-wide">Select Options</div>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="text-sm font-semibold text-[#374151] uppercase tracking-wide">Select Options</div>
+                  {selectedVariantId && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedVariantId(null);
+                        // Reset to first product image if available
+                        if (product.images && product.images.length > 0) {
+                          setActiveImage(product.images[0]);
+                        }
+                      }}
+                      className="text-xs font-medium text-red-600 hover:text-red-700 hover:underline transition-colors flex items-center gap-1"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      Remove
+                    </button>
+                  )}
+                </div>
                 <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                   {product.variants.map((variant) => {
                     const variantOutOfStock = (variant.quantity ?? 0) <= 0;
@@ -674,26 +692,35 @@ const ProductDetailPage = () => {
                         key={variant._id}
                         onClick={() => !variantOutOfStock && handleVariantSelect(variant._id)}
                         disabled={variantOutOfStock}
-                        className={`flex-shrink-0 border-2 rounded-lg overflow-hidden transition-all relative ${variantOutOfStock
+                        className={`group flex-shrink-0 border-2 rounded-xl overflow-hidden transition-all duration-200 relative ${variantOutOfStock
                           ? 'opacity-60 cursor-not-allowed border-gray-200'
                           : selectedVariantId === variant._id
-                            ? 'border-[rgb(72,29,111)] bg-[rgba(72,29,111,0.06)] shadow-sm'
-                            : 'border-[#E5E7EB] hover:border-[#D1D5DB]'
+                            ? 'border-[rgb(72,29,111)] bg-[rgba(72,29,111,0.06)] shadow-lg'
+                            : 'border-[#E5E7EB] hover:border-[rgb(72,29,111)] hover:shadow-md'
                           }`}
                       >
+                        {/* Hover Tooltip - Variant Name */}
+                        <div className={`absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs font-medium px-3 py-1.5 rounded-lg whitespace-nowrap opacity-0 pointer-events-none transition-all duration-200 z-20 shadow-lg ${!variantOutOfStock ? 'group-hover:opacity-100 group-hover:-top-14' : ''
+                          }`}>
+                          {variant.variant_name || 'Variant'}
+                          <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></div>
+                        </div>
+
                         {variantOutOfStock && (
-                          <div className="absolute inset-0 bg-gray-100/80 flex items-center justify-center z-10 rounded-lg">
-                            <span className="text-[10px] font-semibold text-red-600 bg-white px-2 py-0.5 rounded border border-red-200">
+                          <div className="absolute inset-0 bg-gray-100/80 flex items-center justify-center z-10 rounded-xl">
+                            <span className="text-[10px] font-semibold text-red-600 bg-white px-2.5 py-1 rounded-lg border border-red-200 shadow-sm">
                               Out of Stock
                             </span>
                           </div>
                         )}
+
+                        {/* Variant Image */}
                         {variant.variant_image ? (
-                          <div className="w-24 h-32 bg-gray-100 overflow-hidden select-none">
+                          <div className="w-20 h-28 bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden select-none relative">
                             <img
                               src={normalizeImagePath(variant.variant_image)}
                               alt={variant.variant_name}
-                              className="w-full h-full object-cover pointer-events-none select-none"
+                              className="w-full h-full object-cover pointer-events-none select-none transition-transform duration-200 group-hover:scale-105"
                               draggable="false"
                               onContextMenu={handleContextMenu}
                               onDragStart={handleDragStart}
@@ -701,18 +728,29 @@ const ProductDetailPage = () => {
                                 e.target.src = 'https://via.placeholder.com/100x150?text=Image';
                               }}
                             />
+                            {/* Overlay with variant name - shows only when NOT selected */}
+                            {selectedVariantId !== variant._id && (
+                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-100 group-hover:opacity-0 transition-opacity duration-200 pointer-events-none">
+                                <div className="text-white text-xs font-semibold text-center px-2 leading-tight">
+                                  {variant.variant_name || 'Variant'}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         ) : (
-                          <div className="w-24 h-32 bg-gray-100 flex items-center justify-center">
+                          <div className="w-20 h-28 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
                             <Package className="w-6 h-6 text-gray-400" />
                           </div>
                         )}
-                        <div className={`p-2 w-24 ${selectedVariantId === variant._id ? 'bg-[rgba(72,29,111,0.06)]' : 'bg-white'}`}>
-                          <div className={`text-xs font-semibold mb-0.5 truncate ${selectedVariantId === variant._id
-                            ? 'text-[rgb(72,29,111)] font-medium'
+
+                        {/* Variant Name Below Image */}
+                        <div className={`px-2 pt-1.5 pb-2 w-20 ${selectedVariantId === variant._id ? 'bg-[rgba(72,29,111,0.06)]' : 'bg-white'}`}>
+                          <div className={`text-xs font-bold text-center truncate ${selectedVariantId === variant._id
+                            ? 'text-[rgb(72,29,111)]'
                             : 'text-[#374151]'
-                            }`}>{variant.variant_name || 'Variant'}</div>
-                          <div className="text-[10px] text-[#6B7280]">₹ {variant.variant_price?.toLocaleString('en-IN') || displayPrice}</div>
+                            }`} title={variant.variant_name || 'Variant'}>
+                            {variant.variant_name || 'Variant'}
+                          </div>
                         </div>
                       </button>
                     );
