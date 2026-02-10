@@ -182,7 +182,8 @@ exports.update_product = async (req, res) => {
             variants,
             existing_images,           // existing product images (JSON array of URLs)
             existing_variant_images,    // existing variant images (JSON array)
-            details
+            details,
+            status
         } = req.body;
 
         // Parse JSON fields
@@ -284,6 +285,7 @@ exports.update_product = async (req, res) => {
             {
                 name,
                 SKU,
+                status,
                 description,
                 images: productImages,
                 category,
@@ -388,6 +390,8 @@ exports.get_product_list = async (req, res) => {
                     images: 1,
                     category: "$category.name",
                     selling_price: 1,
+                    quantity: 1,
+                    active: 1
                 }
             },
             {

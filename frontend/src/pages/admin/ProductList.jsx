@@ -247,6 +247,9 @@ const ProductList = () => {
                       Category
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Stock
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       Price
                     </th>
                   </tr>
@@ -295,6 +298,21 @@ const ProductList = () => {
                             ? product.category.join(', ')
                             : product.category || 'N/A'}
                         </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        {(product.quantity || 0) === 0 ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            Out of Stock
+                          </span>
+                        ) : (product.quantity || 0) < 10 ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            Low Stock ({product.quantity})
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            In Stock ({product.quantity})
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         <div className="text-sm font-semibold text-gray-900">
@@ -370,8 +388,8 @@ const ProductList = () => {
                             key={pageNum}
                             onClick={() => handlePageChange(pageNum)}
                             className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${pagination.page === pageNum
-                                ? 'bg-green-600 text-white'
-                                : 'border border-gray-300 hover:bg-gray-50'
+                              ? 'bg-green-600 text-white'
+                              : 'border border-gray-300 hover:bg-gray-50'
                               }`}
                           >
                             {pageNum}

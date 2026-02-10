@@ -313,14 +313,14 @@ exports.get_bestseller_products = async (req, res) => {
         let { limit = 12 } = req.query;
         limit = parseInt(limit);
 
-        const products = await product_model.find({ 
+        const products = await product_model.find({
             is_best_seller: true,
             status: 'ACTIVE'
         })
-        .populate('category', 'name')
-        .select('name SKU images selling_price original_price discount_percentage is_best_seller is_new is_trending')
-        .sort({ sort_order: 1, createdAt: -1 })
-        .limit(limit);
+            .populate('category', 'name')
+            .select('name SKU images selling_price original_price discount_percentage is_best_seller is_new is_trending')
+            .sort({ sort_order: 1, createdAt: -1 })
+            .limit(limit);
 
         return res.status(200).json({
             status: true,
@@ -342,14 +342,14 @@ exports.get_trending_products = async (req, res) => {
         let { limit = 12 } = req.query;
         limit = parseInt(limit);
 
-        const products = await product_model.find({ 
+        const products = await product_model.find({
             is_trending: true,
             status: 'ACTIVE'
         })
-        .populate('category', 'name')
-        .select('name SKU images selling_price original_price discount_percentage is_best_seller is_new is_trending')
-        .sort({ sort_order: 1, createdAt: -1 })
-        .limit(limit);
+            .populate('category', 'name')
+            .select('name SKU images selling_price original_price discount_percentage is_best_seller is_new is_trending')
+            .sort({ sort_order: 1, createdAt: -1 })
+            .limit(limit);
 
         return res.status(200).json({
             status: true,
@@ -371,14 +371,14 @@ exports.get_new_products = async (req, res) => {
         let { limit = 12 } = req.query;
         limit = parseInt(limit);
 
-        const products = await product_model.find({ 
+        const products = await product_model.find({
             is_new: true,
             status: 'ACTIVE'
         })
-        .populate('category', 'name')
-        .select('name SKU images selling_price original_price discount_percentage is_best_seller is_new is_trending')
-        .sort({ sort_order: 1, createdAt: -1 })
-        .limit(limit);
+            .populate('category', 'name')
+            .select('name SKU images selling_price original_price discount_percentage is_best_seller is_new is_trending')
+            .sort({ sort_order: 1, createdAt: -1 })
+            .limit(limit);
 
         return res.status(200).json({
             status: true,
@@ -397,8 +397,8 @@ exports.get_new_products = async (req, res) => {
 // User: Get All Products with Filters and Pagination
 exports.get_all_products = async (req, res) => {
     try {
-        let { 
-            page = 1, 
+        let {
+            page = 1,
             limit = 20,
             category_id,
             min_price,
@@ -425,13 +425,13 @@ exports.get_all_products = async (req, res) => {
         if (category_id) {
             // Check if this is a parent category (has no parent_category_id)
             const category = await category_model.findById(category_id).select('parent_category_id');
-            
+
             if (category && !category.parent_category_id) {
                 // Parent category: Get all child category IDs
-                const childCategories = await category_model.find({ 
-                    parent_category_id: category_id 
+                const childCategories = await category_model.find({
+                    parent_category_id: category_id
                 }).select('_id');
-                
+
                 const childCategoryIds = childCategories.map(child => child._id);
                 // Include parent ID + all child IDs
                 const allCategoryIds = [new mongoose.Types.ObjectId(category_id), ...childCategoryIds];
@@ -481,15 +481,18 @@ exports.get_all_products = async (req, res) => {
             query.is_trending = true;
         }
 
-        // Sort options
+        // Sort options - FIXED VERSION
         const sortOptions = {};
         if (sort_by === 'price') {
             sortOptions.selling_price = sort_order === 'asc' ? 1 : -1;
+            sortOptions._id = 1; // Tiebreaker for consistent pagination
         } else if (sort_by === 'name') {
             sortOptions.name = sort_order === 'asc' ? 1 : -1;
+            sortOptions._id = 1; // Tiebreaker for consistent pagination
         } else {
-            sortOptions.sort_order = 1;
+            // Default: sort by createdAt
             sortOptions.createdAt = sort_order === 'asc' ? 1 : -1;
+            sortOptions._id = 1; // IMPORTANT: Ensures consistent order across pages
         }
 
         const [products, total_count] = await Promise.all([
@@ -500,7 +503,8 @@ exports.get_all_products = async (req, res) => {
                 .select('name SKU images selling_price original_price discount_percentage is_best_seller is_new is_trending category attributes')
                 .sort(sortOptions)
                 .skip(skip)
-                .limit(limit),
+                .limit(limit)
+                .lean(), // Performance improvement
             product_model.countDocuments(query)
         ]);
 
