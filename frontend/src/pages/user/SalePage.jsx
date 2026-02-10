@@ -6,10 +6,10 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useParams } from 'react-router-dom';
-import { 
-  Loader2, 
-  X, 
-  ChevronLeft, 
+import {
+  Loader2,
+  X,
+  ChevronLeft,
   ChevronRight,
   SlidersHorizontal,
 } from 'lucide-react';
@@ -34,36 +34,36 @@ const ITEMS_PER_PAGE = 20;
 const SalePage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { categoryId } = useParams(); // Support category from URL params
-  
+
   // ============================================================================
   // STATE MANAGEMENT
   // ============================================================================
-  
+
   // Products & Loading
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  
+
   // Filter Data
   const [categories, setCategories] = useState([]);
   const [attributes, setAttributes] = useState([]);
-  
+
   // UI State
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
   const [attributeDropdownOpen, setAttributeDropdownOpen] = useState(false);
   const [attributeValueDropdownOpen, setAttributeValueDropdownOpen] = useState(false);
-  
+
   // Search Terms
   const [categorySearchTerm, setCategorySearchTerm] = useState('');
   const [attributeSearchTerm, setAttributeSearchTerm] = useState('');
   const [attributeValueSearchTerm, setAttributeValueSearchTerm] = useState('');
-  
+
   // Price Slider State - Single state for range [min, max]
   const [priceRange, setPriceRange] = useState([PRICE_BOUNDS.min, PRICE_BOUNDS.max]);
-  
+
   // Active Filters - Support category from URL params or query params
   const [filters, setFilters] = useState({
     category_id: categoryId || searchParams.get('category') || '',
@@ -78,7 +78,7 @@ const SalePage = () => {
   // ============================================================================
   // HELPER FUNCTIONS
   // ============================================================================
-  
+
   const updateFilters = (newFilters) => {
     const updatedFilters = { ...filters, ...newFilters };
     setFilters(updatedFilters);
@@ -133,7 +133,7 @@ const SalePage = () => {
   // ============================================================================
   // EFFECTS
   // ============================================================================
-  
+
   // Sync categoryId from URL params to filters
   useEffect(() => {
     if (categoryId && categoryId !== filters.category_id) {
@@ -149,16 +149,24 @@ const SalePage = () => {
   useEffect(() => {
     const filterMinPrice = Number(filters.min_price);
     const filterMaxPrice = Number(filters.max_price);
-    
-    const min = filterMinPrice && filterMinPrice >= PRICE_BOUNDS.min && filterMinPrice <= PRICE_BOUNDS.max 
-      ? filterMinPrice 
+
+    const min = filterMinPrice && filterMinPrice >= PRICE_BOUNDS.min && filterMinPrice <= PRICE_BOUNDS.max
+      ? filterMinPrice
       : PRICE_BOUNDS.min;
-    const max = filterMaxPrice && filterMaxPrice >= PRICE_BOUNDS.min && filterMaxPrice <= PRICE_BOUNDS.max 
-      ? filterMaxPrice 
+    const max = filterMaxPrice && filterMaxPrice >= PRICE_BOUNDS.min && filterMaxPrice <= PRICE_BOUNDS.max
+      ? filterMaxPrice
       : PRICE_BOUNDS.max;
-    
+
     setPriceRange([min, max]);
   }, [filters.min_price, filters.max_price]);
+
+  // Sync currentPage with URL params
+  useEffect(() => {
+    const pageFromUrl = Number(searchParams.get('page')) || 1;
+    if (pageFromUrl !== currentPage && pageFromUrl >= 1) {
+      setCurrentPage(pageFromUrl);
+    }
+  }, [searchParams]);
 
   // Fetch categories and attributes
   useEffect(() => {
@@ -229,7 +237,7 @@ const SalePage = () => {
         });
 
         const res = await getAllProducts(filterParams);
-        
+
         if (res.status && res.data) {
           setProducts(res.data.products || []);
           setTotalPages(res.data.total_pages || 1);
@@ -274,11 +282,10 @@ const SalePage = () => {
               <button
                 key={page}
                 onClick={() => handlePageChange(page)}
-                className={`px-4 py-2 border rounded-lg font-medium transition-colors ${
-                  currentPage === page
+                className={`px-4 py-2 border rounded-lg font-medium transition-colors ${currentPage === page
                     ? 'bg-[rgb(72,29,111)] text-white border-[rgb(72,29,111)]'
                     : 'border-gray-300 hover:bg-[#faf9f5] text-[rgb(72,29,111)]'
-                }`}
+                  }`}
               >
                 {page}
               </button>
@@ -322,9 +329,9 @@ const SalePage = () => {
       {/* Mobile Filter Overlay */}
       {mobileFiltersOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div 
-            className="absolute inset-0 bg-black/50" 
-            onClick={() => setMobileFiltersOpen(false)} 
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setMobileFiltersOpen(false)}
           />
           <div className="absolute right-0 top-0 h-full w-80 bg-[#faf9f5] shadow-xl overflow-y-auto">
             <div className="sticky top-0 bg-[#faf9f5] border-b border-gray-200 p-4 flex items-center justify-between z-10">
@@ -399,7 +406,7 @@ const SalePage = () => {
           {/* Products Grid */}
           <div className="flex-1 min-w-0">
             <div className="mb-10 text-center">
-              <h1 
+              <h1
                 className="text-2xl md:text-3xl font-bold text-[rgb(72,29,111)] leading-tight"
                 style={{ fontFamily: '"GeorgiaBallpark Serif", serif' }}
               >

@@ -36,12 +36,60 @@ const RichTextEditor = ({ value, onChange, placeholder = 'Enter description...' 
     }
   }, [value]);
 
+  // Sanitize HTML to remove unwanted CSS variables and inline styles
+  const sanitizeHTML = (html) => {
+    // Create a temporary div to parse HTML
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+
+    // Recursively clean all elements
+    const cleanElement = (element) => {
+      if (element.style && element.style.length > 0) {
+        // Collect only allowed style properties
+        const allowedStyles = {};
+        const allowedProperties = [
+          'color', 'background-color', 'font-weight', 'font-style',
+          'text-decoration', 'text-align', 'font-family', 'font-size',
+          'margin', 'padding', 'border', 'display'
+        ];
+
+        for (let i = 0; i < element.style.length; i++) {
+          const prop = element.style[i];
+          // Skip Tailwind CSS variables and other CSS custom properties
+          if (!prop.startsWith('--')) {
+            // Only keep commonly used formatting properties
+            if (allowedProperties.some(allowed => prop.startsWith(allowed))) {
+              allowedStyles[prop] = element.style.getPropertyValue(prop);
+            }
+          }
+        }
+
+        // Rebuild style attribute with only clean properties
+        element.removeAttribute('style');
+        Object.keys(allowedStyles).forEach(prop => {
+          element.style.setProperty(prop, allowedStyles[prop]);
+        });
+
+        // Remove empty style attribute
+        if (element.style.length === 0) {
+          element.removeAttribute('style');
+        }
+      }
+
+      // Recursively clean child elements
+      Array.from(element.children).forEach(cleanElement);
+    };
+
+    Array.from(tempDiv.children).forEach(cleanElement);
+    return tempDiv.innerHTML;
+  };
+
   useEffect(() => {
     const editor = editorRef.current;
     if (!editor) return;
 
     const handleInput = () => {
-      const html = editor.innerHTML;
+      const html = sanitizeHTML(editor.innerHTML);
       onChange(html);
     };
 
