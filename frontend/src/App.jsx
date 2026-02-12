@@ -113,6 +113,7 @@ import NotFoundPage from './pages/user/NotFoundPage';
 // ============================================
 import WhatsAppSupport from './components/user/WhatsAppSupport';
 import PromoPopup from './components/user/PromoPopup';
+import BottomNav from './components/user/BottomNav';
 
 // TODO: When you create new user pages, import them here:
 // import UserOrders from './pages/user/UserOrders';
@@ -294,8 +295,10 @@ function App() {
         {/* Toaster: Shows notification popups */}
           <Toaster position="top-right" />
 
-          {/* Routes: This is where we define all the pages in our app */}
-          <Routes>
+          {/* Main content wrapper with padding for bottom navigation on mobile */}
+          <div className="pb-20 md:pb-0">
+            {/* Routes: This is where we define all the pages in our app */}
+            <Routes>
 
             {/* 
               Route 1: Home Page - User Homepage with banners and products
@@ -397,13 +400,17 @@ function App() {
               element={<NotFoundPage />}
             />
 
-          </Routes>
+            </Routes>
+          </div>
 
           {/* WhatsApp Support Button - Visible on all user pages */}
           <WhatsAppSupport />
 
           {/* Promotional Popup - Auto-displays after 3-5 seconds on user pages */}
           <PromoPopup />
+
+          {/* Mobile Bottom Navigation - Fixed at bottom, visible only on mobile screens */}
+          <BottomNav />
 
       </AdminAuthProvider>
 
