@@ -276,9 +276,9 @@ const ADMIN_ROUTES = [
 // USER ROUTES CONFIGURATION
 // ============================================
 // User pages (no authentication required)
-  // ============================================
-  // ADD NEW USER PAGES HERE
-  // ============================================
+// ============================================
+// ADD NEW USER PAGES HERE
+// ============================================
 
 /**
  * Main App Function
@@ -293,12 +293,12 @@ function App() {
       <AdminAuthProvider>
 
         {/* Toaster: Shows notification popups */}
-          <Toaster position="top-right" />
+        <Toaster position="top-right" />
 
-          {/* Main content wrapper with padding for bottom navigation on mobile */}
-          <div className="pb-20 md:pb-0">
-            {/* Routes: This is where we define all the pages in our app */}
-            <Routes>
+        {/* Main content wrapper with padding for bottom navigation on mobile */}
+        <div className="pb-20 md:pb-0">
+          {/* Routes: This is where we define all the pages in our app */}
+          <Routes>
 
             {/* 
               Route 1: Home Page - User Homepage with banners and products
@@ -330,6 +330,7 @@ function App() {
 
             {/* Product detail */}
             <Route path="/product/:productId" element={<ProductDetailPage />} />
+            <Route path="/product/:slug/:productId" element={<ProductDetailPage />} />
 
             {/* Cart page */}
             <Route path="/cart" element={<CartPage />} />
@@ -400,17 +401,17 @@ function App() {
               element={<NotFoundPage />}
             />
 
-            </Routes>
-          </div>
+          </Routes>
+        </div>
 
-          {/* WhatsApp Support Button - Visible on all user pages */}
-          <WhatsAppSupport />
+        {/* WhatsApp Support Button - Visible on all user pages */}
+        <WhatsAppSupport />
 
-          {/* Promotional Popup - Auto-displays after 3-5 seconds on user pages */}
-          <PromoPopup />
+        {/* Promotional Popup - Auto-displays after 3-5 seconds on user pages */}
+        <PromoPopup />
 
-          {/* Mobile Bottom Navigation - Fixed at bottom, visible only on mobile screens */}
-          <BottomNav />
+        {/* Mobile Bottom Navigation - Fixed at bottom, visible only on mobile screens */}
+        <BottomNav />
 
       </AdminAuthProvider>
 

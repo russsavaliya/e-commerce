@@ -20,8 +20,8 @@ const ProductCard = ({ product }) => {
     ? product.discount_percentage
     : (product.original_price && product.original_price > product.selling_price
       ? Math.round(
-          ((product.original_price - product.selling_price) / product.original_price) * 100
-        )
+        ((product.original_price - product.selling_price) / product.original_price) * 100
+      )
       : 0);
 
   // Get product images
@@ -39,15 +39,15 @@ const ProductCard = ({ product }) => {
   };
 
   return (
-    <div 
+    <div
       role="button"
       tabIndex={0}
       className="group relative bg-white overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 border-2 border-gray-100 hover:border-[rgb(72,29,111)] hover:border-opacity-40 hover:-translate-y-2"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={() => navigate(`/product/${product._id}`)}
+      onClick={() => navigate(product.slug ? `/product/${product.slug}/${product._id}` : `/product/${product._id}`)}
       onKeyDown={(e) => {
-        if (e.key === 'Enter') navigate(`/product/${product._id}`);
+        if (e.key === 'Enter') navigate(product.slug ? `/product/${product.slug}/${product._id}` : `/product/${product._id}`);
       }}
     >
       {/* Product Image */}
@@ -58,9 +58,8 @@ const ProductCard = ({ product }) => {
             <img
               src={normalizeImagePath(primaryImage)}
               alt={product.name || 'Product'}
-              className={`w-full h-full object-cover transition-opacity duration-500 absolute inset-0 ${
-                isHovered && secondaryImage ? 'opacity-0' : 'opacity-100'
-              }`}
+              className={`w-full h-full object-cover transition-opacity duration-500 absolute inset-0 ${isHovered && secondaryImage ? 'opacity-0' : 'opacity-100'
+                }`}
               onError={(e) => {
                 e.target.src = 'https://via.placeholder.com/400x533?text=Image+Not+Available';
               }}
@@ -70,9 +69,8 @@ const ProductCard = ({ product }) => {
               <img
                 src={normalizeImagePath(secondaryImage)}
                 alt={product.name || 'Product'}
-                className={`w-full h-full object-cover transition-opacity duration-500 absolute inset-0 ${
-                  isHovered ? 'opacity-100' : 'opacity-0'
-                }`}
+                className={`w-full h-full object-cover transition-opacity duration-500 absolute inset-0 ${isHovered ? 'opacity-100' : 'opacity-0'
+                  }`}
                 onError={(e) => {
                   e.target.src = 'https://via.placeholder.com/400x533?text=Image+Not+Available';
                 }}
@@ -96,7 +94,7 @@ const ProductCard = ({ product }) => {
                 border: '1px',
               }}
             >
-              <span 
+              <span
                 className="text-white font-bold uppercase tracking-tight whitespace-nowrap text-[9px] sm:text-[10px]"
                 style={{
                   letterSpacing: '0.3px',
@@ -125,7 +123,7 @@ const ProductCard = ({ product }) => {
       {/* Product Info */}
       <div className="p-3 sm:p-4">
         {/* Product Name - Premium Typography */}
-        <h3 
+        <h3
           className="text-gray-900 mb-2 sm:mb-3 line-clamp-2 leading-tight sm:leading-snug"
           style={{
             fontFamily: '"Inter", sans-serif',
@@ -141,7 +139,7 @@ const ProductCard = ({ product }) => {
         {/* Price - Premium Typography */}
         <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
           {product.original_price && product.original_price > product.selling_price && (
-            <span 
+            <span
               className="text-gray-400 line-through whitespace-nowrap"
               style={{
                 fontFamily: '"Inter", sans-serif',
@@ -154,7 +152,7 @@ const ProductCard = ({ product }) => {
             </span>
           )}
           <div className="flex items-center">
-            <span 
+            <span
               className="text-gray-900"
               style={{
                 fontFamily: '"Inter", sans-serif',
