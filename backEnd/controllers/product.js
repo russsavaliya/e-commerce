@@ -1,10 +1,12 @@
 const product_model = require("../model/product");
 const mongoose = require("mongoose");
 const { uploadToCloudinary } = require("../helper/cloudinary_upload");
+const { generateSlug } = require("../helper/slugHelper");
 exports.create_product = async (req, res) => {
     try {
         let {
             name,
+            slug,
             SKU,
             description,
             category,
@@ -21,6 +23,11 @@ exports.create_product = async (req, res) => {
             variants,
             details
         } = req.body;
+
+        // Generate slug if not provided
+        if (!slug || slug.trim() === "") {
+            slug = generateSlug(name);
+        }
 
         // Parse JSON fields
         attributes = typeof attributes === "string" ? JSON.parse(attributes) : attributes;
@@ -95,6 +102,7 @@ exports.create_product = async (req, res) => {
 
         const product = await product_model.create({
             name,
+            slug,
             SKU,
             description,
             images: productImages,          // all product images
@@ -166,6 +174,7 @@ exports.update_product = async (req, res) => {
 
         let {
             name,
+            slug,
             SKU,
             description,
             category,
@@ -185,6 +194,11 @@ exports.update_product = async (req, res) => {
             details,
             status
         } = req.body;
+
+        // Generate slug if not provided
+        if (!slug || slug.trim() === "") {
+            slug = generateSlug(name);
+        }
 
         // Parse JSON fields
         attributes = typeof attributes === "string" ? JSON.parse(attributes) : attributes;
@@ -284,6 +298,7 @@ exports.update_product = async (req, res) => {
             id,
             {
                 name,
+                slug,
                 SKU,
                 status,
                 description,

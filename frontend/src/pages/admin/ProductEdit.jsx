@@ -63,6 +63,7 @@ const ProductEdit = () => {
   // Form data
   const [formData, setFormData] = useState({
     name: '',
+    slug: '',
     SKU: '',
     description: '',
     category: '',
@@ -164,6 +165,7 @@ const ProductEdit = () => {
         // Set basic form data
         setFormData({
           name: product.name || '',
+          slug: product.slug || '',
           SKU: product.SKU || '',
           description: product.description || '',
           category: product.category?._id || product.category || '',
@@ -769,6 +771,7 @@ const ProductEdit = () => {
       const formDataToSend = new FormData();
 
       formDataToSend.append('name', formData.name.trim());
+      formDataToSend.append('slug', formData.slug.trim());
       formDataToSend.append('SKU', formData.SKU.trim());
       formDataToSend.append('description', formData.description.trim() || '');
       formDataToSend.append('category', formData.category);
@@ -939,6 +942,24 @@ const ProductEdit = () => {
                     {formErrors.name && (
                       <p className="text-xs text-red-500 mt-1">{formErrors.name}</p>
                     )}
+                  </div>
+
+                  {/* Slug */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Slug
+                    </label>
+                    <input
+                      type="text"
+                      name="slug"
+                      value={formData.slug}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                      placeholder="Enter slug (optional)"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Leave blank to auto-generate from name
+                    </p>
                   </div>
 
                   {/* SKU */}

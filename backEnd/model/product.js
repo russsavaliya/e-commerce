@@ -9,6 +9,13 @@ const productSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "category"
     },
+    slug: {
+        type: String,
+        trim: true,
+        lowercase: true,
+        unique: false,
+        index: true
+    },
     status: {
         type: String,
         enum: ['ACTIVE', 'DRAFT'],
