@@ -1,39 +1,9 @@
-import axios from 'axios';
-import { API_BASE_URL } from '../../utils/constants';
-import { getAdminToken } from './authService';
-
-// Create axios instance with default config
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Request interceptor for adding token
-api.interceptors.request.use(
-  (config) => {
-    const token = getAdminToken();
-    if (token) {
-      config.headers.admin_token = token;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+import apiClient from '../../utils/api';
 
 export const getAllMarketingSpends = async (page = 1, limit = 10, search = '', product_id = '', date = '') => {
   try {
-    const response = await api.get('/marketing-spend/list', {
-      params: {
-        page: page,
-        limit: limit,
-        search: search,
-        product_id: product_id,
-        date: date,
-      },
+    const response = await apiClient.get('/marketing-spend/list', {
+      params: { page, limit, search, product_id, date },
     });
     return response.data;
   } catch (error) {
@@ -45,7 +15,7 @@ export const getAllMarketingSpends = async (page = 1, limit = 10, search = '', p
 
 export const getMarketingSpendById = async (id) => {
   try {
-    const response = await api.get(`/marketing-spend/one/${id}`);
+    const response = await apiClient.get(`/marketing-spend/one/${id}`);
     return response.data;
   } catch (error) {
     throw new Error(
@@ -56,7 +26,7 @@ export const getMarketingSpendById = async (id) => {
 
 export const createMarketingSpend = async (marketingSpendData) => {
   try {
-    const response = await api.post('/marketing-spend/create', marketingSpendData);
+    const response = await apiClient.post('/marketing-spend/create', marketingSpendData);
     return response.data;
   } catch (error) {
     throw new Error(
@@ -67,7 +37,7 @@ export const createMarketingSpend = async (marketingSpendData) => {
 
 export const updateMarketingSpend = async (id, marketingSpendData) => {
   try {
-    const response = await api.put(`/marketing-spend/update/${id}`, marketingSpendData);
+    const response = await apiClient.put(`/marketing-spend/update/${id}`, marketingSpendData);
     return response.data;
   } catch (error) {
     throw new Error(
@@ -78,7 +48,7 @@ export const updateMarketingSpend = async (id, marketingSpendData) => {
 
 export const deleteMarketingSpend = async (id) => {
   try {
-    const response = await api.delete(`/marketing-spend/delete/${id}`);
+    const response = await apiClient.delete(`/marketing-spend/delete/${id}`);
     return response.data;
   } catch (error) {
     throw new Error(

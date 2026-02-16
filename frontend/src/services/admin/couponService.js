@@ -1,34 +1,12 @@
-import axios from 'axios';
-import { API_BASE_URL } from '../../utils/constants';
-import { getAdminToken } from './authService';
+import apiClient from '../../utils/api';
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Add token to requests
-api.interceptors.request.use(
-  (config) => {
-    const token = getAdminToken();
-    if (token) {
-      config.headers.admin_token = token;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
 
 /**
  * Create a new coupon
  */
 export const createCoupon = async (couponData) => {
   try {
-    const response = await api.post('/coupons', couponData);
+    const response = await apiClient.post('/coupons', couponData);
     return response.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -40,7 +18,7 @@ export const createCoupon = async (couponData) => {
  */
 export const getAllCoupons = async () => {
   try {
-    const response = await api.get('/coupons/list');
+    const response = await apiClient.get('/coupons/list');
     return response.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -52,7 +30,7 @@ export const getAllCoupons = async () => {
  */
 export const getCouponById = async (couponId) => {
   try {
-    const response = await api.get('/coupons/get-one', {
+    const response = await apiClient.get('/coupons/get-one', {
       params: { coupon_id: couponId },
     });
     return response.data;
@@ -66,7 +44,7 @@ export const getCouponById = async (couponId) => {
  */
 export const updateCoupon = async (couponId, couponData) => {
   try {
-    const response = await api.put('/coupons/update', couponData, {
+    const response = await apiClient.put('/coupons/update', couponData, {
       params: { coupon_id: couponId },
     });
     return response.data;
@@ -80,7 +58,7 @@ export const updateCoupon = async (couponId, couponData) => {
  */
 export const deleteCoupon = async (couponId) => {
   try {
-    const response = await api.delete('/coupons/delete', {
+    const response = await apiClient.delete('/coupons/delete', {
       params: { coupon_id: couponId },
     });
     return response.data;

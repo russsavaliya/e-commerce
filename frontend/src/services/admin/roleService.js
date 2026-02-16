@@ -1,37 +1,9 @@
-import axios from 'axios';
-import { API_BASE_URL } from '../../utils/constants';
-import { getAdminToken } from './authService';
-
-// Create axios instance with default config
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Request interceptor for adding token
-api.interceptors.request.use(
-  (config) => {
-    const token = getAdminToken();
-    if (token) {
-      config.headers.admin_token = token;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+import apiClient from '../../utils/api';
 
 export const getAllRoles = async (page = 1, limit = 10, search = '') => {
   try {
-    const response = await api.get('/role/list', {
-      params: {
-        page: page,
-        limit: limit,
-        search: search,
-      },
+    const response = await apiClient.get('/role/list', {
+      params: { page, limit, search },
     });
     return response.data;
   } catch (error) {
@@ -43,10 +15,8 @@ export const getAllRoles = async (page = 1, limit = 10, search = '') => {
 
 export const getRoleById = async (id) => {
   try {
-    const response = await api.get('/role/one', {
-      params: {
-        id: id,
-      },
+    const response = await apiClient.get('/role/one', {
+      params: { id },
     });
     return response.data;
   } catch (error) {
@@ -58,7 +28,7 @@ export const getRoleById = async (id) => {
 
 export const createRole = async (roleData) => {
   try {
-    const response = await api.post('/role/create', roleData);
+    const response = await apiClient.post('/role/create', roleData);
     return response.data;
   } catch (error) {
     throw new Error(
@@ -69,10 +39,8 @@ export const createRole = async (roleData) => {
 
 export const updateRole = async (id, roleData) => {
   try {
-    const response = await api.put('/role/update', roleData, {
-      params: {
-        id: id,
-      },
+    const response = await apiClient.put('/role/update', roleData, {
+      params: { id },
     });
     return response.data;
   } catch (error) {
@@ -84,10 +52,8 @@ export const updateRole = async (id, roleData) => {
 
 export const deleteRole = async (id) => {
   try {
-    const response = await api.delete('/role/delete', {
-      params: {
-        id: id,
-      },
+    const response = await apiClient.delete('/role/delete', {
+      params: { id },
     });
     return response.data;
   } catch (error) {

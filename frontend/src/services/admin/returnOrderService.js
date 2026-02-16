@@ -1,35 +1,14 @@
-import axios from 'axios';
-import { API_BASE_URL } from '../../utils/constants';
-import { getAdminToken } from './authService';
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Add auth token to requests
-api.interceptors.request.use((config) => {
-  const token = getAdminToken();
-  if (token) {
-    config.headers.admin_token = token;
-  }
-  return config;
-});
+import apiClient from '../../utils/api';
 
 /**
  * Get all return orders with pagination and filters
  */
 export const getReturnOrdersList = async ({ page = 1, limit = 10, status = '' }) => {
   try {
-    const params = new URLSearchParams();
-    params.append('page', page.toString());
-    params.append('limit', limit.toString());
-    if (status) {
-      params.append('status', status);
-    }
+    const params = { page, limit };
+    if (status) params.status = status;
 
-    const response = await api.get(`/return-order/list?${params.toString()}`);
+    const response = await apiClient.get('/return-order/list', { params });
     return response.data;
   } catch (error) {
     throw new Error(
@@ -43,7 +22,7 @@ export const getReturnOrdersList = async ({ page = 1, limit = 10, status = '' })
  */
 export const getReturnOrderOne = async (returnOrderId) => {
   try {
-    const response = await api.get(`/return-order/get-one?returnOrderId=${returnOrderId}`);
+    const response = await apiClient.get('/return-order/get-one', { params: { returnOrderId } });
     return response.data;
   } catch (error) {
     throw new Error(
@@ -57,7 +36,7 @@ export const getReturnOrderOne = async (returnOrderId) => {
  */
 export const updateReturnOrderStatus = async ({ returnOrderId, status }) => {
   try {
-    const response = await api.patch('/return-order/update-status', {
+    const response = await apiClient.patch('/return-order/update-status', {
       returnOrderId,
       status,
     });
@@ -75,7 +54,7 @@ export const updateReturnOrderStatus = async ({ returnOrderId, status }) => {
  */
 export const getShipmentDetails = async (returnOrderId) => {
   try {
-    const response = await api.get(`/return-order/get-shipment-details?returnOrderId=${returnOrderId}`);
+    const response = await apiClient.get('/return-order/get-shipment-details', { params: { returnOrderId } });
     return response.data;
   } catch (error) {
     throw new Error(
@@ -90,7 +69,7 @@ export const getShipmentDetails = async (returnOrderId) => {
  */
 export const createShiprocketReturn = async ({ returnOrderId, length, breadth, height, weight, return_type }) => {
   try {
-    const response = await api.post('/return-order/create-shiprocket-return', {
+    const response = await apiClient.post('/return-order/create-shiprocket-return', {
       returnOrderId,
       length,
       breadth,
