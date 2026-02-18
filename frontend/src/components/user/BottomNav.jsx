@@ -14,6 +14,10 @@ import { Home, Zap, Phone } from 'lucide-react';
 function BottomNav() {
   const location = useLocation();
 
+  // Hide BottomNav on product detail page
+  const isProductDetailPage = location.pathname.includes('/product/');
+  if (isProductDetailPage) return null;
+
   // Define navigation items
   const navItems = [
     {
