@@ -1,35 +1,11 @@
-import axios from 'axios';
-import { API_BASE_URL } from '../../utils/constants';
-import { getAdminToken } from './authService';
-
-// Create axios instance with default config
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Request interceptor for adding token
-api.interceptors.request.use(
-  (config) => {
-    const token = getAdminToken();
-    if (token) {
-      config.headers.admin_token = token;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+import apiClient from '../../utils/api';
 
 /**
  * Create shipment for an order
  */
 export const createShipment = async (orderId, shipmentData = {}) => {
   try {
-    const response = await api.post(`/shipments/create/${orderId}`, shipmentData);
+    const response = await apiClient.post(`/shipments/create/${orderId}`, shipmentData);
     return response.data;
   } catch (error) {
     throw new Error(
@@ -43,7 +19,7 @@ export const createShipment = async (orderId, shipmentData = {}) => {
  */
 export const getShipmentById = async (shipmentId) => {
   try {
-    const response = await api.get('/shipments/one', {
+    const response = await apiClient.get('/shipments/one', {
       params: { shipment_id: shipmentId },
     });
     return response.data;
@@ -59,7 +35,7 @@ export const getShipmentById = async (shipmentId) => {
  */
 export const getShipmentByOrder = async (orderId) => {
   try {
-    const response = await api.get(`/shipments/order/${orderId}`);
+    const response = await apiClient.get(`/shipments/order/${orderId}`);
     return response.data;
   } catch (error) {
     throw new Error(
@@ -73,13 +49,8 @@ export const getShipmentByOrder = async (orderId) => {
  */
 export const getAllShipments = async (page = 1, limit = 10, search = '', shipment_status = '') => {
   try {
-    const response = await api.get('/shipments/list', {
-      params: {
-        page,
-        limit,
-        search,
-        shipment_status,
-      },
+    const response = await apiClient.get('/shipments/list', {
+      params: { page, limit, search, shipment_status },
     });
     return response.data;
   } catch (error) {
@@ -94,7 +65,7 @@ export const getAllShipments = async (page = 1, limit = 10, search = '', shipmen
  */
 export const updateShipmentStatus = async (shipmentId, shipment_status) => {
   try {
-    const response = await api.patch(`/shipments/${shipmentId}/status`, {
+    const response = await apiClient.patch(`/shipments/${shipmentId}/status`, {
       shipment_status,
     });
     return response.data;

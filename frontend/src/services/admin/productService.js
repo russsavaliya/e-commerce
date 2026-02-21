@@ -1,36 +1,15 @@
-import axios from 'axios';
-import { API_BASE_URL } from '../../utils/constants';
-import { getAdminToken } from './authService';
-
-const productApi = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 30000, // 30 seconds for file uploads
-});
-
-// Request interceptor for adding token
-productApi.interceptors.request.use(
-  (config) => {
-    const token = getAdminToken();
-    if (token) {
-      config.headers.admin_token = token;
-    }
-    // Don't set Content-Type for FormData - browser will set it with boundary
-    if (config.data instanceof FormData) {
-      delete config.headers['Content-Type'];
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+import apiClient from '../../utils/api';
 
 /**
  * Create a new product
  */
 export const createProduct = async (formData) => {
   try {
-    const response = await productApi.post('/product/create', formData);
+    const response = await apiClient.post('/product/create', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   } catch (error) {
     if (error.response) {
@@ -48,7 +27,11 @@ export const createProduct = async (formData) => {
  */
 export const updateProduct = async (id, formData) => {
   try {
-    const response = await productApi.put(`/product/update/${id}`, formData);
+    const response = await apiClient.put(`/product/update/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   } catch (error) {
     if (error.response) {
@@ -66,12 +49,8 @@ export const updateProduct = async (id, formData) => {
  */
 export const getAllProducts = async (page = 1, limit = 10, search = '') => {
   try {
-    const response = await productApi.get('/product/list', {
-      params: {
-        page: page,
-        limit: limit,
-        search: search,
-      },
+    const response = await apiClient.get('/product/list', {
+      params: { page, limit, search },
     });
     return response.data;
   } catch (error) {
@@ -90,7 +69,7 @@ export const getAllProducts = async (page = 1, limit = 10, search = '') => {
  */
 export const getProductById = async (id) => {
   try {
-    const response = await productApi.get(`/product/get_one/${id}`);
+    const response = await apiClient.get(`/product/get_one/${id}`);
     return response.data;
   } catch (error) {
     if (error.response) {

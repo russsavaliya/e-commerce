@@ -68,13 +68,16 @@ const WhatsAppSupport = () => {
 
   // Check if current page is Product Detail page
   const isProductDetailPage = location.pathname.includes('/product/');
-  
-  // Adjust bottom position: higher on Product Detail page (mobile only) to avoid sticky buttons
-  const bottomPosition = isProductDetailPage ? 'bottom-20' : 'bottom-4';
+
+  // Move button higher on mobile to avoid BottomNav overlap
+  // Use a larger bottom margin (e.g., bottom-28) for mobile, keep desktop as before
+  const bottomPosition = isProductDetailPage
+    ? 'bottom-28 sm:bottom-6' // higher on product page (mobile), normal on desktop
+    : 'bottom-24 sm:bottom-6'; // higher on all mobile pages, normal on desktop
 
   return (
     <div
-      className={`fixed ${bottomPosition} right-4 sm:bottom-6 sm:right-6 z-40`}
+      className={`fixed ${bottomPosition} right-4 sm:right-6 z-40`}
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
     >

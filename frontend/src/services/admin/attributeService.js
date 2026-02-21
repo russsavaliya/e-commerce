@@ -1,38 +1,8 @@
-/**
- * Attribute Service
- * Handles all attribute-related API calls
- */
-
-import axios from 'axios';
-import { API_BASE_URL } from '../../utils/constants';
-import { getAdminToken } from './authService';
-
-// Create axios instance
-const attributeApi = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  timeout: 10000,
-});
-
-// Request interceptor for adding token
-attributeApi.interceptors.request.use(
-  (config) => {
-    const token = getAdminToken();
-    if (token) {
-      config.headers.admin_token = token;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+import apiClient from '../../utils/api';
 
 export const getAllAttributes = async (page = 1, limit = 10, search = '') => {
   try {
-    const response = await attributeApi.get('/attributes/list', {
+    const response = await apiClient.get('/attributes/list', {
       params: {
         page: page,
         limit: limit,
@@ -56,7 +26,7 @@ export const getAllAttributes = async (page = 1, limit = 10, search = '') => {
  */
 export const createAttribute = async (attributeData) => {
   try {
-    const response = await attributeApi.post('/attributes/create', attributeData);
+    const response = await apiClient.post('/attributes/create', attributeData);
     return response.data;
   } catch (error) {
     if (error.response) {
@@ -71,7 +41,7 @@ export const createAttribute = async (attributeData) => {
 
 export const updateAttribute = async (id, attributeData) => {
   try {
-    const response = await attributeApi.put(`/attributes/update/${id}`, attributeData);
+    const response = await apiClient.put(`/attributes/update/${id}`, attributeData);
     return response.data;
   } catch (error) {
     if (error.response) {
@@ -86,7 +56,7 @@ export const updateAttribute = async (id, attributeData) => {
 
 export const deleteAttribute = async (id) => {
   try {
-    await attributeApi.delete(`/attributes/delete/${id}`);
+    await apiClient.delete(`/attributes/delete/${id}`);
   } catch (error) {
     if (error.response) {
       throw new Error(error.response.data?.message || 'Failed to delete attribute');
@@ -98,5 +68,4 @@ export const deleteAttribute = async (id) => {
   }
 };
 
-export default attributeApi;
 

@@ -278,7 +278,7 @@ exports.get_products_by_category = async (req, res) => {
         const [products, total_count] = await Promise.all([
             product_model.find(query)
                 .populate('category', 'name')
-                .select('name SKU images selling_price original_price discount_percentage is_best_seller is_new is_trending')
+                .select('name SKU images selling_price original_price discount_percentage is_best_seller is_new is_trending slug')
                 .sort({ sort_order: 1, createdAt: -1 })
                 .skip(skip)
                 .limit(limit),
@@ -318,7 +318,7 @@ exports.get_bestseller_products = async (req, res) => {
             status: 'ACTIVE'
         })
             .populate('category', 'name')
-            .select('name SKU images selling_price original_price discount_percentage is_best_seller is_new is_trending')
+            .select('name SKU images selling_price original_price discount_percentage is_best_seller is_new is_trending slug')
             .sort({ sort_order: 1, createdAt: -1 })
             .limit(limit);
 
@@ -347,7 +347,7 @@ exports.get_trending_products = async (req, res) => {
             status: 'ACTIVE'
         })
             .populate('category', 'name')
-            .select('name SKU images selling_price original_price discount_percentage is_best_seller is_new is_trending')
+            .select('name SKU images selling_price original_price discount_percentage is_best_seller is_new is_trending slug')
             .sort({ sort_order: 1, createdAt: -1 })
             .limit(limit);
 
@@ -376,7 +376,7 @@ exports.get_new_products = async (req, res) => {
             status: 'ACTIVE'
         })
             .populate('category', 'name')
-            .select('name SKU images selling_price original_price discount_percentage is_best_seller is_new is_trending')
+            .select('name SKU images selling_price original_price discount_percentage is_best_seller is_new is_trending slug')
             .sort({ sort_order: 1, createdAt: -1 })
             .limit(limit);
 
@@ -500,7 +500,7 @@ exports.get_all_products = async (req, res) => {
                 .populate('category', 'name')
                 .populate('attributes.attributeId', 'name')
                 .populate('attributes.attributeValuesIds', 'value')
-                .select('name SKU images selling_price original_price discount_percentage is_best_seller is_new is_trending category attributes')
+                .select('name SKU images selling_price original_price discount_percentage is_best_seller is_new is_trending category attributes slug')
                 .sort(sortOptions)
                 .skip(skip)
                 .limit(limit)

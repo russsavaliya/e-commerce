@@ -1,34 +1,11 @@
-import axios from 'axios';
-import { API_BASE_URL } from '../../utils/constants';
-import { getAdminToken } from './authService';
-
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Add token to requests
-api.interceptors.request.use(
-  (config) => {
-    const token = getAdminToken();
-    if (token) {
-      config.headers.admin_token = token;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+import apiClient from '../../utils/api';
 
 /**
  * Create a new note
  */
 export const createNote = async (noteData) => {
   try {
-    const response = await api.post('/notes/create', noteData);
+    const response = await apiClient.post('/notes/create', noteData);
     return response.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -40,7 +17,7 @@ export const createNote = async (noteData) => {
  */
 export const getAllNotes = async () => {
   try {
-    const response = await api.get('/notes/list');
+    const response = await apiClient.get('/notes/list');
     return response.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -52,7 +29,7 @@ export const getAllNotes = async () => {
  */
 export const getNoteById = async (noteId) => {
   try {
-    const response = await api.get(`/notes/one/${noteId}`);
+    const response = await apiClient.get(`/notes/one/${noteId}`);
     return response.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -64,7 +41,7 @@ export const getNoteById = async (noteId) => {
  */
 export const updateNote = async (noteId, noteData) => {
   try {
-    const response = await api.put(`/notes/update/${noteId}`, noteData);
+    const response = await apiClient.put(`/notes/update/${noteId}`, noteData);
     return response.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -76,7 +53,7 @@ export const updateNote = async (noteId, noteData) => {
  */
 export const deleteNote = async (noteId) => {
   try {
-    const response = await api.delete(`/notes/delete/${noteId}`);
+    const response = await apiClient.delete(`/notes/delete/${noteId}`);
     return response.data;
   } catch (error) {
     throw error.response?.data || error;

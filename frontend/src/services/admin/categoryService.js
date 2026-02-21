@@ -1,35 +1,11 @@
 
-import axios from 'axios';
-import { API_BASE_URL } from '../../utils/constants';
-import { getAdminToken } from './authService';
-
-// Create axios instance with default config
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Request interceptor for adding token
-api.interceptors.request.use(
-  (config) => {
-    const token = getAdminToken();
-    if (token) {
-      config.headers.admin_token = token;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+import apiClient from '../../utils/api';
 
 
 export const getAllCategories = async (page = 1, limit = 10, search = '') => {
   try {
     // Add pagination and search query parameters
-    const response = await api.get('/category/list', {
+    const response = await apiClient.get('/category/list', {
       params: {
         page: page,
         limit: limit,
@@ -46,7 +22,7 @@ export const getAllCategories = async (page = 1, limit = 10, search = '') => {
 
 export const createCategory = async (categoryData) => {
   try {
-    const response = await api.post('/category/create', categoryData);
+    const response = await apiClient.post('/category/create', categoryData);
     return response.data;
   } catch (error) {
     throw new Error(
@@ -57,7 +33,7 @@ export const createCategory = async (categoryData) => {
 
 export const deleteCategory = async (id) => {
   try {
-    const response = await api.delete('/category/delete?id=' + id);
+    const response = await apiClient.delete('/category/delete?id=' + id);
     return response.data;
   } catch (error) {
     throw new Error(
@@ -67,7 +43,7 @@ export const deleteCategory = async (id) => {
 };
 export const updateCategory = async (id, categoryData) => {
   try {
-    const response = await api.put(
+    const response = await apiClient.put(
       '/category/update/?id=' + id,
       categoryData
     );

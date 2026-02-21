@@ -31,7 +31,7 @@ const CartItemsReview = ({ cart }) => {
             {/* Product Image */}
             <div
               className="w-20 h-24 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 cursor-pointer flex items-center justify-center"
-              onClick={() => navigate(`/product/${item.productId}`)}
+              onClick={() => navigate(item.product.slug ? `/product/${item.product.slug}/${item.productId}` : `/product/${item.productId}`)}
             >
               <img
                 src={normalizeImagePath(item.image || item.product.images?.[0])}
@@ -47,7 +47,7 @@ const CartItemsReview = ({ cart }) => {
             <div className="flex-1 min-w-0">
               <h3
                 className="font-semibold text-gray-900 mb-1 cursor-pointer hover:text-[#481d6f] transition-colors line-clamp-2"
-                onClick={() => navigate(`/product/${item.productId}`)}
+                onClick={() => navigate(item.product.slug ? `/product/${item.product.slug}/${item.productId}` : `/product/${item.productId}`)}
               >
                 {item.product.name}
               </h3>

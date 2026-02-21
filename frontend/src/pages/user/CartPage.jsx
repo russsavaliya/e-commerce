@@ -190,7 +190,7 @@ const CartPage = () => {
                     {/* Product Image - Shows variant image if variant selected, otherwise product image */}
                     <div
                       className="w-20 h-24 sm:w-24 sm:h-32 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 cursor-pointer flex items-center justify-center"
-                      onClick={() => navigate(`/product/${item.productId}`)}
+                      onClick={() => navigate(item.product.slug ? `/product/${item.product.slug}/${item.productId}` : `/product/${item.productId}`)}
                     >
                       <img
                         src={normalizeImagePath(item.image || item.product.images?.[0])}
@@ -208,7 +208,7 @@ const CartPage = () => {
                         <div className="flex-1 min-w-0">
                           <h3
                             className="font-semibold text-gray-900 text-base sm:text-lg mb-1 cursor-pointer hover:text-[#481d6f]-600 transition-colors line-clamp-2"
-                            onClick={() => navigate(`/product/${item.productId}`)}
+                            onClick={() => navigate(item.product.slug ? `/product/${item.product.slug}/${item.productId}` : `/product/${item.productId}`)}
                           >
                             {item.product.name}
                           </h3>

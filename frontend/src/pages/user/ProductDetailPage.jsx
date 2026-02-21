@@ -11,7 +11,7 @@ import toast from 'react-hot-toast';
 import paymentGroupSvg from '../../assets/images/payment-group.svg';
 
 const ProductDetailPage = () => {
-  const { productId } = useParams();
+  const { productId, slug } = useParams();
   const navigate = useNavigate();
 
   const [product, setProduct] = useState(null);

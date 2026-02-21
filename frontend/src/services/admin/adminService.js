@@ -1,32 +1,8 @@
-import axios from 'axios';
-import { API_BASE_URL } from '../../utils/constants';
-import { getAdminToken } from './authService';
-
-// Create axios instance with default config
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Request interceptor for adding token
-api.interceptors.request.use(
-  (config) => {
-    const token = getAdminToken();
-    if (token) {
-      config.headers.admin_token = token;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+import apiClient from '../../utils/api';
 
 export const getAllAdmins = async (page = 1, limit = 10, search = '') => {
   try {
-    const response = await api.get('/admin/list', {
+    const response = await apiClient.get('/admin/list', {
       params: {
         page: page,
         limit: limit,
@@ -43,7 +19,7 @@ export const getAllAdmins = async (page = 1, limit = 10, search = '') => {
 
 export const createAdmin = async (adminData) => {
   try {
-    const response = await api.post('/admin/auth/signup', adminData);
+    const response = await apiClient.post('/admin/auth/signup', adminData);
     return response.data;
   } catch (error) {
     throw new Error(
@@ -54,7 +30,7 @@ export const createAdmin = async (adminData) => {
 
 export const deleteAdmin = async (id) => {
   try {
-    const response = await api.delete('/admin/delete', {
+    const response = await apiClient.delete('/admin/delete', {
       params: {
         id: id,
       },
@@ -69,7 +45,7 @@ export const deleteAdmin = async (id) => {
 
 export const getAdminProfile = async () => {
   try {
-    const response = await api.get('/admin/profile');
+    const response = await apiClient.get('/admin/profile');
     return response.data;
   } catch (error) {
     throw new Error(
@@ -80,7 +56,7 @@ export const getAdminProfile = async () => {
 
 export const updatePassword = async (passwordData) => {
   try {
-    const response = await api.put('/admin/update-password', passwordData);
+    const response = await apiClient.put('/admin/update-password', passwordData);
     return response.data;
   } catch (error) {
     throw new Error(

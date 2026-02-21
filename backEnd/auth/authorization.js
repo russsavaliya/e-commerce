@@ -4,11 +4,18 @@ const jwt = require('jsonwebtoken')
 exports.authorization = async function (req, res, next) {
     try {
 
-        let token = req.headers.admin_token
+        // Extract Bearer token from Authorization header
+        const authHeader = req.headers.authorization;
+        let token;
+        
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            token = authHeader.slice(7); // Remove "Bearer " prefix
+        }
+        
         if (!token) {
-            return res.status(500).json({
+            return res.status(401).json({
                 status: false,
-                message: 'Plz Enter a Token'
+                message: 'no token provided'
             })
 
         }
