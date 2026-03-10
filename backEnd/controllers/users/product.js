@@ -529,4 +529,65 @@ exports.get_all_products = async (req, res) => {
         });
     }
 };
+exports.get_related_products = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { limit = 4 } = req.query;
+
+        // Validate product ID
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                status: false,
+                message: "Invalid product id"
+            });
+        }
+
+        // Get the current product to find related products by category and attributes
+        const currentProduct = await product_model.findById(id).select('category attributes');
+
+        if (!currentProduct) {
+            return res.status(404).json({
+                status: false,
+                message: "Product not found"
+            });
+        }
+
+        // Build query for related products
+        const relatedQuery = {
+            _id: { $ne: new mongoose.Types.ObjectId(id) }, // Exclude current product
+            status: 'ACTIVE',
+            $or: [
+                // Match by category
+                { category: currentProduct.category },
+                // Match by attributes if product has attributes
+                ...(currentProduct.attributes && currentProduct.attributes.length > 0 ? [{
+                    attributes: {
+                        $elemMatch: {
+                            attributeId: { $in: currentProduct.attributes.map(a => a.attributeId) }
+                        }
+                    }
+                }] : [])
+            ]
+        };
+
+        // Fetch related products
+        const relatedProducts = await product_model.find(relatedQuery)
+            .populate('category', 'name')
+            .select('name SKU images selling_price original_price discount_percentage is_best_seller is_new is_trending slug')
+            .sort({ createdAt: -1 })
+            .limit(parseInt(limit));
+
+        return res.status(200).json({
+            status: true,
+            message: "Related products fetched successfully",
+            data: relatedProducts
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            status: false,
+            message: error.message
+        });
+    }
+};
 
