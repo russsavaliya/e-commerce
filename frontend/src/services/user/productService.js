@@ -104,4 +104,16 @@ export const getProductDetail = async (productId) => {
   }
 };
 
-
+// Get related products
+export const getRelatedProducts = async (productId, limit = 4) => {
+  try {
+    const response = await userApi.get(`/users/products/${productId}/related`, {
+      params: {
+        limit
+      }
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};

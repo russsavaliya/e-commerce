@@ -2,7 +2,8 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/user/Navbar';
 import Footer from '../../components/user/Footer';
-import { getProductDetail } from '../../services/user/productService';
+import ProductCarousel from '../../components/user/ProductCarousel';
+import { getProductDetail, getRelatedProducts } from '../../services/user/productService';
 import { addToCart } from '../../services/user/cartService';
 import { getReviews, addReview } from '../../services/user/reviewService';
 import { getAvailableCoupons } from '../../services/user/couponService';
@@ -42,6 +43,8 @@ const ProductDetailPage = () => {
   const [loadingCoupons, setLoadingCoupons] = useState(false);
   const [copiedCode, setCopiedCode] = useState(null);
   const [mobileTab, setMobileTab] = useState('description');
+  const [relatedProducts, setRelatedProducts] = useState([]);
+  const [loadingRelatedProducts, setLoadingRelatedProducts] = useState(false);
 
   const renderStars = (rating, size = 'sm') => {
     const total = 5;
@@ -97,6 +100,8 @@ const ProductDetailPage = () => {
           setActiveImage(firstImage);
           // Don't auto-select first variant - show main product price initially
           setSelectedVariantId(null);
+          // Fetch related products
+          fetchRelatedProducts(productId);
         } else {
           setError('Product not found');
         }
@@ -123,6 +128,21 @@ const ProductDetailPage = () => {
       // Silently fail - coupons are optional
     } finally {
       setLoadingCoupons(false);
+    }
+  };
+
+  const fetchRelatedProducts = async (pid) => {
+    try {
+      setLoadingRelatedProducts(true);
+      const response = await getRelatedProducts(pid, 4);
+      if (response.status && response.data) {
+        setRelatedProducts(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching related products:', error);
+      // Silently fail - related products are optional
+    } finally {
+      setLoadingRelatedProducts(false);
     }
   };
 
@@ -945,6 +965,35 @@ const ProductDetailPage = () => {
 
         {/* Divider Section */}
         <div className="mt-12 mb-8">
+          <div className="border-t border-[#E5E7EB]"></div>
+        </div>
+
+        {/* Related Products Section */}
+        {relatedProducts.length > 0 && (
+          <div className="mb-12 animate-fade-in-up">
+            <div className="mb-8 text-center">
+              <h2
+                className="text-2xl md:text-3xl font-bold text-[#374151] leading-tight"
+                style={{ fontFamily: '"GeorgiaBallpark Serif", serif' }}
+              >
+                People Also Viewed
+              </h2>
+              <p className="text-sm text-[#6B7280] mt-2">Similar products that might interest you</p>
+            </div>
+            
+            {loadingRelatedProducts ? (
+              <div className="flex items-center justify-center gap-2 py-12 text-sm text-[#6B7280]">
+                <Loader2 className="w-5 h-5 animate-spin text-[rgb(72,29,111)]" />
+                <span>Loading related products...</span>
+              </div>
+            ) : (
+              <ProductCarousel products={relatedProducts} />
+            )}
+          </div>
+        )}
+
+        {/* Divider Section Before Reviews */}
+        <div className="mt-8 mb-8">
           <div className="border-t border-[#E5E7EB]"></div>
         </div>
 

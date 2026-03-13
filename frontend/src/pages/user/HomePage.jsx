@@ -22,6 +22,7 @@ const HomePage = () => {
   const [bottomBanners, setBottomBanners] = useState([]);
   const [bestsellerProducts, setBestsellerProducts] = useState([]);
   const [trendingProducts, setTrendingProducts] = useState([]);
+  const [markquote, setMarkquote] = useState(["Free delivery for today.", "Exclusive offers on our new collection.", "Shop now and get benefits."]);
   const [loading, setLoading] = useState(true);
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const [bannerImageErrors, setBannerImageErrors] = useState(new Set());
@@ -115,6 +116,78 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen animate-fade-in">
+      {/* Marquee Announcement Bar */}
+      <style>{`
+        @keyframes scroll-left {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
+        }
+
+        .marquee-bar {
+          background-color: #1a1a1a;
+          height: 38px;
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+          width: 100%;
+          position: relative;
+          z-index: 50;
+        }
+
+        .marquee-track {
+          display: inline-flex;
+          align-items: center;
+          animation: scroll-left 140s linear infinite;
+          white-space: nowrap;
+          padding: 0;
+          margin: 0;
+          gap: 0;
+          will-change: transform;
+        }
+
+        .marquee-track:hover {
+          animation-play-state: paused;
+          cursor: pointer;
+        }
+
+        .marquee-item {
+          display: inline-flex;
+          align-items: center;
+          padding: 0 40px;
+          white-space: nowrap;
+          font-size: 13px;
+          font-weight: 500;
+          color: #ffffff;
+          flex-shrink: 0;
+        }
+
+        .dot {
+          color: #f0a500;
+          font-size: 10px;
+          display: inline-block;
+          line-height: 1;
+          padding: 0 8px;
+          flex-shrink: 0;
+        }
+      `}</style>
+
+      <div className="marquee-bar">
+        <div className="marquee-track">
+          {Array.from({ length: 20 }).flatMap((_, i) =>
+            markquote.map((msg, idx) => (
+              <React.Fragment key={`${i}-${idx}`}>
+                <span className="marquee-item">{msg}</span>
+                <span className="dot">•</span>
+              </React.Fragment>
+            ))
+          )}
+        </div>
+      </div>
+
       {/* Navbar */}
       <Navbar />
       {/* Hero Banner Section - Optimized for 1500×700 banner images (15:7 aspect ratio) */}

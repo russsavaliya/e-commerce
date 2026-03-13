@@ -25,6 +25,7 @@ router.get('/products/new', user_product_controller.get_new_products);
 router.get('/products/by-category', user_product_controller.get_products_by_category);
 router.get('/products/all', user_product_controller.get_all_products);
 router.get('/products/:id', user_product_controller.get_product_detail);
+router.get('/products/:id/related', user_product_controller.get_related_products);
 
 // Category routes
 router.get('/categories/list', user_category_controller.get_categories_list);
