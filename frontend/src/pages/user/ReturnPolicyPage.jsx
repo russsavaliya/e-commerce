@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Navbar from '../../components/user/Navbar';
 import Footer from '../../components/user/Footer';
 import { RefreshCw, Clock, CheckCircle2, AlertCircle, ArrowRight } from 'lucide-react';
+import useSEO from '../../hooks/useSEO';
 
 const ReturnPolicyPage = () => {
   const returnPoints = [
@@ -51,9 +52,56 @@ const ReturnPolicyPage = () => {
     },
   ];
 
+  useSEO({
+    title: 'Return Policy – Easy Returns & Refunds | SIYARA',
+    description: 'SIYARA\'s hassle-free return policy. Return items within 7 days. Simple online return process with quick refunds in 5-7 business days. Read our complete return and refund policy.',
+    keywords: 'siyara return policy, saree return, ethnic wear refund, return saree online, exchange policy, siyara refund process, return window siyara',
+    canonicalUrl: 'https://siyara.online/return-policy',
+  });
+
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF9F5]">
       <Navbar />
+
+      {/* FAQ Schema for Return Policy */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What is SIYARA's return window?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "You can return items within 7 days of delivery. Items must be in original condition with tags attached."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Which items are eligible for return at SIYARA?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "All sarees and accessories are eligible for return, except personalized or custom-made items."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How do I start a return at SIYARA?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Use our online return form to submit your return request. Enter your Order ID and email to get started. We will provide a return authorization and shipping instructions."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How long does it take to receive a refund from SIYARA?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Refunds typically take 5-7 business days to appear in your account after we receive and inspect the returned item. Refunds are processed to the original payment method."
+            }
+          }
+        ]
+      }) }} />
 
       <main className="flex-1 max-w-4xl mx-auto px-4 lg:px-6 py-12 w-full">
         {/* Header */}

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Navbar from '../../components/user/Navbar';
 import Footer from '../../components/user/Footer';
 import { Store, BookOpen, Heart, Sparkles } from 'lucide-react';
+import useSEO from '../../hooks/useSEO';
 
 // Images
 import heroImg from '../../assets/images/about-hero.png';
@@ -75,6 +76,13 @@ const RevealSection = ({ children, className = '', delay = 0 }) => {
 
 /* ──────────────── Main Page ──────────────── */
 const AboutPage = () => {
+  useSEO({
+    title: 'About Us – Our Story & Heritage | SIYARA',
+    description: 'Learn about SIYARA\'s journey from a boutique saree store to a premium online ethnic wear destination. We work with master weavers from Varanasi, Kanchipuram and Chanderi to bring authentic handcrafted sarees to you.',
+    keywords: 'about siyara, siyara story, handloom sarees, artisan sarees, indian weaving heritage, banarasi weavers, kanchipuram weavers, chanderi sarees, siyara ethnic wear brand',
+    canonicalUrl: 'https://siyara.online/about',
+  });
+
   return (
     <div className="min-h-screen bg-[#faf9f5]">
       <Navbar />

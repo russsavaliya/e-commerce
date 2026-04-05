@@ -10,6 +10,7 @@ import { getAvailableCoupons } from '../../services/user/couponService';
 import { Loader2, ChevronLeft, IndianRupee, Package, X, ShoppingBag, Star, Truck, Box, Tag, Copy, CheckCircle2, CreditCard, RotateCcw, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
 import paymentGroupSvg from '../../assets/images/payment-group.svg';
+import useSEO from '../../hooks/useSEO';
 
 const ProductDetailPage = () => {
   const { productId, slug } = useParams();
@@ -523,8 +524,96 @@ const ProductDetailPage = () => {
     </div>
   );
 
+  // Dynamic SEO for product detail page
+  useSEO({
+    title: product ? `${product.name} | Buy Online at SIYARA` : 'Product Detail | SIYARA',
+    description: product
+      ? `Buy ${product.name} online at SIYARA. ${product.category?.name ? product.category.name + '. ' : ''}Price ₹${displayPrice?.toLocaleString('en-IN')}${discountPercent > 0 ? ` (${discountPercent}% off)` : ''}. Premium quality ethnic wear with free shipping.`
+      : 'Shop premium ethnic wear at SIYARA',
+    keywords: product
+      ? `${product.name}, buy ${product.name} online, ${product.category?.name || 'saree'}, designer ${product.category?.name || 'ethnic wear'}, siyara ${product.category?.name || 'saree'}`
+      : 'buy sarees online, ethnic wear',
+    canonicalUrl: product
+      ? `https://siyara.online/product/${slug ? slug + '/' : ''}${productId}`
+      : `https://siyara.online/product/${productId}`,
+    ogTitle: product ? `${product.name} | SIYARA` : undefined,
+    ogDescription: product
+      ? `Buy ${product.name} at ₹${displayPrice?.toLocaleString('en-IN')}. Shop now at SIYARA.`
+      : undefined,
+    ogImage: product?.images?.[0] || undefined,
+    ogType: 'product',
+  });
+
   return (
     <div className="min-h-screen bg-[#FAF9F5]">
+      {/* Product Schema - Structured Data for Google Rich Results */}
+      {product && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Product",
+          "name": product.name,
+          "image": product.images || [],
+          "description": product.description ? product.description.replace(/<[^>]*>/g, '').substring(0, 300) : '',
+          "brand": {
+            "@type": "Brand",
+            "name": "SIYARA"
+          },
+          "category": product.category?.name || 'Ethnic Wear',
+          "offers": {
+            "@type": "Offer",
+            "url": `https://siyara.online/product/${slug ? slug + '/' : ''}${productId}`,
+            "priceCurrency": "INR",
+            "price": displayPrice || 0,
+            ...(product.original_price && product.original_price > displayPrice ? {
+              "priceValidUntil": new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+            } : {}),
+            "availability": isOutOfStock
+              ? "https://schema.org/OutOfStock"
+              : "https://schema.org/InStock",
+            "seller": {
+              "@type": "Organization",
+              "name": "SIYARA"
+            }
+          },
+          ...(reviewSummary.count > 0 ? {
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": reviewSummary.average?.toFixed(1) || "0",
+              "reviewCount": reviewSummary.count || 0,
+              "bestRating": "5",
+              "worstRating": "1"
+            }
+          } : {})
+        }) }} />
+      )}
+
+      {/* BreadcrumbList Schema */}
+      {product && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://siyara.online/"
+            },
+            ...(product.category?.name ? [{
+              "@type": "ListItem",
+              "position": 2,
+              "name": product.category.name,
+              "item": "https://siyara.online/sale"
+            }] : []),
+            {
+              "@type": "ListItem",
+              "position": product.category?.name ? 3 : 2,
+              "name": product.name
+            }
+          ]
+        }) }} />
+      )}
+
       <Navbar />
       <main className="max-w-6xl mx-auto px-4 lg:px-6 py-10 pb-24 md:pb-10">
         <button

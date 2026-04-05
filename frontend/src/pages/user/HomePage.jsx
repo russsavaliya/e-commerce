@@ -12,8 +12,15 @@ import Navbar from '../../components/user/Navbar';
 import Footer from '../../components/user/Footer';
 import HeroSection from '../../components/user/HeroSection';
 import { useNavigate } from 'react-router-dom';
+import useSEO from '../../hooks/useSEO';
 
 const HomePage = () => {
+  useSEO({
+    title: 'SIYARA | Premium Ethnic Wear – Sarees, Kurtis & Lehengas Online',
+    description: 'Shop premium designer sarees, kurtis, lehengas and elegant traditional outfits at SIYARA. Explore our curated collection for weddings, festivals and special occasions. Free shipping available.',
+    keywords: 'siyara, buy sarees online, designer sarees, banarasi saree, kanjivaram saree, silk sarees, kurtis, lehengas, indian ethnic wear, wedding sarees, traditional fashion, bridal sarees, party wear saree, festival wear, ethnic clothing india, women ethnic wear online',
+    canonicalUrl: 'https://siyara.online/',
+  });
   const navigate = useNavigate();
   // State Management
   const [banners, setBanners] = useState([]);

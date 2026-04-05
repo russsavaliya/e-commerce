@@ -6,9 +6,15 @@ import { Loader2, ShoppingBag, Trash2, Plus, Minus, IndianRupee, X, PackageSearc
 import { getCart, updateCartItem, removeFromCart, clearCart } from '../../services/user/cartService';
 import { getAvailableCoupons } from '../../services/user/couponService';
 import toast from 'react-hot-toast';
+import useSEO from '../../hooks/useSEO';
 
 const CartPage = () => {
   const navigate = useNavigate();
+  useSEO({
+    title: 'Shopping Cart | SIYARA',
+    description: 'Review items in your shopping cart. Proceed to checkout for secure payment.',
+    noindex: true,
+  });
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(null);

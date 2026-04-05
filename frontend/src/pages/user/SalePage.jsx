@@ -20,6 +20,7 @@ import FilterSidebar from '../../components/user/FilterSidebar';
 import { getAllProducts } from '../../services/user/productService';
 import { getCategoriesList } from '../../services/user/categoryService';
 import { getAttributesList } from '../../services/user/attributeService';
+import useSEO from '../../hooks/useSEO';
 
 // ============================================================================
 // CONSTANTS
@@ -32,6 +33,12 @@ const ITEMS_PER_PAGE = 20;
 // MAIN COMPONENT
 // ============================================================================
 const SalePage = () => {
+  useSEO({
+    title: 'Sale – Designer Sarees & Kurtis at Best Prices | SIYARA',
+    description: 'Explore our exclusive sale collection featuring designer sarees, kurtis, lehengas and ethnic wear at amazing prices. Filter by category, price and more. Shop now at SIYARA.',
+    keywords: 'saree sale, ethnic wear sale, designer saree discount, buy sarees online cheap, kurtis sale, lehengas on sale, siyara sale, indian wear offers, saree online shopping, affordable ethnic wear',
+    canonicalUrl: 'https://siyara.online/sale',
+  });
   const [searchParams, setSearchParams] = useSearchParams();
   const { categoryId } = useParams(); // Support category from URL params
 

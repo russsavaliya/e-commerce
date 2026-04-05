@@ -1,4 +1,23 @@
+# SIYARA - siyara.online
+# Robots.txt — Controls which pages search engines can crawl
+
+# Allow all search engines
 User-agent: *
 Allow: /
 
+# Block admin panel (not for public indexing)
+Disallow: /admin
+Disallow: /admin/*
+
+# Block private/transactional pages (no SEO value)
+Disallow: /cart
+Disallow: /checkout
+Disallow: /order-success/*
+Disallow: /order/track
+Disallow: /return-order
+
+# Block static assets directories from cluttering index
+Disallow: /assets/
+
+# Sitemap location
 Sitemap: https://siyara.online/sitemap.xml

@@ -19,6 +19,7 @@ import FilterSidebar from '../../components/user/FilterSidebar';
 import { getAllProducts } from '../../services/user/productService';
 import { getCategoriesList } from '../../services/user/categoryService';
 import { getAttributesList } from '../../services/user/attributeService';
+import useSEO from '../../hooks/useSEO';
 
 // ============================================================================
 // CONSTANTS
@@ -30,6 +31,12 @@ const ITEMS_PER_PAGE = 20;
 // MAIN COMPONENT
 // ============================================================================
 const NewArrivalPage = () => {
+  useSEO({
+    title: 'Best Sellers – Top Rated Sarees & Ethnic Wear | SIYARA',
+    description: 'Shop SIYARA\'s most popular and top-rated designer sarees, kurtis and lehengas. Explore our bestselling ethnic wear collection loved by thousands of customers.',
+    keywords: 'best selling sarees, top rated sarees, popular designer sarees, bestseller ethnic wear, most bought sarees online, siyara bestsellers, trending sarees india',
+    canonicalUrl: 'https://siyara.online/bestseller',
+  });
   const [searchParams, setSearchParams] = useSearchParams();
 
   // ============================================================================

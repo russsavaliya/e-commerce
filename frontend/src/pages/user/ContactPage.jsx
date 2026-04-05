@@ -4,8 +4,15 @@ import Footer from '../../components/user/Footer';
 import { Mail, Send } from 'lucide-react';
 import { sendSupportMessage } from '../../services/user/supportService';
 import toast from 'react-hot-toast';
+import useSEO from '../../hooks/useSEO';
 
 const ContactPage = () => {
+  useSEO({
+    title: 'Contact Us – Get Styling Help & Support | SIYARA',
+    description: 'Need help with your order, sizing, or styling? Contact SIYARA support team via email. We respond within 24 hours. Get expert styling advice for sarees and ethnic wear.',
+    keywords: 'contact siyara, siyara customer support, saree styling help, ethnic wear help, siyara email support, order help siyara',
+    canonicalUrl: 'https://siyara.online/contact',
+  });
   const [form, setForm] = useState({
     name: '',
     email: '',

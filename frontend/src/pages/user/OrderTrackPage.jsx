@@ -5,6 +5,7 @@ import { trackOrder, cancelOrder } from '../../services/user/orderTrackService';
 import { Loader2, Package, Calendar, CheckCircle2, AlertCircle, XCircle } from 'lucide-react';
 import { API_BASE_URL } from '../../utils/constants';
 import toast from 'react-hot-toast';
+import useSEO from '../../hooks/useSEO';
 
 // Helper function to normalize image paths
 const normalizeImagePath = (imagePath) => {
@@ -35,6 +36,11 @@ const formatDate = (dateString) => {
 };
 
 const OrderTrackPage = () => {
+  useSEO({
+    title: 'Track Your Order | SIYARA',
+    description: 'Track your SIYARA order status. Enter your order ID and email to check delivery status.',
+    noindex: true,
+  });
   const [form, setForm] = useState({ orderId: '', email: '' });
   const [loading, setLoading] = useState(false);
   const [order, setOrder] = useState(null);

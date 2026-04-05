@@ -19,6 +19,7 @@ import FilterSidebar from '../../components/user/FilterSidebar';
 import { getAllProducts } from '../../services/user/productService';
 import { getCategoriesList } from '../../services/user/categoryService';
 import { getAttributesList } from '../../services/user/attributeService';
+import useSEO from '../../hooks/useSEO';
 
 // ============================================================================
 // CONSTANTS
@@ -30,6 +31,12 @@ const ITEMS_PER_PAGE = 20;
 // MAIN COMPONENT
 // ============================================================================
 const NewArrivalPage = () => {
+  useSEO({
+    title: 'New Arrivals – Latest Sarees & Ethnic Wear Collection | SIYARA',
+    description: 'Discover the newest additions to SIYARA collection. Shop fresh designer sarees, kurtis and lehengas. Be the first to wear our latest ethnic wear designs.',
+    keywords: 'new sarees, latest saree collection, new arrival ethnic wear, latest designer sarees, new kurtis, new lehengas, siyara new collection, trendy sarees 2026, latest indian fashion',
+    canonicalUrl: 'https://siyara.online/new-arrival',
+  });
   const [searchParams, setSearchParams] = useSearchParams();
   
   // ============================================================================

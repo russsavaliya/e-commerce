@@ -3,9 +3,16 @@ import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/user/Navbar';
 import Footer from '../../components/user/Footer';
 import { Home, ArrowLeft, AlertCircle } from 'lucide-react';
+import useSEO from '../../hooks/useSEO';
 
 const NotFoundPage = () => {
   const navigate = useNavigate();
+
+  useSEO({
+    title: 'Page Not Found | SIYARA',
+    description: 'The page you are looking for does not exist. Return to SIYARA homepage to explore our ethnic wear collection.',
+    noindex: true,
+  });
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF9F5]">
