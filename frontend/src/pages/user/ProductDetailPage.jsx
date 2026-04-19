@@ -7,7 +7,7 @@ import { getProductDetail, getRelatedProducts } from '../../services/user/produc
 import { addToCart } from '../../services/user/cartService';
 import { getReviews, addReview } from '../../services/user/reviewService';
 import { getAvailableCoupons } from '../../services/user/couponService';
-import { Loader2, ChevronLeft, IndianRupee, Package, X, ShoppingBag, Star, Truck, Box, Tag, Copy, CheckCircle2, CreditCard, RotateCcw, Calendar } from 'lucide-react';
+import { Loader2, ChevronLeft, ChevronRight, IndianRupee, Package, X, ShoppingBag, Star, Truck, Box, Tag, Copy, CheckCircle2, CreditCard, RotateCcw, Calendar, ZoomIn, ZoomOut } from 'lucide-react';
 import toast from 'react-hot-toast';
 import paymentGroupSvg from '../../assets/images/payment-group.svg';
 import useSEO from '../../hooks/useSEO';
@@ -46,6 +46,13 @@ const ProductDetailPage = () => {
   const [mobileTab, setMobileTab] = useState('description');
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [loadingRelatedProducts, setLoadingRelatedProducts] = useState(false);
+  const [modalImageIndex, setModalImageIndex] = useState(0);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [lastTouchDistance, setLastTouchDistance] = useState(null);
+  const modalImageAreaRef = React.useRef(null);
 
   const renderStars = (rating, size = 'sm') => {
     const total = 5;
@@ -87,6 +94,70 @@ const ProductDetailPage = () => {
   const handleDragStart = (e) => {
     e.preventDefault();
     return false;
+  };
+
+  const openImageModal = (index = 0) => {
+    setModalImageIndex(index);
+    setZoomLevel(1);
+    setPanPosition({ x: 0, y: 0 });
+    setIsImageModalOpen(true);
+  };
+
+  const closeImageModal = () => {
+    setIsImageModalOpen(false);
+    setZoomLevel(1);
+    setPanPosition({ x: 0, y: 0 });
+    setIsDragging(false);
+  };
+
+  const handleZoomIn = () => setZoomLevel(prev => Math.min(4, parseFloat((prev + 0.5).toFixed(1))));
+  const handleZoomOut = () => setZoomLevel(prev => {
+    const next = Math.max(1, parseFloat((prev - 0.5).toFixed(1)));
+    if (next <= 1) setPanPosition({ x: 0, y: 0 });
+    return next;
+  });
+  const handleResetZoom = () => { setZoomLevel(1); setPanPosition({ x: 0, y: 0 }); };
+
+  const handleModalMouseDown = (e) => {
+    if (zoomLevel > 1) {
+      e.preventDefault();
+      setIsDragging(true);
+      setDragStart({ x: e.clientX - panPosition.x, y: e.clientY - panPosition.y });
+    }
+  };
+  const handleModalMouseMove = (e) => {
+    if (isDragging) setPanPosition({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
+  };
+  const handleModalMouseUp = () => setIsDragging(false);
+  const handleModalDoubleClick = () => zoomLevel > 1 ? handleResetZoom() : setZoomLevel(2.5);
+
+  const getTouchDistance = (touches) => {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+  const handleModalTouchStart = (e) => {
+    if (e.touches.length === 2) setLastTouchDistance(getTouchDistance(e.touches));
+  };
+  const handleModalTouchMove = (e) => {
+    if (e.touches.length === 2 && lastTouchDistance) {
+      const dist = getTouchDistance(e.touches);
+      setZoomLevel(prev => Math.max(1, Math.min(4, prev * (dist / lastTouchDistance))));
+      setLastTouchDistance(dist);
+    }
+  };
+  const handleModalTouchEnd = () => {
+    setLastTouchDistance(null);
+    setZoomLevel(prev => { if (prev <= 1) { setPanPosition({ x: 0, y: 0 }); return 1; } return prev; });
+  };
+
+  const goToModalPrev = () => {
+    setModalImageIndex(prev => (prev > 0 ? prev - 1 : (product?.images?.length ?? 1) - 1));
+    handleResetZoom();
+  };
+  const goToModalNext = () => {
+    setModalImageIndex(prev => (prev < (product?.images?.length ?? 1) - 1 ? prev + 1 : 0));
+    handleResetZoom();
   };
 
   useEffect(() => {
@@ -160,6 +231,42 @@ const ProductDetailPage = () => {
     fetchReviews(reviewPage);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productId, reviewPage]);
+
+  // Keyboard navigation for image modal
+  useEffect(() => {
+    if (!isImageModalOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') closeImageModal();
+      else if (e.key === 'ArrowLeft') goToModalPrev();
+      else if (e.key === 'ArrowRight') goToModalNext();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isImageModalOpen]);
+
+  // Scroll-to-zoom (non-passive wheel listener)
+  useEffect(() => {
+    const el = modalImageAreaRef.current;
+    if (!el || !isImageModalOpen) return;
+    const onWheel = (e) => {
+      e.preventDefault();
+      const delta = e.deltaY < 0 ? 0.3 : -0.3;
+      setZoomLevel(prev => {
+        const next = parseFloat(Math.max(1, Math.min(4, prev + delta)).toFixed(1));
+        if (next <= 1) setPanPosition({ x: 0, y: 0 });
+        return next;
+      });
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, [isImageModalOpen]);
+
+  // Lock body scroll when modal open
+  useEffect(() => {
+    document.body.style.overflow = isImageModalOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [isImageModalOpen]);
 
   const fetchReviews = async (page = 1) => {
     try {
@@ -316,6 +423,26 @@ const ProductDetailPage = () => {
       setSubmittingReview(false);
     }
   };
+
+  // Dynamic SEO for product detail page — must be before early returns to satisfy rules of hooks
+  useSEO({
+    title: product ? `${product.name} | Buy Online at SIYARA` : 'Product Detail | SIYARA',
+    description: product
+      ? `Buy ${product.name} online at SIYARA. ${product.category?.name ? product.category.name + '. ' : ''}Price ₹${displayPrice?.toLocaleString('en-IN')}${discountPercent > 0 ? ` (${discountPercent}% off)` : ''}. Premium quality ethnic wear with free shipping.`
+      : 'Shop premium ethnic wear at SIYARA',
+    keywords: product
+      ? `${product.name}, buy ${product.name} online, ${product.category?.name || 'saree'}, designer ${product.category?.name || 'ethnic wear'}, siyara ${product.category?.name || 'saree'}`
+      : 'buy sarees online, ethnic wear',
+    canonicalUrl: product
+      ? `https://siyara.online/product/${slug ? slug + '/' : ''}${productId}`
+      : `https://siyara.online/product/${productId}`,
+    ogTitle: product ? `${product.name} | SIYARA` : undefined,
+    ogDescription: product
+      ? `Buy ${product.name} at ₹${displayPrice?.toLocaleString('en-IN')}. Shop now at SIYARA.`
+      : undefined,
+    ogImage: product?.images?.[0] || undefined,
+    ogType: 'product',
+  });
 
   if (loading) {
     return (
@@ -524,26 +651,6 @@ const ProductDetailPage = () => {
     </div>
   );
 
-  // Dynamic SEO for product detail page
-  useSEO({
-    title: product ? `${product.name} | Buy Online at SIYARA` : 'Product Detail | SIYARA',
-    description: product
-      ? `Buy ${product.name} online at SIYARA. ${product.category?.name ? product.category.name + '. ' : ''}Price ₹${displayPrice?.toLocaleString('en-IN')}${discountPercent > 0 ? ` (${discountPercent}% off)` : ''}. Premium quality ethnic wear with free shipping.`
-      : 'Shop premium ethnic wear at SIYARA',
-    keywords: product
-      ? `${product.name}, buy ${product.name} online, ${product.category?.name || 'saree'}, designer ${product.category?.name || 'ethnic wear'}, siyara ${product.category?.name || 'saree'}`
-      : 'buy sarees online, ethnic wear',
-    canonicalUrl: product
-      ? `https://siyara.online/product/${slug ? slug + '/' : ''}${productId}`
-      : `https://siyara.online/product/${productId}`,
-    ogTitle: product ? `${product.name} | SIYARA` : undefined,
-    ogDescription: product
-      ? `Buy ${product.name} at ₹${displayPrice?.toLocaleString('en-IN')}. Shop now at SIYARA.`
-      : undefined,
-    ogImage: product?.images?.[0] || undefined,
-    ogType: 'product',
-  });
-
   return (
     <div className="min-h-screen bg-[#FAF9F5]">
       {/* Product Schema - Structured Data for Google Rich Results */}
@@ -631,7 +738,11 @@ const ProductDetailPage = () => {
               <div
                 className="relative bg-gray-100 overflow-hidden cursor-pointer flex items-center justify-center select-none"
                 style={{ minHeight: '400px', maxHeight: '720px' }}
-                onClick={() => displayImage && setIsImageModalOpen(true)}
+                onClick={() => {
+                  if (!displayImage) return;
+                  const idx = images.indexOf(activeImage);
+                  openImageModal(Math.max(0, idx));
+                }}
                 onContextMenu={handleContextMenu}
               >
                 {displayImage ? (
@@ -1126,34 +1237,146 @@ const ProductDetailPage = () => {
       </main>
       <Footer />
 
-      {/* Image Lightbox Modal */}
-      {isImageModalOpen && displayImage && (
+      {/* Image Lightbox Modal with Zoom */}
+      {isImageModalOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm select-none"
-          onClick={() => setIsImageModalOpen(false)}
+          className="fixed inset-0 z-50 bg-black/95 select-none"
           onContextMenu={handleContextMenu}
         >
-          <div className="relative max-w-7xl max-h-[90vh] w-full h-full flex items-center justify-center p-4 select-none">
-            <button
-              onClick={() => setIsImageModalOpen(false)}
-              className="absolute top-4 right-4 z-10 p-2 bg-white/90 hover:bg-white rounded-full transition-colors shadow-lg"
-              aria-label="Close"
-            >
-              <X className="w-6 h-6 text-gray-900" />
-            </button>
+          {/* Top Bar */}
+          <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 py-3 bg-gradient-to-b from-black/70 to-transparent">
+            <span className="text-white/70 text-sm font-medium">
+              {images.length > 1 ? `${modalImageIndex + 1} / ${images.length}` : product.name}
+            </span>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={handleZoomOut}
+                disabled={zoomLevel <= 1}
+                className="p-2 text-white/80 hover:text-white hover:bg-white/15 rounded-full transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="Zoom out"
+              >
+                <ZoomOut className="w-5 h-5" />
+              </button>
+              <span className="text-white/70 text-xs min-w-[3.5rem] text-center tabular-nums">
+                {Math.round(zoomLevel * 100)}%
+              </span>
+              <button
+                onClick={handleZoomIn}
+                disabled={zoomLevel >= 4}
+                className="p-2 text-white/80 hover:text-white hover:bg-white/15 rounded-full transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="Zoom in"
+              >
+                <ZoomIn className="w-5 h-5" />
+              </button>
+              {zoomLevel > 1 && (
+                <button
+                  onClick={handleResetZoom}
+                  className="px-3 py-1.5 text-xs font-medium text-white/80 hover:text-white hover:bg-white/15 rounded-full transition-all"
+                >
+                  Reset
+                </button>
+              )}
+              <div className="w-px h-5 bg-white/20 mx-1" />
+              <button
+                onClick={closeImageModal}
+                className="p-2 text-white/80 hover:text-white hover:bg-white/15 rounded-full transition-all"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Image Area */}
+          <div
+            ref={modalImageAreaRef}
+            className={`absolute inset-0 flex items-center justify-center overflow-hidden ${
+              zoomLevel > 1 ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-zoom-in'
+            }`}
+            onMouseDown={handleModalMouseDown}
+            onMouseMove={handleModalMouseMove}
+            onMouseUp={handleModalMouseUp}
+            onMouseLeave={handleModalMouseUp}
+            onDoubleClick={handleModalDoubleClick}
+            onTouchStart={handleModalTouchStart}
+            onTouchMove={handleModalTouchMove}
+            onTouchEnd={handleModalTouchEnd}
+          >
             <img
-              src={normalizeImagePath(displayImage)}
+              src={normalizeImagePath(images[modalImageIndex] || displayImage)}
               alt={product.name}
-              className="max-w-full max-h-full object-contain rounded-lg select-none"
+              className="max-w-full max-h-full object-contain select-none"
+              style={{
+                transform: `translate(${panPosition.x}px, ${panPosition.y}px) scale(${zoomLevel})`,
+                transformOrigin: 'center center',
+                transition: isDragging ? 'none' : 'transform 0.15s ease-out',
+                userSelect: 'none',
+                WebkitUserSelect: 'none',
+              }}
               draggable="false"
               onContextMenu={handleContextMenu}
               onDragStart={handleDragStart}
-              onClick={(e) => e.stopPropagation()}
               onError={(e) => {
                 e.target.src = 'https://via.placeholder.com/800x1000?text=Image+Not+Available';
               }}
             />
           </div>
+
+          {/* Zoom hint */}
+          {zoomLevel === 1 && (
+            <div className="absolute left-1/2 -translate-x-1/2 z-20 text-white/35 text-xs text-center pointer-events-none hidden md:block"
+              style={{ bottom: images.length > 1 ? '96px' : '24px' }}
+            >
+              Scroll to zoom · Double-click to zoom · Drag to pan when zoomed
+            </div>
+          )}
+
+          {/* Left / Right Nav Arrows */}
+          {images.length > 1 && (
+            <>
+              <button
+                onClick={goToModalPrev}
+                className="absolute left-3 top-1/2 -translate-y-1/2 z-20 p-3 bg-white/10 hover:bg-white/25 rounded-full text-white transition-all backdrop-blur-sm shadow-lg"
+                aria-label="Previous image"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+              <button
+                onClick={goToModalNext}
+                className="absolute right-3 top-1/2 -translate-y-1/2 z-20 p-3 bg-white/10 hover:bg-white/25 rounded-full text-white transition-all backdrop-blur-sm shadow-lg"
+                aria-label="Next image"
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            </>
+          )}
+
+          {/* Bottom Thumbnail Strip */}
+          {images.length > 1 && (
+            <div className="absolute bottom-0 left-0 right-0 z-20 pb-4 pt-8 bg-gradient-to-t from-black/70 to-transparent">
+              <div className="flex items-center justify-center gap-2 overflow-x-auto px-4 scrollbar-hide">
+                {images.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => { setModalImageIndex(idx); handleResetZoom(); }}
+                    className={`flex-shrink-0 w-12 h-16 rounded overflow-hidden border-2 transition-all duration-200 ${
+                      modalImageIndex === idx
+                        ? 'border-white scale-110 shadow-lg'
+                        : 'border-transparent opacity-50 hover:opacity-90 hover:scale-105'
+                    }`}
+                  >
+                    <img
+                      src={normalizeImagePath(img)}
+                      alt={`Image ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                      draggable="false"
+                      onContextMenu={handleContextMenu}
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

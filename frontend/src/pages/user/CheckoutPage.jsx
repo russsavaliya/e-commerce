@@ -3,7 +3,7 @@
  * User can add shipping details and review order before placing it
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/user/Navbar';
 import Footer from '../../components/user/Footer';
@@ -63,6 +63,15 @@ const CheckoutPage = () => {
   const [applyingCoupon, setApplyingCoupon] = useState(null); // Track which coupon is being applied
   const [couponError, setCouponError] = useState('');
   const [availableCoupons, setAvailableCoupons] = useState([]);
+  const [couponPreviewFromCart, setCouponPreviewFromCart] = useState(() => {
+    try {
+      const raw = localStorage.getItem('previewedCouponData');
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  });
+  const autoAppliedRef = useRef(false);
 
   useEffect(() => {
     fetchCart();
@@ -96,13 +105,30 @@ const CheckoutPage = () => {
         : availableCoupons.some(c => c.code === appliedCoupon.couponCode && c.applicableToOnline);
 
       if (!isCompatible) {
-        const couponData = availableCoupons.find(c => c.code === appliedCoupon.couponCode);
         const paymentMethodName = selectedPayment === 'cod' ? 'Cash on Delivery' : 'Online Payment';
         setAppliedCoupon(null);
         toast.error(`Coupon ${appliedCoupon.couponCode} is not applicable for ${paymentMethodName} orders and has been removed`);
       }
     }
   }, [selectedPayment, currentStep, appliedCoupon, availableCoupons]);
+
+  // Auto-apply coupon previewed on the cart page
+  useEffect(() => {
+    if (currentStep !== 'payment' || appliedCoupon || availableCoupons.length === 0 || autoAppliedRef.current) return;
+
+    const previewedCode = localStorage.getItem('previewedCouponCode');
+    if (!previewedCode) return;
+
+    localStorage.removeItem('previewedCouponCode');
+    localStorage.removeItem('previewedCouponData');
+    setCouponPreviewFromCart(null);
+    autoAppliedRef.current = true;
+
+    const matchedCoupon = availableCoupons.find((c) => c.code === previewedCode);
+    if (matchedCoupon) {
+      handleApplyCoupon(matchedCoupon);
+    }
+  }, [currentStep, availableCoupons]);
 
   const fetchCart = async () => {
     try {
@@ -849,6 +875,7 @@ const CheckoutPage = () => {
               currentStep={currentStep}
               appliedCoupon={appliedCoupon}
               onRemoveCoupon={handleRemoveCoupon}
+              couponPreviewFromCart={currentStep === 'shipping' ? couponPreviewFromCart : null}
             />
           </div>
         </div>

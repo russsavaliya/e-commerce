@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/user/Navbar';
 import Footer from '../../components/user/Footer';
-import { Loader2, ShoppingBag, Trash2, Plus, Minus, IndianRupee, X, PackageSearch, Tag } from 'lucide-react';
+import { Loader2, ShoppingBag, Trash2, Plus, Minus, IndianRupee, PackageSearch, Tag } from 'lucide-react';
 import { getCart, updateCartItem, removeFromCart, clearCart } from '../../services/user/cartService';
-import { getAvailableCoupons } from '../../services/user/couponService';
+import { getAvailableCoupons, applyCoupon } from '../../services/user/couponService';
 import toast from 'react-hot-toast';
 import useSEO from '../../hooks/useSEO';
 
@@ -20,7 +20,11 @@ const CartPage = () => {
   const [updating, setUpdating] = useState(null);
   const [clearing, setClearing] = useState(false);
   const [availableCoupons, setAvailableCoupons] = useState([]);
-  const [loadingCoupons, setLoadingCoupons] = useState(false);
+  const [couponInput, setCouponInput] = useState('');
+  const [couponPreview, setCouponPreview] = useState(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState('');
+  const [codWarning, setCodWarning] = useState('');
 
   useEffect(() => {
     // Scroll to top when cart page loads
@@ -31,17 +35,44 @@ const CartPage = () => {
 
   const fetchAvailableCoupons = async () => {
     try {
-      setLoadingCoupons(true);
       const response = await getAvailableCoupons();
       if (response.status) {
         setAvailableCoupons(response.data || []);
       }
     } catch (error) {
       console.error('Error fetching coupons:', error);
-      // Don't show error toast, just silently fail
       setAvailableCoupons([]);
+    }
+  };
+
+  const handlePreviewCoupon = async () => {
+    const code = couponInput.trim().toUpperCase();
+    if (!code || !cart?.subtotal) return;
+
+    setPreviewLoading(true);
+    setPreviewError('');
+    setCodWarning('');
+    setCouponPreview(null);
+
+    try {
+      // Call without paymentMethod so COD restriction is not enforced for preview
+      const response = await applyCoupon(code, cart.subtotal);
+      if (response.status) {
+        setCouponPreview(response.data);
+        // Soft warning if coupon is not valid for COD
+        const matched = availableCoupons.find((c) => c.code === code);
+        if (matched && !matched.applicableToCOD) {
+          setCodWarning('This coupon is not valid for Cash on Delivery');
+        }
+        localStorage.setItem('previewedCouponCode', code);
+        localStorage.setItem('previewedCouponData', JSON.stringify(response.data));
+      }
+    } catch (error) {
+      setPreviewError(error.message || 'Invalid coupon code');
+      localStorage.removeItem('previewedCouponCode');
+      localStorage.removeItem('previewedCouponData');
     } finally {
-      setLoadingCoupons(false);
+      setPreviewLoading(false);
     }
   };
 
@@ -298,29 +329,74 @@ const CartPage = () => {
               <div className="bg-white border-2 border-gray-200 rounded-lg p-6 sticky top-4">
                 <h2 className="text-xl font-bold text-gray-900 mb-6">Order Summary</h2>
 
-                {/* Coupon Message */}
-                {availableCoupons.length > 0 && (
-                  <div className="mb-6 pb-6 border-b border-gray-200">
-                    <div className="bg-[rgba(72,29,111,0.05)] border border-[rgb(72,29,111)] rounded-lg p-4">
-                      <div className="flex items-start gap-3">
-                        <div className="flex-shrink-0 mt-0.5">
-                          <Tag className="w-5 h-5 text-[rgb(72,29,111)]" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-semibold text-[rgb(72,29,111)] mb-1">
-                            🎉 Special Offers Available!
-                          </p>
-                          <p className="text-xs text-gray-700 mb-2">
-                            Discount coupons are applied at the payment step. Proceed to payment to use your coupon code.
-                          </p>
-                          <p className="text-xs text-[rgb(72,29,111)] font-semibold">
-                            {availableCoupons.length} {availableCoupons.length === 1 ? 'coupon' : 'coupons'} available
-                          </p>
-                        </div>
-                      </div>
-                    </div>
+                {/* Coupon Preview */}
+                <div className="mb-6 pb-6 border-b border-gray-200">
+                  <p className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                    <Tag className="w-4 h-4 text-[rgb(72,29,111)]" />
+                    Have a coupon? Preview your discount
+                  </p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={couponInput}
+                      onChange={(e) => {
+                        setCouponInput(e.target.value.toUpperCase());
+                        setCouponPreview(null);
+                        setPreviewError('');
+                        setCodWarning('');
+                        if (!e.target.value) {
+                          localStorage.removeItem('previewedCouponCode');
+                          localStorage.removeItem('previewedCouponData');
+                        }
+                      }}
+                      onKeyDown={(e) => e.key === 'Enter' && handlePreviewCoupon()}
+                      placeholder="Enter coupon code"
+                      className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[rgb(72,29,111)] uppercase"
+                    />
+                    <button
+                      onClick={handlePreviewCoupon}
+                      disabled={previewLoading || !couponInput.trim()}
+                      className="px-4 py-2 bg-[rgb(72,29,111)] text-white text-sm font-semibold rounded-lg hover:bg-[#390e60] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                    >
+                      {previewLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Check'}
+                    </button>
                   </div>
-                )}
+
+                  {previewError && (
+                    <p className="text-xs text-red-600 mt-2">{previewError}</p>
+                  )}
+
+                  {codWarning && (
+                    <div className="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                      ⚠️ {codWarning}
+                    </div>
+                  )}
+
+                  {couponPreview && (
+                    <div className="mt-3 bg-green-50 border border-green-200 rounded-lg p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Tag className="w-4 h-4 text-green-700" />
+                        <span className="text-sm font-semibold text-green-800">{couponPreview.couponCode}</span>
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Preview</span>
+                      </div>
+                      <div className="flex justify-between text-xs text-gray-600 mb-1">
+                        <span>Discount</span>
+                        <span className="text-green-700 font-semibold">−₹{couponPreview.discountAmount.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-xs mb-2">
+                        <span className="text-gray-600">Estimated total</span>
+                        <span className="font-bold text-gray-900">₹{Math.round(couponPreview.finalAmount).toLocaleString('en-IN')}</span>
+                      </div>
+                      <p className="text-[10px] text-gray-500">Final discount applied at checkout • Subject to payment method</p>
+                    </div>
+                  )}
+
+                  {availableCoupons.length > 0 && !couponPreview && (
+                    <p className="text-xs text-[rgb(72,29,111)] mt-2">
+                      {availableCoupons.length} {availableCoupons.length === 1 ? 'coupon' : 'coupons'} available for this order
+                    </p>
+                  )}
+                </div>
 
                 <div className="space-y-4 mb-6">
                   <div className="flex justify-between text-gray-700">
@@ -332,18 +408,38 @@ const CartPage = () => {
                       </span>
                     </div>
                   </div>
+                  {couponPreview && (
+                    <div className="flex justify-between text-green-700">
+                      <span className="text-sm">Coupon ({couponPreview.couponCode})</span>
+                      <div className="flex items-center gap-1">
+                        <IndianRupee className="w-4 h-4" />
+                        <span className="font-semibold">−{couponPreview.discountAmount.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  )}
                   <div className="flex justify-between text-gray-700">
                     <span>Shipping</span>
                     <span className="font-semibold text-green-600">Free</span>
                   </div>
                   <div className="border-t border-gray-300 pt-4">
                     <div className="flex justify-between items-center">
-                      <span className="text-lg font-bold text-gray-900">Total</span>
-                      <div className="flex items-center gap-1">
-                        <IndianRupee className="w-5 h-5 text-gray-900" />
-                        <span className="text-2xl font-bold text-gray-900">
-                          {(cart.subtotal || 0).toLocaleString('en-IN')}
-                        </span>
+                      <span className="text-lg font-bold text-gray-900">
+                        {couponPreview ? 'Est. Total' : 'Total'}
+                      </span>
+                      <div className="flex flex-col items-end">
+                        {couponPreview && (
+                          <span className="text-sm text-gray-400 line-through">
+                            ₹{(cart.subtotal || 0).toLocaleString('en-IN')}
+                          </span>
+                        )}
+                        <div className="flex items-center gap-1">
+                          <IndianRupee className="w-5 h-5 text-gray-900" />
+                          <span className="text-2xl font-bold text-gray-900">
+                            {couponPreview
+                              ? Math.round(couponPreview.finalAmount).toLocaleString('en-IN')
+                              : (cart.subtotal || 0).toLocaleString('en-IN')}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
