@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import Navbar from '../../components/user/Navbar';
 import Footer from '../../components/user/Footer';
 import { Loader2, ArrowLeft, CreditCard, Wallet, Tag, X, CheckCircle2 } from 'lucide-react';
@@ -572,24 +572,8 @@ const CheckoutPage = () => {
     );
   }
 
-  if (!cart || !cart.items || cart.items.length === 0) {
-    return (
-      <div className="min-h-screen flex flex-col bg-white">
-        <Navbar />
-        <main className="flex-1 flex items-center justify-center py-20">
-          <div className="text-center">
-            <p className="text-lg text-gray-600 mb-4">Your cart is empty</p>
-            <button
-              onClick={() => navigate('/cart')}
-              className="px-6 py-3 bg-[rgb(72,29,111)] text-white rounded-full font-semibold hover:bg-[#390e60] transition-all duration-200"
-            >
-              Go to Cart
-            </button>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
+  if (!loading && (!cart || !cart.items || cart.items.length === 0)) {
+    return <Navigate to="/cart" state={{ message: 'Add items to your cart before checking out.' }} replace />;
   }
 
   const hasCodCoupon = Array.isArray(availableCoupons) && availableCoupons.some((c) => c?.applicableToCOD);

@@ -98,7 +98,8 @@ const CartPage = () => {
       setUpdating(cartItemId);
       const response = await updateCartItem(cartItemId, newQuantity);
       if (response.status) {
-        await fetchCart(); // Refresh cart
+        await fetchCart();
+        window.dispatchEvent(new Event('cart-updated'));
         toast.success('Cart updated');
       }
     } catch (error) {
@@ -114,7 +115,8 @@ const CartPage = () => {
       setUpdating(cartItemId);
       const response = await removeFromCart(cartItemId);
       if (response.status) {
-        await fetchCart(); // Refresh cart
+        await fetchCart();
+        window.dispatchEvent(new Event('cart-updated'));
         toast.success('Item removed from cart');
       }
     } catch (error) {
@@ -134,7 +136,8 @@ const CartPage = () => {
       setClearing(true);
       const response = await clearCart();
       if (response.status) {
-        await fetchCart(); // Refresh cart
+        await fetchCart();
+        window.dispatchEvent(new Event('cart-updated'));
         toast.success('Cart cleared');
       }
     } catch (error) {

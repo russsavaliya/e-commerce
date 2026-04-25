@@ -62,26 +62,22 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Fetch cart count - Commented out for now to prevent frequent API calls
-  // TODO: Implement in future with better optimization (e.g., event-based updates)
-  // useEffect(() => {
-  //   const fetchCartCount = async () => {
-  //     try {
-  //       const response = await getCartCount();
-  //       if (response.status) {
-  //         setCartCount(response.data.count || 0);
-  //       }
-  //     } catch (error) {
-  //       // Silently fail - cart might be empty or session not initialized
-  //       setCartCount(0);
-  //     }
-  //   };
+  useEffect(() => {
+    const fetchCartCount = async () => {
+      try {
+        const response = await getCartCount();
+        if (response.status) {
+          setCartCount(response.data.count || 0);
+        }
+      } catch {
+        setCartCount(0);
+      }
+    };
 
-  //   fetchCartCount();
-  //   // Refresh cart count when route changes (e.g., after adding to cart)
-  //   const interval = setInterval(fetchCartCount, 2000); // Poll every 2 seconds
-  //   return () => clearInterval(interval);
-  // }, [location.pathname]);
+    fetchCartCount();
+    window.addEventListener('cart-updated', fetchCartCount);
+    return () => window.removeEventListener('cart-updated', fetchCartCount);
+  }, []);
 
   const menuItems = [
     { name: 'Home', path: '/' },

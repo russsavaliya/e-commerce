@@ -18,8 +18,9 @@ const PromoPopup = () => {
   useEffect(() => {
     if (location.pathname.startsWith('/admin')) return;
 
-    const popupClosed = sessionStorage.getItem('promoPopupClosed');
-    if (!popupClosed) {
+    const lastClosed = localStorage.getItem('promoPopupClosedAt');
+    const shouldShow = !lastClosed || (Date.now() - Number(lastClosed)) > 86400000;
+    if (shouldShow) {
       const delay = Math.floor(Math.random() * 2000) + 3000;
       const timer = setTimeout(() => {
         setIsVisible(true);
@@ -33,7 +34,7 @@ const PromoPopup = () => {
     setIsAnimating(false);
     setTimeout(() => {
       setIsVisible(false);
-      sessionStorage.setItem('promoPopupClosed', 'true');
+      localStorage.setItem('promoPopupClosedAt', Date.now().toString());
     }, 400);
   };
 
@@ -74,12 +75,7 @@ const PromoPopup = () => {
           100% { background-position: 200% center; }
         }
 
-        @keyframes tickTock {
-          0%, 100% { transform: rotate(-8deg); }
-          50% { transform: rotate(8deg); }
-        }
-
-        @keyframes scooterFloat {
+@keyframes scooterFloat {
           0%, 100% { transform: translateX(0px) rotate(0deg); }
           25% { transform: translateX(3px) rotate(1deg); }
           75% { transform: translateX(-3px) rotate(-1deg); }
@@ -109,12 +105,7 @@ const PromoPopup = () => {
           animation: shimmer 3s linear infinite;
         }
 
-        .clock-hand {
-          animation: tickTock 1s ease-in-out infinite;
-          transform-origin: center bottom;
-        }
-
-        .scooter-anim {
+.scooter-anim {
           animation: scooterFloat 3s ease-in-out infinite;
         }
 
@@ -251,10 +242,7 @@ const PromoPopup = () => {
               <circle cx="36" cy="36" r="25" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
               <text x="36" y="30" textAnchor="middle" fill="white" fontSize="7" fontWeight="bold" fontFamily="sans-serif" letterSpacing="1">SPECIAL</text>
               <text x="36" y="40" textAnchor="middle" fill="white" fontSize="7" fontWeight="bold" fontFamily="sans-serif" letterSpacing="1">OFFER</text>
-              {/* Clock */}
-              <circle cx="36" cy="50" r="6" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.4)" strokeWidth="0.8" />
-              <line className="clock-hand" x1="36" y1="50" x2="36" y2="46" stroke="white" strokeWidth="1" strokeLinecap="round" />
-              <line x1="36" y1="50" x2="39" y2="50" stroke="white" strokeWidth="0.8" strokeLinecap="round" />
+              <text x="36" y="54" textAnchor="middle" fill="white" fontSize="6" fontWeight="bold" fontFamily="sans-serif" letterSpacing="0.5">FREE</text>
             </svg>
           </div>
 
@@ -357,32 +345,19 @@ const PromoPopup = () => {
               on every order, for today only.
             </p>
 
-            {/* Urgency line */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
+            {/* Trust line */}
+            <p style={{
+              fontFamily: "'Cormorant Garamond', Georgia, serif",
+              fontSize: '13px',
+              fontWeight: '500',
+              color: 'rgb(72,29,111)',
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
               margin: '8px 0 16px',
+              opacity: 0.8,
             }}>
-              <p style={{
-                fontFamily: "'Cormorant Garamond', Georgia, serif",
-                fontSize: '14px',
-                fontWeight: '600',
-                color: 'rgb(72,29,111)',
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-                margin: 0,
-              }}>
-                HURRY — Offer ends soon!
-              </p>
-              {/* Mini clock */}
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="10" stroke="rgb(72,29,111)" strokeWidth="1.5" />
-                <line className="clock-hand" x1="12" y1="12" x2="12" y2="6" stroke="rgb(72,29,111)" strokeWidth="1.8" strokeLinecap="round" />
-                <line x1="12" y1="12" x2="16" y2="12" stroke="rgb(72,29,111)" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
-            </div>
+              Free Shipping on Every Order — Always.
+            </p>
 
             {/* CTA Button */}
             <button

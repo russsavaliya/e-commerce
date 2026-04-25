@@ -320,6 +320,7 @@ function App() {
             <Route path="/contact" element={<ContactPage />} />
 
             {/* Order tracking */}
+            <Route path="/track-order" element={<Navigate to="/order/track" replace />} />
             <Route path="/order/track" element={<OrderTrackPage />} />
 
             {/* Return Policy */}

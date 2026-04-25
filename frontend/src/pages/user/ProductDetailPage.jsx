@@ -360,10 +360,8 @@ const ProductDetailPage = () => {
       setAddingToCart(true);
       const response = await addToCart(product._id, selectedVariantId, 1);
       if (response.status) {
-        toast.success('Added to cart!', {
-          icon: '🛍️',
-        });
-        // Navigate to cart page after successful add
+        toast.success('Added to cart!', { icon: '🛍️' });
+        window.dispatchEvent(new Event('cart-updated'));
         navigate('/cart');
       }
     } catch (error) {

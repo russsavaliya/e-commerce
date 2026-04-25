@@ -46,17 +46,20 @@ const useReveal = () => {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    // Fallback: force visible after 1.5s if IntersectionObserver hasn't fired
+    const timeout = setTimeout(() => el.classList.add('about-visible'), 1500);
     const obs = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
           el.classList.add('about-visible');
           obs.unobserve(el);
+          clearTimeout(timeout);
         }
       },
       { threshold: 0.15 }
     );
     obs.observe(el);
-    return () => obs.disconnect();
+    return () => { obs.disconnect(); clearTimeout(timeout); };
   }, []);
   return ref;
 };
